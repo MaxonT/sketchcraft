@@ -69,3 +69,43 @@ export function subsetFor(c, shots) {
   for (const [re, cmds] of TRIGGERS) if (re.test(r)) cmds.forEach((x) => s.add(x));
   return COMMANDS.map(([n]) => n).filter((n) => s.has(n));
 }
+
+/**
+ * `--repair`: deterministic glue between the model and the engine (not model skill; reported separately).
+ * Fixes the three mechanical slips that make up most engine refusals:
+ *  - a rect whose corners differ in x, y AND z (the model's way of writing a box) -> rect on its lowest plane + pushpull
+ *  - an @name used but never created, when an earlier command made exactly that kind of thing without `as`
+ *    (column, insert of that asset, a group of that name) -> give that command `as`
+ *  - an end_group with no open begin_group -> dropped
+ */
+export function repair(cmds, fixtureNames = new Set()) {
+  if (!Array.isArray(cmds)) return cmds;
+  const out = [];
+  let open = 0;
+  for (const c0 of cmds) {
+    const c = { ...c0 };
+    if (c.cmd === "rect" && Array.isArray(c.from) && Array.isArray(c.to) && c.from.every((v, i) => v !== c.to[i])) {
+      const z0 = Math.min(c.from[2], c.to[2]), h = Math.abs(c.to[2] - c.from[2]);
+      const face = c.as || `rb${out.length}`;
+      out.push({ cmd: "rect", from: [c.from[0], c.from[1], z0], to: [c.to[0], c.to[1], z0], as: face });
+      out.push({ cmd: "pushpull", face: `@${face}`, distance: h, toward: [0, 0, 1] });
+      continue;
+    }
+    if (c.cmd === "begin_group") open++;
+    if (c.cmd === "end_group") { if (open === 0) continue; open--; }
+    out.push(c);
+  }
+  const defined = new Set([...fixtureNames, ...out.map((c) => c.as).filter(Boolean)]);
+  const refs = (c) => JSON.stringify(c).match(/"@(\w+)"/g)?.map((s) => s.slice(2, -1)) || [];
+  for (const [i, c] of out.entries()) {
+    for (const r of refs(c)) {
+      if (defined.has(r)) continue;
+      for (let j = i - 1; j >= 0; j--) {
+        const p = out[j];
+        if (p.as) continue;
+        if (p.cmd === r || (p.cmd === "insert" && p.asset === r) || (p.cmd === "begin_group" && p.name === r) || (p.cmd === "wall" && /wall|room/.test(r))) { p.as = r; defined.add(r); break; }
+      }
+    }
+  }
+  return out;
+}

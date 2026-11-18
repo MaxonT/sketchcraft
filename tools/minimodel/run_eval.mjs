@@ -7,6 +7,8 @@
 // --shots N    the first N hand-written worked examples (lib/spec.mjs FEW_SHOT)
 // --retrieve K K examples picked by similarity from the OTHER fold of the request set (lib/retrieve.mjs): never the
 //              scored request itself. --max-sim drops pool examples more similar than that (near-duplicate control).
+// --repair     deterministic glue on the model's output before the engine runs it (lib/retrieve.mjs repair())
+// --fix-schema the command table also allows `as` on insert (the engine accepts it; the original table left it out)
 // --subset     the schema and the prompt reference list only the commands this request plausibly needs
 //              (core + the retrieved examples' commands + keyword triggers)
 //   node run_eval.mjs --model gold        # control: the reference solutions (must be 100%)
@@ -20,8 +22,8 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { COMMANDS, FEW_SHOT, buildReference, buildSchema } from "./lib/spec.mjs";
-import { fixtureDesc, loadCases, runCase } from "./lib/run_case.mjs";
-import { makeRetriever, subsetFor } from "./lib/retrieve.mjs";
+import { fixtureDesc, loadCases, loadFixture, runCase } from "./lib/run_case.mjs";
+import { makeRetriever, repair, subsetFor } from "./lib/retrieve.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -51,7 +53,9 @@ const retrieveK = Number(flag("retrieve", 0));
 const maxSim = Number(flag("max-sim", 1.01));
 const subset = !!flag("subset");
 const timeoutS = Number(flag("timeout", 120));
-const variant = [shots && `${shots}shot`, retrieveK && `rag${retrieveK}`, maxSim <= 1 && `max${maxSim}`, subset && "subset"].filter(Boolean).join("-");
+const doRepair = !!flag("repair"), fixSchema = !!flag("fix-schema");
+if (fixSchema) COMMANDS.find(([n]) => n === "insert")[1].as = "s?";
+const variant = [shots && `${shots}shot`, retrieveK && `rag${retrieveK}`, maxSim <= 1 && `max${maxSim}`, subset && "subset", fixSchema && "fixschema", doRepair && "repair"].filter(Boolean).join("-");
 const tag = flag("tag", `${model.replace(/[:/]/g, "_")}-${mode}${variant ? "-" + variant : ""}`);
 const guard = !flag("no-memory-guard");
 let cases = loadCases();
@@ -87,6 +91,7 @@ const system = (only) => {
   if (mode === "free") s += "\nReply with ONLY the JSON object, no explanation.";
   return s;
 };
+const fixtureIds = (fx) => new Set(fx ? loadFixture(fx).map((x) => x.as).filter(Boolean) : []);
 const stateOf = (fx) => (fx ? fixtureDesc(fx) : "empty model");
 /** the prompt (and, with --subset, the narrowed schema) for one request */
 function prompt(c) {
@@ -135,20 +140,21 @@ const rows = [];
 let peakRss = 0, skipped = false;
 for (const [i, c] of cases.entries()) {
   if (!(await waitForMemory())) { skipped = true; console.error("memory never recovered: stopping, partial results saved"); break; }
-  let commands, ans = null, parseOk = true, valid = true, err = null;
+  let commands, ans = null, parseOk = true, valid = true, err = null, raw0;
   try {
     if (model === "gold") commands = c.gold;
     else if (model === "noop") commands = [{ cmd: "info" }];
     else {
       ans = await ask(c);
       commands = mode === "constrained" ? JSON.parse(ans.text).commands : parseFree(ans.text);
+      if (doRepair && commands) { raw0 = commands; commands = repair(commands, fixtureIds(c.fixture)); }
       if (!commands) { parseOk = false; }
       else valid = schemaValid(commands);
     }
   } catch (e) { err = String(e.message || e); parseOk = false; }
   const rss = rssMb(); peakRss = Math.max(peakRss, rss);
   const g = parseOk && commands ? await runCase(c, commands) : { pass: false, errs: [err || "output was not a parseable command list"], stage: "parse", engineMs: 0 };
-  rows.push({ id: c.id, tier: c.tier, cat: c.cat || null, request: c.request, pass: g.pass, stage: g.stage, errs: g.errs, parseOk, schemaValid: parseOk ? valid : false, commands, ms: ans ? ans.wall - ans.load : 0, load: ans?.load || 0, promptTok: ans?.promptTok, genTok: ans?.genTok, tokPerSec: ans && ans.evalMs ? ans.genTok / (ans.evalMs / 1000) : null, rssMb: rss, subset: ans?.only?.length, shotIds: ans?.shotIds?.length ? ans.shotIds : undefined, raw: parseOk ? undefined : ans?.text?.slice(0, 400) });
+  rows.push({ id: c.id, tier: c.tier, cat: c.cat || null, request: c.request, pass: g.pass, stage: g.stage, errs: g.errs, parseOk, schemaValid: parseOk ? valid : false, commands, ms: ans ? ans.wall - ans.load : 0, load: ans?.load || 0, promptTok: ans?.promptTok, genTok: ans?.genTok, tokPerSec: ans && ans.evalMs ? ans.genTok / (ans.evalMs / 1000) : null, rssMb: rss, subset: ans?.only?.length, repaired: raw0 && JSON.stringify(raw0) !== JSON.stringify(commands) ? raw0 : undefined, shotIds: ans?.shotIds?.length ? ans.shotIds : undefined, raw: parseOk ? undefined : ans?.text?.slice(0, 400) });
   if ((i + 1) % 10 === 0 || i + 1 === cases.length) console.error(`${i + 1}/${cases.length} pass so far ${rows.filter((r) => r.pass).length}  rss ${rss.toFixed(0)}MB  free ${freePct()}%`);
 }
 
@@ -156,7 +162,7 @@ const pct = (a, b) => (b ? ((100 * a) / b).toFixed(1) + "%" : "-");
 const by = (f) => { const m = {}; for (const r of rows) { const k = f(r); if (k == null) continue; (m[k] ||= []).push(r); } return m; };
 const med = (xs) => { xs = xs.filter((x) => x != null).sort((a, b) => a - b); return xs.length ? xs[Math.floor(xs.length / 2)] : null; };
 const summary = {
-  tag, model, mode, shots, retrieve: retrieveK, maxSim: maxSim <= 1 ? maxSim : null, subset, variant, n: rows.length, skipped, pass: rows.filter((r) => r.pass).length,
+  tag, model, mode, shots, retrieve: retrieveK, maxSim: maxSim <= 1 ? maxSim : null, subset, repair: doRepair, fixSchema, variant, n: rows.length, skipped, pass: rows.filter((r) => r.pass).length,
   tiers: Object.fromEntries(Object.entries(by((r) => r.tier)).map(([k, v]) => [k, { n: v.length, pass: v.filter((r) => r.pass).length }])),
   a11y: (() => { const v = rows.filter((r) => r.cat === "a11y"); return { n: v.length, pass: v.filter((r) => r.pass).length }; })(),
   parseOk: rows.filter((r) => r.parseOk).length, schemaValid: rows.filter((r) => r.schemaValid).length,
