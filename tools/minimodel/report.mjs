@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const dir = join(dirname(fileURLToPath(import.meta.url)), "results");
 const all = readdirSync(dir).filter((f) => f.endsWith(".json")).sort().map((f) => JSON.parse(readFileSync(join(dir, f), "utf8")));
+const label = (s) => s.mode + (s.variant ? "+" + s.variant : s.shots ? "+" + s.shots + "shot" : "");
 const p = (a, b) => (b ? Math.round((100 * a) / b) + "%" : "-");
 const fi = process.argv.indexOf("--fails");
 if (fi > 0) {
@@ -25,7 +26,7 @@ if (fi > 0) {
 console.log("| model | mode | overall | easy | medium | hard | a11y | parse | schema-valid | engine-ok | median s/req | tok/s | peak RSS MB |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|");
 for (const { summary: s } of all) {
   const t = s.tiers;
-  console.log(`| ${s.model} | ${s.mode}${s.shots ? "+" + s.shots + "shot" : ""} | ${p(s.pass, s.n)} (${s.pass}/${s.n}) | ${p(t.easy?.pass, t.easy?.n)} | ${p(t.medium?.pass, t.medium?.n)} | ${p(t.hard?.pass, t.hard?.n)} | ${p(s.a11y.pass, s.a11y.n)} | ${p(s.parseOk, s.n)} | ${p(s.schemaValid, s.n)} | ${p(s.engineAccepted, s.n)} | ${s.medianMs ? (s.medianMs / 1000).toFixed(1) : "-"} | ${s.medianTokPerSec ? s.medianTokPerSec.toFixed(0) : "-"} | ${s.peakOllamaRssMb || "-"} |`);
+  console.log(`| ${s.model} | ${label(s)} | ${p(s.pass, s.n)} (${s.pass}/${s.n}) | ${p(t.easy?.pass, t.easy?.n)} | ${p(t.medium?.pass, t.medium?.n)} | ${p(t.hard?.pass, t.hard?.n)} | ${p(s.a11y.pass, s.a11y.n)} | ${p(s.parseOk, s.n)} | ${p(s.schemaValid, s.n)} | ${p(s.engineAccepted, s.n)} | ${s.medianMs ? (s.medianMs / 1000).toFixed(1) : "-"} | ${s.medianTokPerSec ? s.medianTokPerSec.toFixed(0) : "-"} | ${s.peakOllamaRssMb || "-"} |`);
 }
 
 // Secondary models ran an evenly spread 100-request subset (--limit 100). For a full 201-request result, restate it on
@@ -37,6 +38,6 @@ if (full.length) {
   for (const { summary: s, rows } of full) {
     const r = rows.filter((x) => set.has(x.id));
     const c = (f) => { const v = r.filter(f); return p(v.filter((x) => x.pass).length, v.length) + ` (${v.length})`; };
-    console.log(`| ${s.model} | ${s.mode} | ${c(() => true)} | ${c((x) => x.tier === "easy")} | ${c((x) => x.tier === "medium")} | ${c((x) => x.tier === "hard")} | ${c((x) => x.cat === "a11y")} |`);
+    console.log(`| ${s.model} | ${label(s)} | ${c(() => true)} | ${c((x) => x.tier === "easy")} | ${c((x) => x.tier === "medium")} | ${c((x) => x.tier === "hard")} | ${c((x) => x.cat === "a11y")} |`);
   }
 }
