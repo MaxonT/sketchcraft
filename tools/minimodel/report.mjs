@@ -27,3 +27,16 @@ for (const { summary: s } of all) {
   const t = s.tiers;
   console.log(`| ${s.model} | ${s.mode}${s.shots ? "+" + s.shots + "shot" : ""} | ${p(s.pass, s.n)} (${s.pass}/${s.n}) | ${p(t.easy?.pass, t.easy?.n)} | ${p(t.medium?.pass, t.medium?.n)} | ${p(t.hard?.pass, t.hard?.n)} | ${p(s.a11y.pass, s.a11y.n)} | ${p(s.parseOk, s.n)} | ${p(s.schemaValid, s.n)} | ${p(s.engineAccepted, s.n)} | ${s.medianMs ? (s.medianMs / 1000).toFixed(1) : "-"} | ${s.medianTokPerSec ? s.medianTokPerSec.toFixed(0) : "-"} | ${s.peakOllamaRssMb || "-"} |`);
 }
+
+// Secondary models ran an evenly spread 100-request subset (--limit 100). For a full 201-request result, restate it on
+// that same subset so models are comparable.
+const full = all.filter((x) => x.summary.n === 201);
+if (full.length) {
+  const set = new Set(Array.from({ length: 100 }, (_, i) => full[0].rows[Math.floor((i * 201) / 100)].id));
+  console.log("\nSame 100-request subset, from the full runs:\n\n| model | mode | overall | easy | medium | hard | a11y |\n|---|---|---|---|---|---|---|");
+  for (const { summary: s, rows } of full) {
+    const r = rows.filter((x) => set.has(x.id));
+    const c = (f) => { const v = r.filter(f); return p(v.filter((x) => x.pass).length, v.length) + ` (${v.length})`; };
+    console.log(`| ${s.model} | ${s.mode} | ${c(() => true)} | ${c((x) => x.tier === "easy")} | ${c((x) => x.tier === "medium")} | ${c((x) => x.tier === "hard")} | ${c((x) => x.cat === "a11y")} |`);
+  }
+}
