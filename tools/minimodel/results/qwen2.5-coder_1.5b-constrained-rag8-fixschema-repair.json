@@ -1,0 +1,5352 @@
+{
+ "summary": {
+  "tag": "qwen2.5-coder_1.5b-constrained-rag8-fixschema-repair",
+  "model": "qwen2.5-coder:1.5b",
+  "mode": "constrained",
+  "shots": 0,
+  "retrieve": 8,
+  "maxSim": null,
+  "subset": false,
+  "repair": true,
+  "fixSchema": true,
+  "variant": "rag8-fixschema-repair",
+  "n": 100,
+  "skipped": false,
+  "pass": 60,
+  "tiers": {
+   "easy": {
+    "n": 44,
+    "pass": 35
+   },
+   "medium": {
+    "n": 38,
+    "pass": 19
+   },
+   "hard": {
+    "n": 18,
+    "pass": 6
+   }
+  },
+  "a11y": {
+   "n": 22,
+   "pass": 15
+  },
+  "parseOk": 100,
+  "schemaValid": 100,
+  "engineAccepted": 92,
+  "medianMs": 7291.884708,
+  "p90Ms": 16719.049584,
+  "medianGenTok": 37,
+  "medianTokPerSec": 23.2756904480125,
+  "promptTok": 1809,
+  "loadMs": 6263.718333,
+  "peakOllamaRssMb": 188
+ },
+ "rows": [
+  {
+   "id": "e001",
+   "tier": "easy",
+   "cat": null,
+   "request": "a 4 by 3 meter box 2.4 m tall",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      4,
+      3,
+      0
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 2.4,
+     "as": "bt"
+    }
+   ],
+   "ms": 3896.147708,
+   "load": 95.852292,
+   "promptTok": 1546,
+   "genTok": 49,
+   "tokPerSec": 41.197072101553466,
+   "rssMb": 105.594,
+   "shotIds": [
+    "m100",
+    "m116",
+    "e012",
+    "h136",
+    "e020",
+    "e002",
+    "a158",
+    "e004"
+   ]
+  },
+  {
+   "id": "e003",
+   "tier": "easy",
+   "cat": null,
+   "request": "a cube 3 m on each side",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size 3,3,4, want 3,3,3 (x/y either way)"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      3,
+      3,
+      0
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 3,
+     "toward": [
+      0,
+      0,
+      1
+     ]
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 1,
+     "as": "bt"
+    }
+   ],
+   "ms": 3886.262,
+   "load": 208.738,
+   "promptTok": 1810,
+   "genTok": 47,
+   "tokPerSec": 40.86423065858468,
+   "rssMb": 143.609,
+   "repaired": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      3,
+      3,
+      3
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 1,
+     "as": "bt"
+    }
+   ],
+   "shotIds": [
+    "e012",
+    "e010",
+    "e008",
+    "e006",
+    "e004",
+    "e002",
+    "h142",
+    "h132"
+   ]
+  },
+  {
+   "id": "e005",
+   "tier": "easy",
+   "cat": null,
+   "request": "a 50 cm cube",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size 0.5,0.5,0.2, want 0.5,0.5,0.5 (x/y either way)"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      0.5,
+      0.5,
+      0
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 0.2
+    }
+   ],
+   "ms": 3040.636458,
+   "load": 62.363542,
+   "promptTok": 1555,
+   "genTok": 49,
+   "tokPerSec": 42.464505614004366,
+   "rssMb": 163.797,
+   "shotIds": [
+    "e012",
+    "e010",
+    "e006",
+    "e004",
+    "e002",
+    "e018",
+    "a164",
+    "e008"
+   ]
+  },
+  {
+   "id": "e007",
+   "tier": "easy",
+   "cat": null,
+   "request": "a tall thin pillar 0.5 m square and 4 m tall",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      0.5,
+      0.5,
+      0
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 4,
+     "toward": [
+      0,
+      0,
+      1
+     ]
+    }
+   ],
+   "ms": 3907.967041,
+   "load": 63.032959,
+   "promptTok": 1728,
+   "genTok": 56,
+   "tokPerSec": 42.171896688862915,
+   "rssMb": 118.203,
+   "shotIds": [
+    "m096",
+    "h152",
+    "m098",
+    "a166",
+    "h138",
+    "m118",
+    "e020",
+    "m100"
+   ]
+  },
+  {
+   "id": "e009",
+   "tier": "easy",
+   "cat": null,
+   "request": "a box 1.2 m by 0.6 m, 0.75 m high",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      1.2,
+      0.6,
+      0
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 0.75,
+     "as": "bt"
+    }
+   ],
+   "ms": 3805.078542,
+   "load": 64.921458,
+   "promptTok": 1674,
+   "genTok": 54,
+   "tokPerSec": 42.28027166938011,
+   "rssMb": 93.6875,
+   "shotIds": [
+    "h124",
+    "a164",
+    "h136",
+    "e022",
+    "a158",
+    "e004",
+    "m116",
+    "e002"
+   ]
+  },
+  {
+   "id": "e011",
+   "tier": "easy",
+   "cat": null,
+   "request": "a 10 foot by 12 foot slab 4 inches thick",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size 12,10,0.1, want 3.048,3.6576000000000004,0.1016 (x/y either way)"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      12,
+      10,
+      0
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 0.1,
+     "as": "bt"
+    }
+   ],
+   "ms": 4982.939584,
+   "load": 76.060416,
+   "promptTok": 2179,
+   "genTok": 51,
+   "tokPerSec": 37.602429654301766,
+   "rssMb": 92.2656,
+   "shotIds": [
+    "e018",
+    "a164",
+    "h142",
+    "h146",
+    "h128",
+    "h134",
+    "h152",
+    "e008"
+   ]
+  },
+  {
+   "id": "e013",
+   "tier": "easy",
+   "cat": null,
+   "request": "a flat 8 by 8 square on the ground",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      8,
+      8,
+      0
+     ]
+    }
+   ],
+   "ms": 3676.051958,
+   "load": 66.948042,
+   "promptTok": 2006,
+   "genTok": 25,
+   "tokPerSec": 38.89511680956588,
+   "rssMb": 94.25,
+   "shotIds": [
+    "a166",
+    "h142",
+    "h138",
+    "m118",
+    "m100",
+    "h128",
+    "h152",
+    "a160"
+   ]
+  },
+  {
+   "id": "e015",
+   "tier": "easy",
+   "cat": null,
+   "request": "a circle of radius 2 m",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[z] 3.000, want 0"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "circle",
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "radius": 2,
+     "as": "c"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@c",
+     "distance": 3,
+     "toward": [
+      0,
+      0,
+      1
+     ]
+    }
+   ],
+   "ms": 3686.6715,
+   "load": 72.3285,
+   "promptTok": 1701,
+   "genTok": 48,
+   "tokPerSec": 41.12879844996664,
+   "rssMb": 171.875,
+   "shotIds": [
+    "e012",
+    "e010",
+    "e008",
+    "e006",
+    "e004",
+    "e002",
+    "m098",
+    "h146"
+   ]
+  },
+  {
+   "id": "e017",
+   "tier": "easy",
+   "cat": null,
+   "request": "a cylinder with radius 1 m and height 3 m",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "circle",
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "radius": 1,
+     "as": "c"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@c",
+     "distance": 3,
+     "toward": [
+      0,
+      0,
+      1
+     ]
+    }
+   ],
+   "ms": 2745.36625,
+   "load": 65.63375,
+   "promptTok": 1706,
+   "genTok": 48,
+   "tokPerSec": 39.513928008878125,
+   "rssMb": 151.312,
+   "shotIds": [
+    "e012",
+    "e010",
+    "e008",
+    "e006",
+    "e004",
+    "e002",
+    "h146",
+    "m098"
+   ]
+  },
+  {
+   "id": "e019",
+   "tier": "easy",
+   "cat": null,
+   "request": "a barrel: a cylinder 0.6 m wide and 0.9 m tall",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[x] 1.000, want 0.6",
+    "bbox size[y] 1.000, want 0.6",
+    "bbox size[z] 1.000, want 0.9"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "circle",
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "radius": 0.5,
+     "as": "c"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@c",
+     "distance": 1,
+     "toward": [
+      0,
+      0,
+      1
+     ]
+    }
+   ],
+   "ms": 3186.977834,
+   "load": 77.022166,
+   "promptTok": 1491,
+   "genTok": 50,
+   "tokPerSec": 40.20496908153045,
+   "rssMb": 103.016,
+   "shotIds": [
+    "e012",
+    "a162",
+    "m094",
+    "e002",
+    "e024",
+    "e020",
+    "m096",
+    "m098"
+   ]
+  },
+  {
+   "id": "e021",
+   "tier": "easy",
+   "cat": null,
+   "request": "a round column 4 m tall and 0.4 m wide",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[x] 4.000, want 0.4",
+    "bbox size[y] 4.000, want 0.4",
+    "bbox size[z] 0.040, want 4"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "circle",
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "radius": 2,
+     "as": "c"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@c",
+     "distance": 0.04
+    }
+   ],
+   "ms": 3244.445541,
+   "load": 62.554459,
+   "promptTok": 1610,
+   "genTok": 42,
+   "tokPerSec": 42.28992394442132,
+   "rssMb": 165.047,
+   "shotIds": [
+    "m094",
+    "e002",
+    "e024",
+    "m096",
+    "h146",
+    "e018",
+    "m100",
+    "e020"
+   ]
+  },
+  {
+   "id": "e023",
+   "tier": "easy",
+   "cat": null,
+   "request": "a 3 m wall along the y axis, 0.3 m thick, 2.4 m tall",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       3,
+       0
+      ]
+     ],
+     "thickness": 0.3,
+     "height": 2.4
+    }
+   ],
+   "ms": 3905.155542,
+   "load": 74.844458,
+   "promptTok": 1866,
+   "genTok": 37,
+   "tokPerSec": 36.16753506433483,
+   "rssMb": 85.7188,
+   "shotIds": [
+    "h142",
+    "e020",
+    "h152",
+    "e008",
+    "a160",
+    "m098",
+    "a166",
+    "h150"
+   ]
+  },
+  {
+   "id": "e025",
+   "tier": "easy",
+   "cat": null,
+   "request": "stairs rising 3 m, 1.2 m wide",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "stairs",
+     "at": [
+      0,
+      0,
+      0
+     ],
+     "rise": 3,
+     "width": 1.2
+    }
+   ],
+   "ms": 3329.571666,
+   "load": 235.428334,
+   "promptTok": 1492,
+   "genTok": 27,
+   "tokPerSec": 42.223984095282354,
+   "rssMb": 85.0938,
+   "shotIds": [
+    "a201",
+    "e012",
+    "m096",
+    "e002",
+    "e026",
+    "a162",
+    "e024",
+    "m094"
+   ]
+  },
+  {
+   "id": "e027",
+   "tier": "easy",
+   "cat": null,
+   "request": "plant a tree at 5, 5",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "insert",
+     "asset": "tree",
+     "at": [
+      5,
+      5,
+      0
+     ],
+     "as": "tree"
+    },
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@tree"
+     ],
+     "center": [
+      5,
+      5,
+      0
+     ],
+     "angle": 45
+    }
+   ],
+   "ms": 3136.238875,
+   "load": 69.761125,
+   "promptTok": 1471,
+   "genTok": 44,
+   "tokPerSec": 39.90572254908813,
+   "rssMb": 87.3594,
+   "repaired": [
+    {
+     "cmd": "insert",
+     "asset": "tree",
+     "at": [
+      5,
+      5,
+      0
+     ]
+    },
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@tree"
+     ],
+     "center": [
+      5,
+      5,
+      0
+     ],
+     "angle": 45
+    }
+   ],
+   "shotIds": [
+    "e016",
+    "e014",
+    "e012",
+    "e010",
+    "e008",
+    "e006",
+    "e004",
+    "e002"
+   ]
+  },
+  {
+   "id": "e029",
+   "tier": "easy",
+   "cat": null,
+   "request": "a bench at x 2, y 0",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "insert",
+     "asset": "bench",
+     "at": [
+      2,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 2227.628417,
+   "load": 82.371583,
+   "promptTok": 1507,
+   "genTok": 21,
+   "tokPerSec": 41.71590426299295,
+   "rssMb": 168.766,
+   "shotIds": [
+    "m074",
+    "m072",
+    "m070",
+    "a162",
+    "m098",
+    "e004",
+    "a166",
+    "a160"
+   ]
+  },
+  {
+   "id": "e031",
+   "tier": "easy",
+   "cat": null,
+   "request": "add a door at x 3 on the ground",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "insert",
+     "asset": "door",
+     "at": [
+      3,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 2661.349083,
+   "load": 65.650917,
+   "promptTok": 1735,
+   "genTok": 21,
+   "tokPerSec": 41.46206429513228,
+   "rssMb": 141.547,
+   "shotIds": [
+    "h142",
+    "m076",
+    "m072",
+    "m070",
+    "m078",
+    "m074",
+    "e004",
+    "a160"
+   ]
+  },
+  {
+   "id": "e033",
+   "tier": "easy",
+   "cat": null,
+   "request": "a fire hydrant at 4, 4",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "insert",
+     "asset": "hydrant",
+     "at": [
+      4,
+      4,
+      0
+     ],
+     "rotate": 0,
+     "as": "h"
+    }
+   ],
+   "ms": 2570.617,
+   "load": 67.383,
+   "promptTok": 1472,
+   "genTok": 30,
+   "tokPerSec": 40.293488854524156,
+   "rssMb": 89.9062,
+   "shotIds": [
+    "e016",
+    "e014",
+    "e012",
+    "e010",
+    "e008",
+    "e006",
+    "e004",
+    "e002"
+   ]
+  },
+  {
+   "id": "e035",
+   "tier": "easy",
+   "cat": null,
+   "request": "a palm tree at 8, 2",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "insert",
+     "asset": "palm",
+     "at": [
+      8,
+      2,
+      0
+     ],
+     "as": "palm"
+    },
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@palm"
+     ],
+     "center": [
+      8,
+      2,
+      0
+     ],
+     "angle": 90
+    }
+   ],
+   "ms": 7426.939249999999,
+   "load": 4059.06075,
+   "promptTok": 1471,
+   "genTok": 46,
+   "tokPerSec": 41.40151173479949,
+   "rssMb": 75.4375,
+   "repaired": [
+    {
+     "cmd": "insert",
+     "asset": "palm",
+     "at": [
+      8,
+      2,
+      0
+     ]
+    },
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@palm"
+     ],
+     "center": [
+      8,
+      2,
+      0
+     ],
+     "angle": 90
+    }
+   ],
+   "shotIds": [
+    "e016",
+    "e014",
+    "e012",
+    "e010",
+    "e008",
+    "e006",
+    "e004",
+    "e002"
+   ]
+  },
+  {
+   "id": "e037",
+   "tier": "easy",
+   "cat": null,
+   "request": "move the house 3 m north and 2 m up",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox min[x] 3.000, want 0",
+    "bbox min[y] 2.000, want 3",
+    "bbox min[z] 0.000, want 2",
+    "bbox max[x] 7.000, want 4",
+    "bbox max[y] 5.000, want 6",
+    "bbox max[z] 2.400, want 4.4"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "move",
+     "ids": [
+      "@house"
+     ],
+     "by": [
+      3,
+      2,
+      0
+     ]
+    }
+   ],
+   "ms": 3146.0350829999998,
+   "load": 143.964917,
+   "promptTok": 1841,
+   "genTok": 22,
+   "tokPerSec": 39.19024335377562,
+   "rssMb": 83.0781,
+   "shotIds": [
+    "a194",
+    "e046",
+    "e062",
+    "m104",
+    "a186",
+    "a172",
+    "e036",
+    "a184"
+   ]
+  },
+  {
+   "id": "e039",
+   "tier": "easy",
+   "cat": null,
+   "request": "rotate the selected group 45 degrees",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@house"
+     ],
+     "center": [
+      2,
+      1.5,
+      0
+     ],
+     "angle": 45
+    }
+   ],
+   "ms": 3393.042834,
+   "load": 86.957166,
+   "promptTok": 1919,
+   "genTok": 29,
+   "tokPerSec": 37.62348432982527,
+   "rssMb": 82.5625,
+   "shotIds": [
+    "e038",
+    "e036",
+    "a174",
+    "m108",
+    "m106",
+    "m104",
+    "h140",
+    "e040"
+   ]
+  },
+  {
+   "id": "e041",
+   "tier": "easy",
+   "cat": null,
+   "request": "turn the selected group 180 degrees around its own corner at the origin",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@house"
+     ],
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "angle": 180
+    }
+   ],
+   "ms": 3401.315375,
+   "load": 93.684625,
+   "promptTok": 1933,
+   "genTok": 28,
+   "tokPerSec": 38.15106966824604,
+   "rssMb": 85.125,
+   "shotIds": [
+    "e036",
+    "a164",
+    "a158",
+    "e042",
+    "h140",
+    "e044",
+    "e040",
+    "m104"
+   ]
+  },
+  {
+   "id": "e043",
+   "tier": "easy",
+   "cat": null,
+   "request": "make the house twice as tall",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "scale",
+     "ids": [
+      "@house"
+     ],
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "factor": [
+      1,
+      1,
+      2
+     ]
+    }
+   ],
+   "ms": 4225.759833,
+   "load": 421.240167,
+   "promptTok": 1970,
+   "genTok": 30,
+   "tokPerSec": 39.19934680821768,
+   "rssMb": 81.0156,
+   "shotIds": [
+    "e048",
+    "m080",
+    "e046",
+    "e036",
+    "a188",
+    "a194",
+    "h156",
+    "e050"
+   ]
+  },
+  {
+   "id": "e045",
+   "tier": "easy",
+   "cat": null,
+   "request": "copy the house 6 m to the east",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "copy",
+     "group": "@house",
+     "by": [
+      6,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 3394.006125,
+   "load": 516.993875,
+   "promptTok": 1993,
+   "genTok": 22,
+   "tokPerSec": 41.65839873689312,
+   "rssMb": 158.703,
+   "shotIds": [
+    "e050",
+    "a194",
+    "e046",
+    "m104",
+    "a172",
+    "h156",
+    "e036",
+    "h140"
+   ]
+  },
+  {
+   "id": "e047",
+   "tier": "easy",
+   "cat": null,
+   "request": "rename the house to shed",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rename",
+     "id": "@house",
+     "name": "shed"
+    }
+   ],
+   "ms": 2809.282834,
+   "load": 108.717166,
+   "promptTok": 1816,
+   "genTok": 18,
+   "tokPerSec": 39.01443384496934,
+   "rssMb": 101.969,
+   "shotIds": [
+    "e054",
+    "e048",
+    "m080",
+    "e050",
+    "a194",
+    "e046",
+    "e036",
+    "m116"
+   ]
+  },
+  {
+   "id": "e049",
+   "tier": "easy",
+   "cat": null,
+   "request": "paint the house red",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "paint",
+     "ids": [
+      "@house"
+     ],
+     "color": [
+      1,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 3404.18725,
+   "load": 128.81275,
+   "promptTok": 1927,
+   "genTok": 22,
+   "tokPerSec": 36.91156202316291,
+   "rssMb": 88.4844,
+   "shotIds": [
+    "a194",
+    "e046",
+    "e036",
+    "m108",
+    "h144",
+    "h126",
+    "e052",
+    "e054"
+   ]
+  },
+  {
+   "id": "e051",
+   "tier": "easy",
+   "cat": null,
+   "request": "color the house green",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "paint",
+     "ids": [
+      "@house"
+     ],
+     "color": [
+      0,
+      0.8,
+      0.1
+     ]
+    }
+   ],
+   "ms": 26858.608083,
+   "load": 2851.391917,
+   "promptTok": 1902,
+   "genTok": 26,
+   "tokPerSec": 12.160880277704289,
+   "rssMb": 27.8281,
+   "shotIds": [
+    "e054",
+    "e048",
+    "m080",
+    "e050",
+    "a194",
+    "e046",
+    "e036",
+    "h156"
+   ]
+  },
+  {
+   "id": "e053",
+   "tier": "easy",
+   "cat": null,
+   "request": "the house should be white",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "paint",
+     "ids": [
+      "@house"
+     ],
+     "color": [
+      1,
+      1,
+      1
+     ]
+    }
+   ],
+   "ms": 3326.038667,
+   "load": 188.961333,
+   "promptTok": 1876,
+   "genTok": 22,
+   "tokPerSec": 18.433635984952353,
+   "rssMb": 81.8281,
+   "shotIds": [
+    "e054",
+    "e048",
+    "m080",
+    "e050",
+    "a194",
+    "e046",
+    "e036",
+    "h126"
+   ]
+  },
+  {
+   "id": "e055",
+   "tier": "easy",
+   "cat": null,
+   "request": "paint the top face red",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "paint",
+     "ids": [
+      "@top"
+     ],
+     "color": [
+      1,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 9149.723125,
+   "load": 116.276875,
+   "promptTok": 1941,
+   "genTok": 22,
+   "tokPerSec": 18.86947810454377,
+   "rssMb": 80.5156,
+   "shotIds": [
+    "e036",
+    "a186",
+    "m108",
+    "h126",
+    "e052",
+    "e054",
+    "h144",
+    "e056"
+   ]
+  },
+  {
+   "id": "e057",
+   "tier": "easy",
+   "cat": null,
+   "request": "what is the volume of the house?",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "volume",
+     "id": "@house"
+    }
+   ],
+   "ms": 16719.049584,
+   "load": 1987.950416,
+   "promptTok": 1832,
+   "genTok": 14,
+   "tokPerSec": 8.197514209798028,
+   "rssMb": 85.9062,
+   "shotIds": [
+    "e038",
+    "e054",
+    "e048",
+    "m080",
+    "e050",
+    "a194",
+    "e046",
+    "e036"
+   ]
+  },
+  {
+   "id": "e059",
+   "tier": "easy",
+   "cat": null,
+   "request": "push the top of the tower up another 2 m",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "pushpull",
+     "face": "@top",
+     "distance": 2,
+     "toward": [
+      0,
+      0,
+      1
+     ]
+    }
+   ],
+   "ms": 9505.562583,
+   "load": 199.437417,
+   "promptTok": 1809,
+   "genTok": 28,
+   "tokPerSec": 19.822534091095005,
+   "rssMb": 90.1875,
+   "shotIds": [
+    "e062",
+    "m118",
+    "a184",
+    "m110",
+    "m092",
+    "m114",
+    "e060",
+    "h148"
+   ]
+  },
+  {
+   "id": "e061",
+   "tier": "easy",
+   "cat": null,
+   "request": "move the lot 4 m south",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "move",
+     "ids": [
+      "@lot"
+     ],
+     "by": [
+      0,
+      -4,
+      0
+     ]
+    }
+   ],
+   "ms": 5869.907667,
+   "load": 120.092333,
+   "promptTok": 1793,
+   "genTok": 22,
+   "tokPerSec": 22.072896624016682,
+   "rssMb": 163.953,
+   "shotIds": [
+    "a182",
+    "m074",
+    "m078",
+    "e036",
+    "a184",
+    "a196",
+    "m120",
+    "e060"
+   ]
+  },
+  {
+   "id": "e063",
+   "tier": "easy",
+   "cat": null,
+   "request": "delete group a",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "delete",
+     "ids": [
+      "@a"
+     ]
+    }
+   ],
+   "ms": 4714.299791,
+   "load": 116.700209,
+   "promptTok": 1726,
+   "genTok": 14,
+   "tokPerSec": 29.918203077163263,
+   "rssMb": 167.859,
+   "shotIds": [
+    "e002",
+    "a198",
+    "e062",
+    "e068",
+    "a174",
+    "m108",
+    "m106",
+    "e046"
+   ]
+  },
+  {
+   "id": "e065",
+   "tier": "easy",
+   "cat": null,
+   "request": "make the post twice as high",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "scale",
+     "ids": [
+      "@post"
+     ],
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "factor": [
+      1,
+      1,
+      2
+     ]
+    }
+   ],
+   "ms": 6651.859167,
+   "load": 118.140833,
+   "promptTok": 1848,
+   "genTok": 30,
+   "tokPerSec": 24.947264186130806,
+   "rssMb": 133.719,
+   "shotIds": [
+    "h156",
+    "a186",
+    "a178",
+    "e050",
+    "e002",
+    "a188",
+    "e066",
+    "e064"
+   ]
+  },
+  {
+   "id": "e067",
+   "tier": "easy",
+   "cat": null,
+   "request": "rotate group a 90 degrees around the point 0.5, 0.5",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@a"
+     ],
+     "center": [
+      0.5,
+      0.5,
+      0
+     ],
+     "angle": 90
+    }
+   ],
+   "ms": 6252.94425,
+   "load": 108.05575,
+   "promptTok": 1833,
+   "genTok": 31,
+   "tokPerSec": 25.17666647569488,
+   "rssMb": 172.219,
+   "shotIds": [
+    "a198",
+    "h140",
+    "e040",
+    "e062",
+    "e068",
+    "a174",
+    "m108",
+    "m106"
+   ]
+  },
+  {
+   "id": "m069",
+   "tier": "medium",
+   "cat": null,
+   "request": "a 6x4 room with 2.4 m walls",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 1: no face 1"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       6,
+       0,
+       0
+      ],
+      [
+       6,
+       4,
+       0
+      ],
+      [
+       0,
+       4,
+       0
+      ]
+     ],
+     "closed": true,
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 0.2,
+     "as": "bt"
+    }
+   ],
+   "ms": 8479.698792,
+   "load": 118.301208,
+   "promptTok": 1743,
+   "genTok": 65,
+   "tokPerSec": 21.46945038512211,
+   "rssMb": 101.938,
+   "shotIds": [
+    "a160",
+    "a164",
+    "e004",
+    "h142",
+    "m076",
+    "m074",
+    "m072",
+    "m070"
+   ]
+  },
+  {
+   "id": "m071",
+   "tier": "medium",
+   "cat": null,
+   "request": "a 8x3 room with 3 m walls",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 1: no face 1"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       8,
+       0,
+       0
+      ],
+      [
+       8,
+       3,
+       0
+      ],
+      [
+       0,
+       3,
+       0
+      ]
+     ],
+     "closed": true,
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 2.7,
+     "as": "bt"
+    }
+   ],
+   "ms": 4176.039209,
+   "load": 100.960791,
+   "promptTok": 1741,
+   "genTok": 65,
+   "tokPerSec": 24.119069153409537,
+   "rssMb": 167.984,
+   "shotIds": [
+    "a160",
+    "a164",
+    "e004",
+    "h142",
+    "m076",
+    "m074",
+    "m072",
+    "m070"
+   ]
+  },
+  {
+   "id": "m073",
+   "tier": "medium",
+   "cat": null,
+   "request": "a 10x6 room with 3 m walls",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 1: no face 1"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       10,
+       0,
+       0
+      ],
+      [
+       10,
+       6,
+       0
+      ],
+      [
+       0,
+       6,
+       0
+      ]
+     ],
+     "closed": true,
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 3,
+     "as": "bt"
+    }
+   ],
+   "ms": 4208.330292,
+   "load": 91.669708,
+   "promptTok": 1742,
+   "genTok": 65,
+   "tokPerSec": 24.07659834489988,
+   "rssMb": 169.844,
+   "shotIds": [
+    "a160",
+    "a164",
+    "e004",
+    "h142",
+    "m076",
+    "m074",
+    "m072",
+    "m070"
+   ]
+  },
+  {
+   "id": "m075",
+   "tier": "medium",
+   "cat": null,
+   "request": "make a 5 by 5 m room, 2.7 m high, with a door in the north wall",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 1: no face 1"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       5,
+       0,
+       0
+      ],
+      [
+       5,
+       5,
+       0
+      ],
+      [
+       0,
+       5,
+       0
+      ]
+     ],
+     "closed": true,
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 2.7,
+     "as": "bt"
+    }
+   ],
+   "ms": 8456.451292,
+   "load": 92.548708,
+   "promptTok": 1774,
+   "genTok": 65,
+   "tokPerSec": 23.36027632852181,
+   "rssMb": 104.781,
+   "shotIds": [
+    "h150",
+    "h124",
+    "a164",
+    "a170",
+    "e022",
+    "e002",
+    "m076",
+    "m074"
+   ]
+  },
+  {
+   "id": "m077",
+   "tier": "medium",
+   "cat": null,
+   "request": "a 6 m by 4 m room, 2.4 m walls, with a window on the east wall",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size 6.2,4.2,2.7, want 6.2,4.2,2.4 (x/y either way)"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       6,
+       0,
+       0
+      ],
+      [
+       6,
+       4,
+       0
+      ],
+      [
+       0,
+       4,
+       0
+      ]
+     ],
+     "closed": true,
+     "as": "bf"
+    },
+    {
+     "cmd": "insert",
+     "asset": "window",
+     "at": [
+      3.5,
+      0,
+      1
+     ]
+    }
+   ],
+   "ms": 8467.563334,
+   "load": 106.436666,
+   "promptTok": 1782,
+   "genTok": 63,
+   "tokPerSec": 23.2756904480125,
+   "rssMb": 166.203,
+   "shotIds": [
+    "a176",
+    "a164",
+    "m076",
+    "h142",
+    "m074",
+    "e032",
+    "m072",
+    "m070"
+   ]
+  },
+  {
+   "id": "m079",
+   "tier": "medium",
+   "cat": null,
+   "request": "put two windows in the north wall of the room",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "instances /window/: 0, want >= 2"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      1,
+      0,
+      1
+     ],
+     "to": [
+      2,
+      0,
+      2
+     ]
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      2.5,
+      0,
+      1
+     ],
+     "to": [
+      3.5,
+      0,
+      2
+     ]
+    }
+   ],
+   "ms": 8150.662834,
+   "load": 104.337166,
+   "promptTok": 1842,
+   "genTok": 50,
+   "tokPerSec": 24.47525314252583,
+   "rssMb": 89.625,
+   "shotIds": [
+    "e028",
+    "m074",
+    "h132",
+    "h154",
+    "a172",
+    "a192",
+    "a176",
+    "m078"
+   ]
+  },
+  {
+   "id": "m081",
+   "tier": "medium",
+   "cat": null,
+   "request": "give the house a 45 degree gable roof",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "roof",
+     "face": "@top",
+     "kind": "gable",
+     "pitch": 45
+    }
+   ],
+   "ms": 6196.73475,
+   "load": 96.26525,
+   "promptTok": 1925,
+   "genTok": 23,
+   "tokPerSec": 26.59461960666245,
+   "rssMb": 165.969,
+   "shotIds": [
+    "e050",
+    "a194",
+    "e046",
+    "e036",
+    "h126",
+    "h124",
+    "m082",
+    "m080"
+   ]
+  },
+  {
+   "id": "m083",
+   "tier": "medium",
+   "cat": null,
+   "request": "a shed roof on the house, pitched at 20 degrees",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "roof",
+     "face": "@top",
+     "kind": "shed",
+     "pitch": 20
+    }
+   ],
+   "ms": 6297.890125,
+   "load": 113.109875,
+   "promptTok": 1986,
+   "genTok": 23,
+   "tokPerSec": 26.64258396394988,
+   "rssMb": 108.609,
+   "shotIds": [
+    "e046",
+    "e036",
+    "h126",
+    "h140",
+    "m082",
+    "m104",
+    "e040",
+    "m080"
+   ]
+  },
+  {
+   "id": "m085",
+   "tier": "medium",
+   "cat": null,
+   "request": "a row of 4 columns, 2 m apart",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[x] 0.300, want 6.3",
+    "bbox size[y] 6.300, want 0.3"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      2,
+      0
+     ]
+    },
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      4,
+      0
+     ]
+    },
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      6,
+      0
+     ]
+    }
+   ],
+   "ms": 8618.677833,
+   "load": 117.322167,
+   "promptTok": 1916,
+   "genTok": 56,
+   "tokPerSec": 24.465101294479698,
+   "rssMb": 87.75,
+   "shotIds": [
+    "h146",
+    "h128",
+    "m090",
+    "h138",
+    "m088",
+    "h130",
+    "m084",
+    "m086"
+   ]
+  },
+  {
+   "id": "m087",
+   "tier": "medium",
+   "cat": null,
+   "request": "a colonnade of 5 columns 4 m apart",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[x] 0.300, want 16.3",
+    "bbox size[y] 16.300, want 0.3"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      4,
+      0
+     ]
+    },
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      8,
+      0
+     ]
+    },
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      12,
+      0
+     ]
+    },
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      16,
+      0
+     ]
+    }
+   ],
+   "ms": 8064.163417,
+   "load": 110.836583,
+   "promptTok": 1917,
+   "genTok": 71,
+   "tokPerSec": 23.34585728862299,
+   "rssMb": 86.4531,
+   "shotIds": [
+    "h146",
+    "h128",
+    "m088",
+    "m090",
+    "h138",
+    "m086",
+    "h130",
+    "m084"
+   ]
+  },
+  {
+   "id": "m089",
+   "tier": "medium",
+   "cat": null,
+   "request": "three 1 m boxes in a row, 3 m between them",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "box",
+     "as": "b"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      1,
+      1,
+      0
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 1,
+     "as": "bt"
+    },
+    {
+     "cmd": "end_group"
+    },
+    {
+     "cmd": "array",
+     "ids": [
+      "@b"
+     ],
+     "by": [
+      3,
+      0,
+      0
+     ],
+     "count": 2
+    }
+   ],
+   "ms": 9365.956584,
+   "load": 123.043416,
+   "promptTok": 1747,
+   "genTok": 86,
+   "tokPerSec": 24.729255086262,
+   "rssMb": 187.766,
+   "shotIds": [
+    "e010",
+    "e008",
+    "e006",
+    "e004",
+    "e002",
+    "h142",
+    "m088",
+    "m086"
+   ]
+  },
+  {
+   "id": "m091",
+   "tier": "medium",
+   "cat": null,
+   "request": "array the house 4 times, 6 m apart",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[x] 24.300, want 22",
+    "bbox size[y] 3.150, want 3",
+    "bbox size[z] 2.700, want 2.4",
+    "groups: 6, want 4"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      0,
+      0
+     ],
+     "as": "c"
+    },
+    {
+     "cmd": "array",
+     "ids": [
+      "@c"
+     ],
+     "by": [
+      6,
+      0,
+      0
+     ],
+     "count": 4
+    }
+   ],
+   "ms": 6954.608375,
+   "load": 140.391625,
+   "promptTok": 1783,
+   "genTok": 42,
+   "tokPerSec": 24.44580305163804,
+   "rssMb": 140.859,
+   "shotIds": [
+    "e054",
+    "e048",
+    "m080",
+    "e050",
+    "a194",
+    "e046",
+    "e036",
+    "m084"
+   ]
+  },
+  {
+   "id": "m093",
+   "tier": "medium",
+   "cat": null,
+   "request": "a row of 6 columns along y, 2.5 m apart",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[x] 3.300, want 0.3",
+    "bbox size[y] 10.300, want 12.8"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      2.5,
+      0
+     ]
+    },
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      5,
+      0
+     ]
+    },
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      7.5,
+      0
+     ]
+    },
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      10,
+      0
+     ]
+    },
+    {
+     "cmd": "column",
+     "at": [
+      3,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 9993.995584,
+   "load": 126.004416,
+   "promptTok": 1675,
+   "genTok": 87,
+   "tokPerSec": 21.23927483786843,
+   "rssMb": 87.1562,
+   "shotIds": [
+    "h150",
+    "a160",
+    "m092",
+    "a166",
+    "m088",
+    "h130",
+    "m084",
+    "m086"
+   ]
+  },
+  {
+   "id": "m095",
+   "tier": "medium",
+   "cat": null,
+   "request": "a staircase going up 2.1 m toward the east that is 1 m wide",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[y] 3.080, want 1"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "stairs",
+     "at": [
+      0,
+      0,
+      0
+     ],
+     "rise": 2.1,
+     "direction": 90,
+     "width": 1
+    }
+   ],
+   "ms": 6883.314333,
+   "load": 225.685667,
+   "promptTok": 1588,
+   "genTok": 32,
+   "tokPerSec": 18.917968086503997,
+   "rssMb": 80.3125,
+   "shotIds": [
+    "e012",
+    "m096",
+    "e026",
+    "m094",
+    "m118",
+    "e002",
+    "a162",
+    "e024"
+   ]
+  },
+  {
+   "id": "m097",
+   "tier": "medium",
+   "cat": null,
+   "request": "a triangular prism: base triangle with points (0,0), (4,0), (2,3), extruded 2 m up",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "polygon",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       4,
+       0,
+       0
+      ],
+      [
+       2,
+       3,
+       0
+      ]
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 2,
+     "as": "bt"
+    }
+   ],
+   "ms": 30842.993875,
+   "load": 223.006125,
+   "promptTok": 1491,
+   "genTok": 53,
+   "tokPerSec": 11.89448092940693,
+   "rssMb": 31.7812,
+   "shotIds": [
+    "e016",
+    "e014",
+    "e012",
+    "e010",
+    "e008",
+    "e006",
+    "e004",
+    "e002"
+   ]
+  },
+  {
+   "id": "m099",
+   "tier": "medium",
+   "cat": null,
+   "request": "a 2 m diameter pond (a flat circle) centered at 3, 4",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox max[z] 0.200, want 0"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "circle",
+     "center": [
+      3,
+      4,
+      0
+     ],
+     "radius": 1,
+     "as": "c"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@c",
+     "distance": 0.2
+    }
+   ],
+   "ms": 12333.746166,
+   "load": 170.253834,
+   "promptTok": 2087,
+   "genTok": 41,
+   "tokPerSec": 17.26928517527131,
+   "rssMb": 93.7656,
+   "shotIds": [
+    "e002",
+    "h152",
+    "h142",
+    "h146",
+    "a160",
+    "h128",
+    "m098",
+    "e018"
+   ]
+  },
+  {
+   "id": "m101",
+   "tier": "medium",
+   "cat": null,
+   "request": "inset the lot by 1 m",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "offset",
+     "face": "@lot",
+     "distance": 1
+    }
+   ],
+   "ms": 7134.230833,
+   "load": 122.769167,
+   "promptTok": 1567,
+   "genTok": 18,
+   "tokPerSec": 23.308784370558808,
+   "rssMb": 83.7656,
+   "shotIds": [
+    "e012",
+    "e010",
+    "e008",
+    "e006",
+    "e004",
+    "e002",
+    "m120",
+    "e060"
+   ]
+  },
+  {
+   "id": "m103",
+   "tier": "medium",
+   "cat": null,
+   "request": "cut a 1 m square window hole in the middle of the facade at 1 m height",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      1,
+      1,
+      1
+     ],
+     "to": [
+      2,
+      1,
+      2
+     ]
+    }
+   ],
+   "ms": 13009.345542,
+   "load": 911.654458,
+   "promptTok": 1895,
+   "genTok": 25,
+   "tokPerSec": 20.72713191392193,
+   "rssMb": 74.6094,
+   "shotIds": [
+    "m100",
+    "m110",
+    "h152",
+    "a190",
+    "a168",
+    "e032",
+    "m102",
+    "h154"
+   ]
+  },
+  {
+   "id": "m105",
+   "tier": "medium",
+   "cat": null,
+   "request": "copy the house 6 m east and paint the copy blue",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "copy",
+     "group": "@house",
+     "by": [
+      6,
+      0,
+      0
+     ],
+     "as": "c3"
+    },
+    {
+     "cmd": "paint",
+     "ids": [
+      "@c3"
+     ],
+     "color": [
+      0.1,
+      0.2,
+      0.9
+     ]
+    }
+   ],
+   "ms": 18000.28575,
+   "load": 389.71425,
+   "promptTok": 2037,
+   "genTok": 51,
+   "tokPerSec": 18.35215737145081,
+   "rssMb": 66.7969,
+   "shotIds": [
+    "e052",
+    "h144",
+    "e054",
+    "e036",
+    "e050",
+    "a172",
+    "h156",
+    "h140"
+   ]
+  },
+  {
+   "id": "m107",
+   "tier": "medium",
+   "cat": null,
+   "request": "place b right next to a, touching it on the east side",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "move",
+     "ids": [
+      "@b"
+     ],
+     "by": [
+      -2,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 20042.179292,
+   "load": 1187.820708,
+   "promptTok": 1792,
+   "genTok": 22,
+   "tokPerSec": 10.217777810270313,
+   "rssMb": 47.2031,
+   "shotIds": [
+    "a176",
+    "m112",
+    "m108",
+    "m106",
+    "a198",
+    "e062",
+    "e068",
+    "a174"
+   ]
+  },
+  {
+   "id": "m109",
+   "tier": "medium",
+   "cat": null,
+   "request": "make the house a component called hut and place another hut 10 m east",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "make_component",
+     "ids": [
+      "@house"
+     ],
+     "name": "hut"
+    },
+    {
+     "cmd": "place",
+     "component": "hut",
+     "at": [
+      10,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 54359.281667,
+   "load": 6263.718333,
+   "promptTok": 1990,
+   "genTok": 38,
+   "tokPerSec": 8.04161614230346,
+   "rssMb": 22.7656,
+   "shotIds": [
+    "m080",
+    "a194",
+    "e046",
+    "h156",
+    "h140",
+    "m104",
+    "e050",
+    "e036"
+   ]
+  },
+  {
+   "id": "m111",
+   "tier": "medium",
+   "cat": null,
+   "request": "paint the front face of the block red",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "0/1 faces red {\"normal\":[0,-1,0]} (materials )"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "paint",
+     "ids": [
+      "@f"
+     ],
+     "color": [
+      1,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 10427.81225,
+   "load": 286.18775,
+   "promptTok": 1903,
+   "genTok": 22,
+   "tokPerSec": 25.263358425364085,
+   "rssMb": 81.2344,
+   "shotIds": [
+    "h124",
+    "e054",
+    "h144",
+    "m076",
+    "a186",
+    "m108",
+    "m112",
+    "e056"
+   ]
+  },
+  {
+   "id": "m113",
+   "tier": "medium",
+   "cat": null,
+   "request": "draw a 4 m long dimension along the front edge of the block, set 1 m out",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "dimension",
+     "from": [
+      2,
+      1.5,
+      1.2
+     ],
+     "to": [
+      6,
+      1.5,
+      1.2
+     ],
+     "offset": [
+      -1,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 12779.613458,
+   "load": 3421.386542,
+   "promptTok": 1698,
+   "genTok": 42,
+   "tokPerSec": 21.245150468140835,
+   "rssMb": 82.0156,
+   "shotIds": [
+    "e022",
+    "e002",
+    "h150",
+    "m076",
+    "e058",
+    "e010",
+    "e056",
+    "m112"
+   ]
+  },
+  {
+   "id": "m115",
+   "tier": "medium",
+   "cat": null,
+   "request": "a tree and a bench side by side near 5, 5",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "insert",
+     "asset": "tree",
+     "at": [
+      5,
+      5,
+      0
+     ]
+    },
+    {
+     "cmd": "insert",
+     "asset": "bench",
+     "at": [
+      5,
+      5,
+      2.7
+     ]
+    }
+   ],
+   "ms": 9399.214458,
+   "load": 1345.785542,
+   "promptTok": 1555,
+   "genTok": 40,
+   "tokPerSec": 19.148433260039464,
+   "rssMb": 81.5625,
+   "shotIds": [
+    "e014",
+    "e012",
+    "e010",
+    "e008",
+    "e006",
+    "e004",
+    "e002",
+    "m112"
+   ]
+  },
+  {
+   "id": "m117",
+   "tier": "medium",
+   "cat": null,
+   "request": "a box 2 by 2 by 2 at x 10, y 10",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox max[z] 0.000, want 2"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      10,
+      10,
+      0
+     ],
+     "to": [
+      12,
+      12,
+      0
+     ]
+    }
+   ],
+   "ms": 9651.594166,
+   "load": 162.405834,
+   "promptTok": 1512,
+   "genTok": 29,
+   "tokPerSec": 22.01410530720704,
+   "rssMb": 76.2656,
+   "shotIds": [
+    "m072",
+    "m070",
+    "a158",
+    "a162",
+    "m098",
+    "a166",
+    "a160",
+    "e004"
+   ]
+  },
+  {
+   "id": "m119",
+   "tier": "medium",
+   "cat": null,
+   "request": "measure the volume of the tower",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "volume",
+     "id": "@tower"
+    }
+   ],
+   "ms": 7291.884708,
+   "load": 211.115292,
+   "promptTok": 1771,
+   "genTok": 14,
+   "tokPerSec": 20.142385110378306,
+   "rssMb": 82.7812,
+   "shotIds": [
+    "e006",
+    "e004",
+    "e002",
+    "m118",
+    "m110",
+    "h148",
+    "m092",
+    "m114"
+   ]
+  },
+  {
+   "id": "m121",
+   "tier": "medium",
+   "cat": null,
+   "request": "pull the lot up into a 10 by 8 box 2 m high",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "pushpull",
+     "face": "@lot",
+     "distance": 2,
+     "toward": [
+      0,
+      0,
+      -1
+     ]
+    }
+   ],
+   "ms": 8902.285125,
+   "load": 167.714875,
+   "promptTok": 1621,
+   "genTok": 28,
+   "tokPerSec": 19.59413029219667,
+   "rssMb": 79.2031,
+   "shotIds": [
+    "e062",
+    "a158",
+    "e004",
+    "m116",
+    "a184",
+    "e002",
+    "m120",
+    "e060"
+   ]
+  },
+  {
+   "id": "m123",
+   "tier": "medium",
+   "cat": null,
+   "request": "a gable roof at 30° on a 6 by 4 m box 3 m tall",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      6,
+      4,
+      0
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 3,
+     "as": "t"
+    },
+    {
+     "cmd": "roof",
+     "face": "@t",
+     "kind": "gable",
+     "pitch": 30
+    }
+   ],
+   "ms": 10150.573375,
+   "load": 161.426625,
+   "promptTok": 1653,
+   "genTok": 65,
+   "tokPerSec": 19.289884239555818,
+   "rssMb": 83.8281,
+   "shotIds": [
+    "e012",
+    "h136",
+    "e020",
+    "e002",
+    "a158",
+    "e004",
+    "h124",
+    "m080"
+   ]
+  },
+  {
+   "id": "h125",
+   "tier": "hard",
+   "cat": null,
+   "request": "a white 6 x 5 house 2.8 m tall with a dark gray hip roof at 25 degrees",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 5: unknown name @house"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "house",
+     "as": "h"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      6,
+      5,
+      0
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 3,
+     "toward": [
+      0,
+      0,
+      1
+     ]
+    },
+    {
+     "cmd": "end_group"
+    },
+    {
+     "cmd": "roof",
+     "face": "@bf",
+     "kind": "hip",
+     "pitch": 25,
+     "as": "r"
+    },
+    {
+     "cmd": "paint",
+     "ids": [
+      "@house"
+     ],
+     "color": [
+      1,
+      1,
+      1
+     ]
+    },
+    {
+     "cmd": "paint",
+     "ids": [
+      "@r"
+     ],
+     "color": [
+      0.3,
+      0.3,
+      0.3
+     ]
+    }
+   ],
+   "ms": 13342.645667,
+   "load": 124.354333,
+   "promptTok": 1643,
+   "genTok": 134,
+   "tokPerSec": 21.55496438892349,
+   "rssMb": 100.812,
+   "shotIds": [
+    "e020",
+    "m072",
+    "m070",
+    "a166",
+    "h124",
+    "m098",
+    "e004",
+    "h126"
+   ]
+  },
+  {
+   "id": "h127",
+   "tier": "hard",
+   "cat": null,
+   "request": "four 3 m columns at the corners of a 6 by 6 square",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[x] 5.300, want 6.3",
+    "bbox size[y] 5.300, want 6.3"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      0,
+      0
+     ],
+     "height": 3
+    },
+    {
+     "cmd": "column",
+     "at": [
+      5,
+      0,
+      0
+     ],
+     "height": 3
+    },
+    {
+     "cmd": "column",
+     "at": [
+      5,
+      5,
+      0
+     ],
+     "height": 3
+    },
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      5,
+      0
+     ],
+     "height": 3
+    }
+   ],
+   "ms": 10206.554958,
+   "load": 128.445042,
+   "promptTok": 1844,
+   "genTok": 69,
+   "tokPerSec": 20.40208544120941,
+   "rssMb": 81.4531,
+   "shotIds": [
+    "m100",
+    "h150",
+    "m086",
+    "h152",
+    "a166",
+    "h130",
+    "m084",
+    "h128"
+   ]
+  },
+  {
+   "id": "h129",
+   "tier": "hard",
+   "cat": null,
+   "request": "a 3 by 3 grid of columns, 4 m apart",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      4,
+      0
+     ]
+    },
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      8,
+      0
+     ]
+    },
+    {
+     "cmd": "column",
+     "at": [
+      4,
+      0,
+      0
+     ]
+    },
+    {
+     "cmd": "column",
+     "at": [
+      4,
+      4,
+      0
+     ]
+    },
+    {
+     "cmd": "column",
+     "at": [
+      4,
+      8,
+      0
+     ]
+    },
+    {
+     "cmd": "column",
+     "at": [
+      8,
+      0,
+      0
+     ]
+    },
+    {
+     "cmd": "column",
+     "at": [
+      8,
+      4,
+      0
+     ]
+    },
+    {
+     "cmd": "column",
+     "at": [
+      8,
+      8,
+      0
+     ]
+    }
+   ],
+   "ms": 76115.491083,
+   "load": 3490.508917,
+   "promptTok": 1919,
+   "genTok": 121,
+   "tokPerSec": 11.21850746125195,
+   "rssMb": 23.125,
+   "shotIds": [
+    "h146",
+    "h128",
+    "m088",
+    "m090",
+    "h138",
+    "m086",
+    "m084",
+    "h130"
+   ]
+  },
+  {
+   "id": "h131",
+   "tier": "hard",
+   "cat": null,
+   "request": "8 columns evenly spaced on a circle of radius 5 m around the origin",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[x] 39.666, want 10.3",
+    "bbox size[y] 0.300, want 10.3"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      0,
+      0
+     ],
+     "as": "c"
+    },
+    {
+     "cmd": "array",
+     "ids": [
+      "@c"
+     ],
+     "by": [
+      5.623741943478261,
+      0,
+      0
+     ],
+     "count": 7
+    }
+   ],
+   "ms": 16766.971292,
+   "load": 1437.028708,
+   "promptTok": 1739,
+   "genTok": 58,
+   "tokPerSec": 20.4578138179682,
+   "rssMb": 64.6094,
+   "shotIds": [
+    "a158",
+    "e028",
+    "m086",
+    "h130",
+    "m084",
+    "m098",
+    "m088",
+    "h146"
+   ]
+  },
+  {
+   "id": "h133",
+   "tier": "hard",
+   "cat": null,
+   "request": "three houses in a row, 10 m apart, the middle one twice as tall",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[x] 19.000, want 24",
+    "bbox size[z] 2.400, want 4.8",
+    "groups: 4, want 3"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "house",
+     "as": "house"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      1,
+      1,
+      0
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 1,
+     "as": "bt"
+    },
+    {
+     "cmd": "end_group"
+    },
+    {
+     "cmd": "array",
+     "ids": [
+      "@house"
+     ],
+     "by": [
+      -5,
+      0,
+      0
+     ],
+     "count": 3
+    },
+    {
+     "cmd": "scale",
+     "ids": [
+      "@house"
+     ],
+     "center": [
+      -2.5,
+      0,
+      0
+     ],
+     "factor": [
+      1,
+      1,
+      2
+     ]
+    },
+    {
+     "cmd": "delete",
+     "ids": [
+      "@house"
+     ]
+    }
+   ],
+   "ms": 15760.138416,
+   "load": 334.861584,
+   "promptTok": 2050,
+   "genTok": 124,
+   "tokPerSec": 21.143359421385643,
+   "rssMb": 91.5781,
+   "shotIds": [
+    "e040",
+    "e038",
+    "e036",
+    "a188",
+    "h144",
+    "a194",
+    "m088",
+    "h156"
+   ]
+  },
+  {
+   "id": "h135",
+   "tier": "hard",
+   "cat": null,
+   "request": "an L-shaped room: 8 by 6 overall with a 4 by 3 notch cut from the north-east corner, 2.7 m walls",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 2: rect has zero width"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       8,
+       0,
+       0
+      ],
+      [
+       8,
+       6,
+       0
+      ],
+      [
+       0,
+       6,
+       0
+      ]
+     ],
+     "closed": true,
+     "as": "L"
+    },
+    {
+     "cmd": "insert",
+     "asset": "door",
+     "at": [
+      4.5,
+      3,
+      0
+     ]
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      2.7,
+      0,
+      0
+     ],
+     "to": [
+      4.7,
+      0,
+      0
+     ],
+     "as": "notch"
+    },
+    {
+     "cmd": "offset",
+     "face": "@notch",
+     "distance": 1,
+     "as": "notch_offset"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@L",
+     "distance": 3,
+     "toward": [
+      0,
+      0,
+      1
+     ]
+    }
+   ],
+   "ms": 15491.04325,
+   "load": 407.95675,
+   "promptTok": 1624,
+   "genTok": 136,
+   "tokPerSec": 18.7982520747739,
+   "rssMb": 81.1562,
+   "shotIds": [
+    "e058",
+    "a158",
+    "m074",
+    "m076",
+    "m072",
+    "m070",
+    "a164",
+    "m096"
+   ]
+  },
+  {
+   "id": "h137",
+   "tier": "hard",
+   "cat": null,
+   "request": "a table: top 1.6 by 0.8 m and 4 cm thick at 0.75 m height, with four 5 cm square legs at the corners",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size 1.9,1.1,4, want 1.6,0.8,0.75 (x/y either way)"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0.75
+     ],
+     "to": [
+      1.6,
+      0.8,
+      0.75
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 0.2,
+     "as": "bt"
+    },
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      0,
+      0.75
+     ],
+     "height": 4
+    },
+    {
+     "cmd": "column",
+     "at": [
+      1.6,
+      0,
+      0.75
+     ],
+     "height": 4
+    },
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      0.8,
+      0.75
+     ],
+     "height": 4
+    },
+    {
+     "cmd": "column",
+     "at": [
+      1.6,
+      0.8,
+      0.75
+     ],
+     "height": 4
+    }
+   ],
+   "ms": 16320.70425,
+   "load": 203.29575,
+   "promptTok": 2071,
+   "genTok": 143,
+   "tokPerSec": 21.628024717086824,
+   "rssMb": 84.5156,
+   "shotIds": [
+    "h150",
+    "h146",
+    "h136",
+    "h152",
+    "e018",
+    "a164",
+    "h128",
+    "e008"
+   ]
+  },
+  {
+   "id": "h139",
+   "tier": "hard",
+   "cat": null,
+   "request": "a staircase 1 m wide rising 2.7 m with a 1.5 m square landing at the top",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[z] 6.000, want 2.7"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "stairs",
+     "at": [
+      0,
+      0,
+      0
+     ],
+     "rise": 2.7,
+     "width": 1,
+     "as": "t"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      1,
+      1,
+      0
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 1,
+     "as": "bt"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      1,
+      1,
+      1
+     ],
+     "to": [
+      2,
+      2,
+      1
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 1,
+     "as": "bt"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      2,
+      2,
+      2
+     ],
+     "to": [
+      3,
+      3,
+      2
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 1,
+     "as": "bt"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      3,
+      3,
+      3
+     ],
+     "to": [
+      4,
+      4,
+      3
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 1,
+     "as": "bt"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      4,
+      4,
+      4
+     ],
+     "to": [
+      5,
+      5,
+      4
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 1,
+     "as": "bt"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      5,
+      5,
+      5
+     ],
+     "to": [
+      6,
+      6,
+      5
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 1,
+     "as": "bt"
+    }
+   ],
+   "ms": 34184.43975,
+   "load": 147.56025,
+   "promptTok": 1669,
+   "genTok": 283,
+   "tokPerSec": 19.76092635120841,
+   "rssMb": 79.7188,
+   "shotIds": [
+    "e002",
+    "h138",
+    "m118",
+    "m100",
+    "h152",
+    "m094",
+    "a162",
+    "e024"
+   ]
+  },
+  {
+   "id": "h141",
+   "tier": "hard",
+   "cat": null,
+   "request": "two rooms side by side, each 4 by 4 m with 2.5 m walls, sharing the wall at x = 4",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[y] 4.000, want 4.2"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "room1",
+     "as": "room1"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      4,
+      4,
+      0
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 2.5,
+     "as": "bt"
+    },
+    {
+     "cmd": "end_group"
+    },
+    {
+     "cmd": "begin_group",
+     "name": "room2",
+     "as": "room2"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      4,
+      0,
+      0
+     ],
+     "to": [
+      8,
+      4,
+      0
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 2.5,
+     "as": "bt"
+    },
+    {
+     "cmd": "end_group"
+    }
+   ],
+   "ms": 26254.15725,
+   "load": 1914.84275,
+   "promptTok": 1842,
+   "genTok": 133,
+   "tokPerSec": 18.125901599125626,
+   "rssMb": 110.391,
+   "shotIds": [
+    "m076",
+    "a166",
+    "e004",
+    "m074",
+    "m072",
+    "m070",
+    "h132",
+    "h142"
+   ]
+  },
+  {
+   "id": "h143",
+   "tier": "hard",
+   "cat": null,
+   "request": "move the tower so it stands against the east side of the house, then raise the tower another 1 m on top",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: unknown name @tower"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "move",
+     "ids": [
+      "@tower"
+     ],
+     "by": [
+      -5,
+      0,
+      0
+     ]
+    },
+    {
+     "cmd": "scale",
+     "ids": [
+      "@tower"
+     ],
+     "center": [
+      -5,
+      0,
+      2.4
+     ],
+     "factor": 1.1
+    }
+   ],
+   "ms": 9331.252334,
+   "load": 201.747666,
+   "promptTok": 2039,
+   "genTok": 49,
+   "tokPerSec": 21.43455144970598,
+   "rssMb": 167.062,
+   "shotIds": [
+    "e050",
+    "a194",
+    "e046",
+    "h156",
+    "h140",
+    "h144",
+    "m104",
+    "e036"
+   ]
+  },
+  {
+   "id": "h145",
+   "tier": "hard",
+   "cat": null,
+   "request": "a street of 4 houses 8 m apart along x, each with a 30 degree gable roof",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "groups /roof/: 1, want 4"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "house",
+     "as": "h"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      8,
+      6,
+      0
+     ],
+     "as": "f"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f",
+     "distance": 8,
+     "as": "t"
+    },
+    {
+     "cmd": "end_group"
+    },
+    {
+     "cmd": "roof",
+     "face": "@t",
+     "kind": "gable",
+     "pitch": 30
+    },
+    {
+     "cmd": "insert",
+     "asset": "door",
+     "at": [
+      4.5,
+      0,
+      0
+     ]
+    },
+    {
+     "cmd": "insert",
+     "asset": "door",
+     "at": [
+      12.5,
+      0,
+      0
+     ]
+    },
+    {
+     "cmd": "insert",
+     "asset": "door",
+     "at": [
+      20.5,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 14310.997125,
+   "load": 128.002875,
+   "promptTok": 1850,
+   "genTok": 141,
+   "tokPerSec": 22.535697067990785,
+   "rssMb": 182.844,
+   "shotIds": [
+    "m072",
+    "m070",
+    "h130",
+    "m084",
+    "m080",
+    "h142",
+    "e004",
+    "h124"
+   ]
+  },
+  {
+   "id": "h147",
+   "tier": "hard",
+   "cat": null,
+   "request": "a 12 m by 8 m lot with a 6 by 4 m house 3 m tall in its middle",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "groups: 2, want 1"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "lot",
+     "as": "l"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      12,
+      8,
+      0
+     ],
+     "as": "lf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@lf",
+     "distance": 3,
+     "toward": [
+      0,
+      0,
+      1
+     ]
+    },
+    {
+     "cmd": "end_group"
+    },
+    {
+     "cmd": "begin_group",
+     "name": "house",
+     "as": "h"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      4,
+      4,
+      0
+     ],
+     "to": [
+      8,
+      6,
+      0
+     ],
+     "as": "f"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f",
+     "distance": 3,
+     "toward": [
+      0,
+      0,
+      1
+     ]
+    },
+    {
+     "cmd": "end_group"
+    },
+    {
+     "cmd": "insert",
+     "asset": "door",
+     "at": [
+      5.5,
+      4,
+      0
+     ]
+    }
+   ],
+   "ms": 14567.411417,
+   "load": 113.588583,
+   "promptTok": 1705,
+   "genTok": 156,
+   "tokPerSec": 21.82615143437961,
+   "rssMb": 117.641,
+   "shotIds": [
+    "h124",
+    "a194",
+    "m096",
+    "h138",
+    "m118",
+    "m098",
+    "m100",
+    "e020"
+   ]
+  },
+  {
+   "id": "h149",
+   "tier": "hard",
+   "cat": null,
+   "request": "an outdoor scene: a house 6 by 4 by 3 m, a tree 4 m to the east of it, and a car 3 m in front of it",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "house",
+     "as": "h"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      6,
+      4,
+      0
+     ],
+     "as": "f"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f",
+     "distance": 3,
+     "as": "t"
+    },
+    {
+     "cmd": "end_group"
+    },
+    {
+     "cmd": "insert",
+     "asset": "tree",
+     "at": [
+      10,
+      0,
+      0
+     ]
+    },
+    {
+     "cmd": "insert",
+     "asset": "car",
+     "at": [
+      3,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 10783.621666,
+   "load": 123.378334,
+   "promptTok": 1735,
+   "genTok": 99,
+   "tokPerSec": 22.38686763876036,
+   "rssMb": 180,
+   "shotIds": [
+    "e002",
+    "e036",
+    "m118",
+    "h134",
+    "m122",
+    "h124",
+    "m076",
+    "e028"
+   ]
+  },
+  {
+   "id": "h151",
+   "tier": "hard",
+   "cat": null,
+   "request": "mirror the house to the other side of the y axis, so the two are back to back",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[y] 3.000, want 6",
+    "groups: 1, want 2"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@house"
+     ],
+     "center": [
+      2,
+      1.5,
+      1.2
+     ],
+     "angle": 180
+    }
+   ],
+   "ms": 7110.863959,
+   "load": 114.136041,
+   "promptTok": 1886,
+   "genTok": 32,
+   "tokPerSec": 24.25684278542184,
+   "rssMb": 174.797,
+   "shotIds": [
+    "e054",
+    "e048",
+    "m080",
+    "e050",
+    "a194",
+    "e046",
+    "e036",
+    "h144"
+   ]
+  },
+  {
+   "id": "h153",
+   "tier": "hard",
+   "cat": null,
+   "request": "make the house 3 times longer along x only, then add a shed roof at 15 degrees",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "scale",
+     "ids": [
+      "@house"
+     ],
+     "center": [
+      2,
+      1.5,
+      0
+     ],
+     "factor": 3
+    },
+    {
+     "cmd": "roof",
+     "face": "@top",
+     "kind": "shed",
+     "pitch": 15
+    }
+   ],
+   "ms": 8348.273625,
+   "load": 101.726375,
+   "promptTok": 2056,
+   "genTok": 46,
+   "tokPerSec": 23.80901494728509,
+   "rssMb": 174.516,
+   "shotIds": [
+    "h126",
+    "h144",
+    "h140",
+    "m082",
+    "e040",
+    "e050",
+    "m080",
+    "m104"
+   ]
+  },
+  {
+   "id": "h155",
+   "tier": "hard",
+   "cat": null,
+   "request": "turn the whole street around: rotate both houses 180 degrees around their shared middle point at 7, 1.5",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@a",
+      "@b"
+     ],
+     "center": [
+      7,
+      1.5,
+      0
+     ],
+     "angle": 180
+    }
+   ],
+   "ms": 7028.356333,
+   "load": 118.643667,
+   "promptTok": 1837,
+   "genTok": 33,
+   "tokPerSec": 21.90661455568992,
+   "rssMb": 93.2344,
+   "shotIds": [
+    "m104",
+    "e040",
+    "a198",
+    "a174",
+    "m108",
+    "m106",
+    "e068",
+    "e062"
+   ]
+  },
+  {
+   "id": "a157",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "a wall 4.2 m long, 2.4 m high, 20 cm thick starting at the origin",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size 4.3,2.6,2.4, want 4.2,0.2,2.4 (x/y either way)"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       4.2,
+       0,
+       0
+      ],
+      [
+       4.2,
+       2.4,
+       0
+      ],
+      [
+       0,
+       2.4,
+       0
+      ]
+     ],
+     "thickness": 0.2,
+     "height": 2.4
+    }
+   ],
+   "ms": 9410.751041,
+   "load": 266.248959,
+   "promptTok": 1604,
+   "genTok": 57,
+   "tokPerSec": 19.54306957937371,
+   "rssMb": 86.5156,
+   "shotIds": [
+    "a162",
+    "e018",
+    "e002",
+    "h150",
+    "e008",
+    "e010",
+    "e022",
+    "a164"
+   ]
+  },
+  {
+   "id": "a159",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "a column at x 2 y 3, 0.4 m square, 3.2 m tall",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "column",
+     "at": [
+      2,
+      3,
+      0
+     ],
+     "size": 0.4,
+     "height": 3.2
+    }
+   ],
+   "ms": 5960.854666,
+   "load": 124.145334,
+   "promptTok": 1537,
+   "genTok": 29,
+   "tokPerSec": 19.854863222880258,
+   "rssMb": 86.7031,
+   "shotIds": [
+    "m118",
+    "a162",
+    "e004",
+    "m098",
+    "a160",
+    "a166",
+    "m100",
+    "e020"
+   ]
+  },
+  {
+   "id": "a161",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "a circle centered at 5 5 with a radius of 1.75 meters",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "circle",
+     "center": [
+      5,
+      5,
+      0
+     ],
+     "radius": 1.75,
+     "as": "c"
+    }
+   ],
+   "ms": 7012.613875,
+   "load": 118.386125,
+   "promptTok": 1811,
+   "genTok": 28,
+   "tokPerSec": 22.12561359275123,
+   "rssMb": 90.9219,
+   "shotIds": [
+    "e010",
+    "e008",
+    "e006",
+    "e004",
+    "e002",
+    "h152",
+    "h146",
+    "m098"
+   ]
+  },
+  {
+   "id": "a163",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "a tree at x 12 y 8",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "insert",
+     "asset": "tree",
+     "at": [
+      12,
+      8,
+      0
+     ]
+    }
+   ],
+   "ms": 4986.627458,
+   "load": 102.372542,
+   "promptTok": 1507,
+   "genTok": 22,
+   "tokPerSec": 21.2249326779626,
+   "rssMb": 85.375,
+   "shotIds": [
+    "m074",
+    "m072",
+    "m070",
+    "a162",
+    "m098",
+    "e004",
+    "a166",
+    "a160"
+   ]
+  },
+  {
+   "id": "a165",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "a box 2 m by 2 m by 2 m centered on the origin",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox min[x] 0.000, want -1",
+    "bbox min[y] 0.000, want -1",
+    "bbox min[z] 1.000, want 0",
+    "bbox max[x] 2.000, want 1",
+    "bbox max[y] 2.000, want 1"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      2,
+      2,
+      0
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 2,
+     "toward": [
+      0,
+      0,
+      1
+     ]
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 1,
+     "toward": [
+      0,
+      0,
+      1
+     ]
+    }
+   ],
+   "ms": 7373.509958,
+   "load": 167.490042,
+   "promptTok": 1540,
+   "genTok": 52,
+   "tokPerSec": 22.381544481432286,
+   "rssMb": 106.656,
+   "repaired": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      2,
+      2,
+      2
+     ],
+     "as": "bf"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@bf",
+     "distance": 1,
+     "toward": [
+      0,
+      0,
+      1
+     ]
+    }
+   ],
+   "shotIds": [
+    "a164",
+    "h136",
+    "e034",
+    "e028",
+    "e002",
+    "m098",
+    "e004",
+    "a158"
+   ]
+  },
+  {
+   "id": "a167",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "a wall from 0 0 to 6 0 and another from 6 0 to 6 4, both 2.7 m high and 0.2 m thick",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       6,
+       0,
+       0
+      ]
+     ],
+     "thickness": 0.2,
+     "height": 2.7
+    },
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       6,
+       0,
+       0
+      ],
+      [
+       6,
+       4,
+       0
+      ]
+     ],
+     "thickness": 0.2,
+     "height": 2.7
+    }
+   ],
+   "ms": 9235.275792,
+   "load": 117.724208,
+   "promptTok": 1701,
+   "genTok": 69,
+   "tokPerSec": 20.474748090806298,
+   "rssMb": 86,
+   "shotIds": [
+    "h152",
+    "e008",
+    "e010",
+    "a160",
+    "a164",
+    "e022",
+    "h150",
+    "e058"
+   ]
+  },
+  {
+   "id": "a169",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "put a window 1 m from the left end of the north wall, 1.2 m wide, 1 m tall, sill at 1 m",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "no face matching {\"normal\":[0,1,0],\"normal_abs\":true,\"area\":1.2,\"x\":[1.55,1.65],\"z\":[1.45,1.55]}"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "insert",
+     "asset": "window",
+     "at": [
+      1,
+      4,
+      1
+     ]
+    }
+   ],
+   "ms": 6619.489958,
+   "load": 120.510042,
+   "promptTok": 1918,
+   "genTok": 21,
+   "tokPerSec": 23.086747578930158,
+   "rssMb": 100.125,
+   "shotIds": [
+    "e028",
+    "a182",
+    "a172",
+    "h154",
+    "e032",
+    "m102",
+    "a170",
+    "a168"
+   ]
+  },
+  {
+   "id": "a171",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "a 2 m cube sitting 3 m east of the house",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: rect has zero width"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      1,
+      1,
+      0
+     ],
+     "to": [
+      5,
+      1,
+      0
+     ],
+     "as": "c1"
+    },
+    {
+     "cmd": "move",
+     "ids": [
+      "@c1"
+     ],
+     "by": [
+      3,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 11771.073875,
+   "load": 103.926125,
+   "promptTok": 1987,
+   "genTok": 48,
+   "tokPerSec": 20.773200139278593,
+   "rssMb": 85.5469,
+   "shotIds": [
+    "m080",
+    "e050",
+    "a194",
+    "e046",
+    "h156",
+    "h140",
+    "m104",
+    "e036"
+   ]
+  },
+  {
+   "id": "a173",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "a tree 3 m south of the house at its middle",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "insert",
+     "asset": "tree",
+     "at": [
+      2,
+      1.5,
+      -2
+     ],
+     "rotate": 90
+    }
+   ],
+   "ms": 7613.929042,
+   "load": 160.070958,
+   "promptTok": 1879,
+   "genTok": 28,
+   "tokPerSec": 18.98880493168127,
+   "rssMb": 83.8438,
+   "shotIds": [
+    "e054",
+    "e048",
+    "m080",
+    "e050",
+    "a194",
+    "e046",
+    "e036",
+    "h144"
+   ]
+  },
+  {
+   "id": "a175",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "slide group a 1 m toward group b",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "/^a$/ min[x] 0.000, want 1",
+    "/^a$/ max[x] 1.000, want 2"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@a"
+     ],
+     "center": [
+      0.5,
+      0.5,
+      0.5
+     ],
+     "angle": 90
+    }
+   ],
+   "ms": 9429.638833,
+   "load": 145.361167,
+   "promptTok": 1703,
+   "genTok": 33,
+   "tokPerSec": 19.824071350884115,
+   "rssMb": 83.2969,
+   "shotIds": [
+    "e004",
+    "e002",
+    "a198",
+    "e062",
+    "a174",
+    "m108",
+    "m106",
+    "e068"
+   ]
+  },
+  {
+   "id": "a177",
+   "tier": "hard",
+   "cat": "a11y",
+   "request": "a door in the middle of the south wall of the room and a window in the middle of the north wall",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "insert",
+     "asset": "door",
+     "at": [
+      3,
+      0,
+      0
+     ]
+    },
+    {
+     "cmd": "insert",
+     "asset": "window",
+     "at": [
+      3,
+      4,
+      1
+     ],
+     "rotate": 90
+    }
+   ],
+   "ms": 8731.947334,
+   "load": 128.052666,
+   "promptTok": 1960,
+   "genTok": 43,
+   "tokPerSec": 17.892622560469906,
+   "rssMb": 83.9375,
+   "shotIds": [
+    "e032",
+    "a170",
+    "a192",
+    "h142",
+    "a196",
+    "a176",
+    "m074",
+    "m078"
+   ]
+  },
+  {
+   "id": "a179",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "make it taller by 1 meter",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[y] 4.500, want 3",
+    "bbox size[z] 2.400, want 3.4"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "scale",
+     "ids": [
+      "@house"
+     ],
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "factor": [
+      1,
+      1.5,
+      1
+     ]
+    }
+   ],
+   "ms": 6925.53675,
+   "load": 139.46325,
+   "promptTok": 1712,
+   "genTok": 32,
+   "tokPerSec": 18.645615949608118,
+   "rssMb": 83.875,
+   "shotIds": [
+    "e060",
+    "e002",
+    "a201",
+    "a184",
+    "e050",
+    "a190",
+    "a186",
+    "a178"
+   ]
+  },
+  {
+   "id": "a181",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "move it back 5 meters",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "undo"
+    }
+   ],
+   "ms": 5183.877791,
+   "load": 128.122209,
+   "promptTok": 1829,
+   "genTok": 9,
+   "tokPerSec": 32.844053162128915,
+   "rssMb": 164.203,
+   "shotIds": [
+    "e062",
+    "e068",
+    "a200",
+    "a180",
+    "a186",
+    "a182",
+    "e036",
+    "a184"
+   ]
+  },
+  {
+   "id": "a183",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "move the door 0.5 m to the right",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "move",
+     "ids": [
+      "@door"
+     ],
+     "by": [
+      0.5,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 7265.685333,
+   "load": 110.314667,
+   "promptTok": 2009,
+   "genTok": 24,
+   "tokPerSec": 24.312895858708167,
+   "rssMb": 89.6875,
+   "shotIds": [
+    "e068",
+    "m076",
+    "a186",
+    "a196",
+    "e036",
+    "a184",
+    "a188",
+    "a182"
+   ]
+  },
+  {
+   "id": "a185",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "a bit wider: add 1 meter to the width",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[x] 6.000, want 5"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "scale",
+     "ids": [
+      "@house"
+     ],
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "factor": [
+      1.5,
+      1,
+      1
+     ]
+    }
+   ],
+   "ms": 6358.446291,
+   "load": 118.553709,
+   "promptTok": 1734,
+   "genTok": 32,
+   "tokPerSec": 24.46963885360953,
+   "rssMb": 88.5469,
+   "shotIds": [
+    "e002",
+    "m110",
+    "m078",
+    "a201",
+    "a186",
+    "a184",
+    "a178",
+    "a190"
+   ]
+  },
+  {
+   "id": "a187",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "undo that and then move the house 2 m east",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "undo"
+    },
+    {
+     "cmd": "move",
+     "ids": [
+      "@house"
+     ],
+     "by": [
+      2,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 7821.923333,
+   "load": 116.076667,
+   "promptTok": 2017,
+   "genTok": 26,
+   "tokPerSec": 24.41152672332084,
+   "rssMb": 90.3438,
+   "shotIds": [
+    "h144",
+    "a182",
+    "a184",
+    "h156",
+    "a200",
+    "m104",
+    "e036",
+    "a180"
+   ]
+  },
+  {
+   "id": "a189",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "rotate it a quarter turn about the origin",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@house"
+     ],
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "angle": 90
+    }
+   ],
+   "ms": 7101.322625,
+   "load": 138.677375,
+   "promptTok": 1864,
+   "genTok": 27,
+   "tokPerSec": 24.148866168472875,
+   "rssMb": 87.7188,
+   "shotIds": [
+    "a190",
+    "a186",
+    "a184",
+    "a178",
+    "m120",
+    "h140",
+    "m104",
+    "e040"
+   ]
+  },
+  {
+   "id": "a191",
+   "tier": "hard",
+   "cat": "a11y",
+   "request": "move the door 1 m left and raise it 0.1 m",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "move",
+     "ids": [
+      "@door"
+     ],
+     "by": [
+      -1,
+      0,
+      0.1
+     ]
+    }
+   ],
+   "ms": 7509.469917,
+   "load": 115.530083,
+   "promptTok": 2017,
+   "genTok": 24,
+   "tokPerSec": 23.18736498685743,
+   "rssMb": 89.7031,
+   "shotIds": [
+    "m076",
+    "a186",
+    "a196",
+    "e036",
+    "m102",
+    "a184",
+    "a188",
+    "a182"
+   ]
+  },
+  {
+   "id": "a193",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "what's in the model?",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "parts"
+    }
+   ],
+   "ms": 4928.79875,
+   "load": 122.20125,
+   "promptTok": 1707,
+   "genTok": 9,
+   "tokPerSec": 29.58519485844816,
+   "rssMb": 86.1875,
+   "shotIds": [
+    "e008",
+    "e006",
+    "e004",
+    "e002",
+    "a192",
+    "a176",
+    "m078",
+    "a196"
+   ]
+  },
+  {
+   "id": "a195",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "what's the volume of the house?",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "volume",
+     "id": "@house"
+    }
+   ],
+   "ms": 6086.321833,
+   "load": 129.678167,
+   "promptTok": 1866,
+   "genTok": 14,
+   "tokPerSec": 24.391720536405785,
+   "rssMb": 86.8125,
+   "shotIds": [
+    "e054",
+    "e048",
+    "m080",
+    "e050",
+    "a194",
+    "e046",
+    "e036",
+    "a196"
+   ]
+  },
+  {
+   "id": "a197",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "is there a door? where is it?",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "parts"
+    },
+    {
+     "cmd": "pick",
+     "at": [
+      2.5,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 7241.526167,
+   "load": 122.473833,
+   "promptTok": 1941,
+   "genTok": 23,
+   "tokPerSec": 20.677057555747623,
+   "rssMb": 84.75,
+   "shotIds": [
+    "e034",
+    "m074",
+    "m078",
+    "m076",
+    "a196",
+    "a188",
+    "a200",
+    "a182"
+   ]
+  },
+  {
+   "id": "a199",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "how many things are there and what are they called?",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "parts"
+    }
+   ],
+   "ms": 8518.696125,
+   "load": 170.303875,
+   "promptTok": 1729,
+   "genTok": 9,
+   "tokPerSec": 22.63956584859224,
+   "rssMb": 76.7344,
+   "shotIds": [
+    "a194",
+    "a201",
+    "a174",
+    "m108",
+    "m106",
+    "e068",
+    "e062",
+    "a198"
+   ]
+  }
+ ]
+}
