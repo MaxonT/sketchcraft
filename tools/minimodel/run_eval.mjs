@@ -1,8 +1,14 @@
 #!/usr/bin/env node
 // minimodel eval harness: natural language -> local model (Ollama) -> SketchCraft commands -> engine -> graded.
 //
-//   node run_eval.mjs --model qwen2.5-coder:1.5b [--mode constrained|free] [--shots 0|3] [--limit N]
+//   node run_eval.mjs --model qwen2.5-coder:1.5b [--mode constrained|free] [--shots 0..8] [--limit N]
+//                     [--retrieve K] [--max-sim 0.8] [--subset] [--timeout 120]
 //                     [--ids e001,m010] [--cat a11y] [--tag name] [--no-memory-guard]
+// --shots N    the first N hand-written worked examples (lib/spec.mjs FEW_SHOT)
+// --retrieve K K examples picked by similarity from the OTHER fold of the request set (lib/retrieve.mjs): never the
+//              scored request itself. --max-sim drops pool examples more similar than that (near-duplicate control).
+// --subset     the schema and the prompt reference list only the commands this request plausibly needs
+//              (core + the retrieved examples' commands + keyword triggers)
 //   node run_eval.mjs --model gold        # control: the reference solutions (must be 100%)
 //   node run_eval.mjs --model noop        # control: only `info` (shows what a do-nothing answer scores)
 //   node run_eval.mjs --check-spec        # the command table still matches core/src/commands/command.rs + policy.rs
@@ -15,6 +21,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { COMMANDS, FEW_SHOT, buildReference, buildSchema } from "./lib/spec.mjs";
 import { fixtureDesc, loadCases, runCase } from "./lib/run_case.mjs";
+import { makeRetriever, subsetFor } from "./lib/retrieve.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -40,9 +47,15 @@ const model = flag("model", null);
 if (!model) { console.error("usage: see header of run_eval.mjs"); process.exit(2); }
 const mode = flag("mode", "constrained");
 const shots = Number(flag("shots", 0));
-const tag = flag("tag", `${model.replace(/[:/]/g, "_")}-${mode}${shots ? "-" + shots + "shot" : ""}`);
+const retrieveK = Number(flag("retrieve", 0));
+const maxSim = Number(flag("max-sim", 1.01));
+const subset = !!flag("subset");
+const timeoutS = Number(flag("timeout", 120));
+const variant = [shots && `${shots}shot`, retrieveK && `rag${retrieveK}`, maxSim <= 1 && `max${maxSim}`, subset && "subset"].filter(Boolean).join("-");
+const tag = flag("tag", `${model.replace(/[:/]/g, "_")}-${mode}${variant ? "-" + variant : ""}`);
 const guard = !flag("no-memory-guard");
 let cases = loadCases();
+const pick = makeRetriever(cases);
 if (flag("ids")) { const s = new Set(flag("ids").split(",")); cases = cases.filter((c) => s.has(c.id)); }
 if (flag("cat")) cases = cases.filter((c) => c.cat === flag("cat"));
 if (flag("limit")) {
@@ -68,19 +81,23 @@ async function waitForMemory() {
   return true;
 }
 
-const REF = buildReference();
 const SCHEMA = buildSchema();
-const system = () => {
-  let s = REF;
+const system = (only) => {
+  let s = buildReference(only);
   if (mode === "free") s += "\nReply with ONLY the JSON object, no explanation.";
   return s;
 };
-function messages(c) {
-  const m = [{ role: "system", content: system() }];
-  if (shots) for (const [q, a] of FEW_SHOT.slice(0, shots)) { m.push({ role: "user", content: `Model state: empty model\nRequest: ${q}` }); m.push({ role: "assistant", content: JSON.stringify(a) }); }
-  const state = c.fixture ? fixtureDesc(c.fixture) : "empty model";
-  m.push({ role: "user", content: `Model state: ${state}\nRequest: ${c.request}` });
-  return m;
+const stateOf = (fx) => (fx ? fixtureDesc(fx) : "empty model");
+/** the prompt (and, with --subset, the narrowed schema) for one request */
+function prompt(c) {
+  const ex = [...FEW_SHOT.slice(0, shots).map(([q, a, fx]) => ({ q, a, fx }))];
+  const got = retrieveK ? pick(c, retrieveK, { maxSim }) : [];
+  for (const { p } of got) ex.push({ q: p.request, a: { commands: p.gold }, fx: p.fixture });
+  const only = subset ? subsetFor(c, got) : null;
+  const m = [{ role: "system", content: system(only) }];
+  for (const { q, a, fx } of ex) { m.push({ role: "user", content: `Model state: ${stateOf(fx)}\nRequest: ${q}` }); m.push({ role: "assistant", content: JSON.stringify(a) }); }
+  m.push({ role: "user", content: `Model state: ${stateOf(c.fixture)}\nRequest: ${c.request}` });
+  return { messages: m, schema: only ? buildSchema(only) : SCHEMA, only, shotIds: got.map(({ p }) => p.id) };
 }
 
 function parseFree(text) {
@@ -103,13 +120,14 @@ const reqs = Object.fromEntries(COMMANDS.map(([n, f]) => [n, Object.entries(f).f
 const schemaValid = (cmds) => Array.isArray(cmds) && cmds.length > 0 && cmds.every((c) => c && names.has(c.cmd) && reqs[c.cmd].every((k) => k in c));
 
 async function ask(c) {
-  const body = { model, messages: messages(c), stream: false, think: false, keep_alive: "10m", options: { temperature: 0, seed: 7, num_ctx: 4096, num_predict: 900 } };
-  if (mode === "constrained") body.format = SCHEMA;
+  const pr = prompt(c);
+  const body = { model, messages: pr.messages, stream: false, think: false, keep_alive: "10m", options: { temperature: 0, seed: 7, num_ctx: 4096, num_predict: 900 } };
+  if (mode === "constrained") body.format = pr.schema;
   const t0 = Date.now();
-  const res = await fetch(`${HOST}/api/chat`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  const res = await fetch(`${HOST}/api/chat`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(timeoutS * 1000) });
   const j = await res.json();
   if (j.error) throw new Error(j.error);
-  return { text: j.message?.content ?? "", wall: Date.now() - t0, load: (j.load_duration || 0) / 1e6, promptTok: j.prompt_eval_count, genTok: j.eval_count, evalMs: (j.eval_duration || 0) / 1e6, promptMs: (j.prompt_eval_duration || 0) / 1e6 };
+  return { only: pr.only, shotIds: pr.shotIds, text: j.message?.content ?? "", wall: Date.now() - t0, load: (j.load_duration || 0) / 1e6, promptTok: j.prompt_eval_count, genTok: j.eval_count, evalMs: (j.eval_duration || 0) / 1e6, promptMs: (j.prompt_eval_duration || 0) / 1e6 };
 }
 
 mkdirSync(join(here, "results"), { recursive: true });
@@ -130,7 +148,7 @@ for (const [i, c] of cases.entries()) {
   } catch (e) { err = String(e.message || e); parseOk = false; }
   const rss = rssMb(); peakRss = Math.max(peakRss, rss);
   const g = parseOk && commands ? await runCase(c, commands) : { pass: false, errs: [err || "output was not a parseable command list"], stage: "parse", engineMs: 0 };
-  rows.push({ id: c.id, tier: c.tier, cat: c.cat || null, request: c.request, pass: g.pass, stage: g.stage, errs: g.errs, parseOk, schemaValid: parseOk ? valid : false, commands, ms: ans ? ans.wall - ans.load : 0, load: ans?.load || 0, promptTok: ans?.promptTok, genTok: ans?.genTok, tokPerSec: ans && ans.evalMs ? ans.genTok / (ans.evalMs / 1000) : null, rssMb: rss, raw: parseOk ? undefined : ans?.text?.slice(0, 400) });
+  rows.push({ id: c.id, tier: c.tier, cat: c.cat || null, request: c.request, pass: g.pass, stage: g.stage, errs: g.errs, parseOk, schemaValid: parseOk ? valid : false, commands, ms: ans ? ans.wall - ans.load : 0, load: ans?.load || 0, promptTok: ans?.promptTok, genTok: ans?.genTok, tokPerSec: ans && ans.evalMs ? ans.genTok / (ans.evalMs / 1000) : null, rssMb: rss, subset: ans?.only?.length, shotIds: ans?.shotIds?.length ? ans.shotIds : undefined, raw: parseOk ? undefined : ans?.text?.slice(0, 400) });
   if ((i + 1) % 10 === 0 || i + 1 === cases.length) console.error(`${i + 1}/${cases.length} pass so far ${rows.filter((r) => r.pass).length}  rss ${rss.toFixed(0)}MB  free ${freePct()}%`);
 }
 
@@ -138,7 +156,7 @@ const pct = (a, b) => (b ? ((100 * a) / b).toFixed(1) + "%" : "-");
 const by = (f) => { const m = {}; for (const r of rows) { const k = f(r); if (k == null) continue; (m[k] ||= []).push(r); } return m; };
 const med = (xs) => { xs = xs.filter((x) => x != null).sort((a, b) => a - b); return xs.length ? xs[Math.floor(xs.length / 2)] : null; };
 const summary = {
-  tag, model, mode, shots, n: rows.length, skipped, pass: rows.filter((r) => r.pass).length,
+  tag, model, mode, shots, retrieve: retrieveK, maxSim: maxSim <= 1 ? maxSim : null, subset, variant, n: rows.length, skipped, pass: rows.filter((r) => r.pass).length,
   tiers: Object.fromEntries(Object.entries(by((r) => r.tier)).map(([k, v]) => [k, { n: v.length, pass: v.filter((r) => r.pass).length }])),
   a11y: (() => { const v = rows.filter((r) => r.cat === "a11y"); return { n: v.length, pass: v.filter((r) => r.pass).length }; })(),
   parseOk: rows.filter((r) => r.parseOk).length, schemaValid: rows.filter((r) => r.schemaValid).length,

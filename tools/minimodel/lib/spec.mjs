@@ -57,8 +57,8 @@ const TYPES = {
 const T = (code) => TYPES[code.replace("?", "")];
 
 /** JSON schema for Ollama's `format`: {"commands":[ one of the typed commands, ... ]} */
-export function buildSchema() {
-  const variants = COMMANDS.map(([name, fields]) => {
+export function buildSchema(only = null) {
+  const variants = COMMANDS.filter(([n]) => !only || only.includes(n)).map(([name, fields]) => {
     const props = { cmd: { const: name } };
     const required = ["cmd"];
     for (const [k, code] of Object.entries(fields)) {
@@ -72,8 +72,8 @@ export function buildSchema() {
 
 const SHORT = { v3: "[x,y,z]", n: "number", i: "int", s: "string", b: "bool", id: "id", ids: "[id,..]", pts: "[[x,y,z],..]", fac: "n|[x,y,z]", roofkind: "gable|hip|shed", asset: "asset" };
 /** The compact reference put in the prompt, generated from the table (about 900 tokens). */
-export function buildReference() {
-  const lines = COMMANDS.map(([name, fields, doc]) => {
+export function buildReference(only = null) {
+  const lines = COMMANDS.filter(([n]) => !only || only.includes(n)).map(([name, fields, doc]) => {
     const f = Object.entries(fields).map(([k, c]) => (c.endsWith("?") ? `${k}?` : k) + (c.startsWith("n") || c.startsWith("i") ? "" : "")).join(", ");
     return `${name}${f ? " {" + f + "}" : ""}${doc ? ": " + doc : ""}`;
   });
@@ -88,8 +88,14 @@ export function buildReference() {
   ].join("\n");
 }
 
+// Hand-written worked examples (none is an eval request). [request, answer, fixture-or-null]. `--shots N` uses the first N.
 export const FEW_SHOT = [
-  ["a 3 by 2 meter box 1.5 m tall", { commands: [{ cmd: "begin_group", name: "box", as: "box" }, { cmd: "rect", from: [0, 0, 0], to: [3, 2, 0], as: "f" }, { cmd: "pushpull", face: "@f", distance: 1.5 }, { cmd: "end_group" }] }],
-  ["move the house 5 m east and paint it red", { commands: [{ cmd: "move", ids: ["@house"], by: [5, 0, 0] }, { cmd: "paint", ids: ["@house"], color: [1, 0, 0] }] }],
-  ["a 5x4 room with 2.5 m walls", { commands: [{ cmd: "wall", points: [[0, 0, 0], [5, 0, 0], [5, 4, 0], [0, 4, 0]], thickness: 0.2, height: 2.5, closed: true }] }],
+  ["a 3 by 2 meter box 1.5 m tall", { commands: [{ cmd: "begin_group", name: "box", as: "box" }, { cmd: "rect", from: [0, 0, 0], to: [3, 2, 0], as: "f" }, { cmd: "pushpull", face: "@f", distance: 1.5 }, { cmd: "end_group" }] }, null],
+  ["move the house 5 m east and paint it red", { commands: [{ cmd: "move", ids: ["@house"], by: [5, 0, 0] }, { cmd: "paint", ids: ["@house"], color: [1, 0, 0] }] }, "house"],
+  ["a 5x4 room with 2.5 m walls", { commands: [{ cmd: "wall", points: [[0, 0, 0], [5, 0, 0], [5, 4, 0], [0, 4, 0]], thickness: 0.2, height: 2.5, closed: true }] }, null],
+  ["how tall is the tower?", { commands: [{ cmd: "parts", ids: ["@tower"] }] }, "tower"],
+  ["a green 2 m cube 4 m east of the origin", { commands: [{ cmd: "begin_group", name: "cube", as: "cube" }, { cmd: "rect", from: [4, 0, 0], to: [6, 2, 0], as: "f" }, { cmd: "pushpull", face: "@f", distance: 2 }, { cmd: "end_group" }, { cmd: "paint", ids: ["@cube"], color: [0, 0.6, 0] }] }, null],
+  ["an L-shaped wall, 5 m along x then 3 m along y, 3 m high", { commands: [{ cmd: "wall", points: [[0, 0, 0], [5, 0, 0], [5, 3, 0]], height: 3 }] }, null],
+  ["put a 30 degree shed roof on the tower", { commands: [{ cmd: "roof", face: "@top", kind: "shed", pitch: 30 }] }, "tower"],
+  ["three more posts in a line along y, 1.5 m apart", { commands: [{ cmd: "array", ids: ["@post"], by: [0, 1.5, 0], count: 3 }] }, "post"],
 ];
