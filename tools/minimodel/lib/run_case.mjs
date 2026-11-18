@@ -1,0 +1,40 @@
+// Run one eval case: scratch engine -> fixture -> the model's commands -> inspect -> grade.
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { Session } from "./engine.mjs";
+import { grade } from "./check.mjs";
+
+const here = dirname(fileURLToPath(import.meta.url));
+const evalDir = join(here, "../eval");
+export const loadCases = () => readFileSync(join(evalDir, "cases.jsonl"), "utf8").trim().split("\n").map((l) => JSON.parse(l));
+export const loadFixture = (name) => readFileSync(join(evalDir, "fixtures", `${name}.jsonl`), "utf8").split("\n").filter((l) => l.trim() && !l.startsWith("#")).map((l) => JSON.parse(l));
+export const fixtureDesc = (name) => JSON.parse(readFileSync(join(evalDir, "fixtures.json"), "utf8"))[name];
+
+const INSPECT = new Set(["info", "parts", "faces", "volume", "pick", "components", "levels", "report"]);
+const sig = (s) => JSON.stringify([s.info.faces, s.info.bounds, (s.info.groups || []).length, (s.info.instances || []).length, s.faces.map((f) => f.material).join("|")]);
+
+/** @returns {{pass:boolean, errs:string[], stage:string, engineMs:number}} */
+export async function runCase(c, commands) {
+  const t0 = Date.now();
+  const s = await new Session().init();
+  try {
+    if (c.fixture) {
+      const f = await s.run(loadFixture(c.fixture));
+      if (!f.ok) return { pass: false, errs: [`fixture failed: ${f.error}`], stage: "fixture", engineMs: Date.now() - t0 };
+    }
+    const before = c.check.readonly ? await s.inspect() : null;
+    if (!Array.isArray(commands) || commands.length === 0) return { pass: false, errs: ["no commands"], stage: "empty", engineMs: Date.now() - t0 };
+    const r = await s.run(commands);
+    if (!r.ok) return { pass: false, errs: [`engine rejected command ${r.failedAt}: ${r.error || r.stopped || "unknown"}`], stage: "engine", engineMs: Date.now() - t0 };
+    const after = await s.inspect();
+    let errs = grade(c.check, after, r.replies);
+    if (c.check.readonly) {
+      if (!commands.some((x) => INSPECT.has(x.cmd))) errs.push("no read-only inspect command was used");
+      if (sig(before) !== sig(after)) errs.push("a question changed the model");
+    }
+    return { pass: errs.length === 0, errs, stage: errs.length ? "check" : "ok", engineMs: Date.now() - t0 };
+  } finally {
+    s.close();
+  }
+}
