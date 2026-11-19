@@ -23,12 +23,12 @@ export function makeRng(seed) {
 }
 
 // ---------- numbers and units ----------
-const W = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
+export const W = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
 export const fmt = (v) => String(+(+v).toFixed(3));
-const r4 = (v) => +(+v).toFixed(4);
+export const r4 = (v) => +(+v).toFixed(4);
 
 /** a length: {v: meters, t: text}. opts: lo, hi, step, imperial(ok), bare(ok), words(ok) */
-function len(r, lo, hi, { step = 0.1, imperial = true, bare = false, small = false } = {}) {
+export function len(r, lo, hi, { step = 0.1, imperial = true, bare = false, small = false } = {}) {
   if (imperial && r.chance(0.12)) {
     if (small || hi < 0.6) {
       const inch = r.int(Math.max(1, Math.ceil(lo / 0.0254)), Math.max(1, Math.floor(hi / 0.0254)));
@@ -40,7 +40,7 @@ function len(r, lo, hi, { step = 0.1, imperial = true, bare = false, small = fal
   const v = r.step(lo, hi, step);
   return { v, t: metric(r, v, bare) };
 }
-function metric(r, v, bare = false) {
+export function metric(r, v, bare = false) {
   if (bare && r.chance(0.5)) return fmt(v);
   if (v === 0.5 && r.chance(0.3)) return "half a meter";
   if (v === 1.5 && r.chance(0.25)) return "a meter and a half";
@@ -50,14 +50,14 @@ function metric(r, v, bare = false) {
   if (Number.isInteger(v) && v <= 12 && r.chance(0.15)) return `${W[v]} ${r.pick(["meters", "metres"])}`;
   return `${fmt(v)}${r.pick([" m", " m", "m", " meters", " metres"])}`.replace(/^1 meters/, "1 meter");
 }
-const count = (r, n) => (n <= 12 && r.chance(0.5) ? W[n] : String(n));
-const deg = (r, a) => `${a}${r.pick([" degrees", " degrees", "°", " deg", " degree"])}`.replace(/^1 degrees/, "1 degree");
+export const count = (r, n) => (n <= 12 && r.chance(0.5) ? W[n] : String(n));
+export const deg = (r, a) => `${a}${r.pick([" degrees", " degrees", "°", " deg", " degree"])}`.replace(/^1 degrees/, "1 degree");
 
 // compass and axis words. +X east, +Y north, -Y south (front), +Z up.
-const DIRS = {
+export const DIRS = {
   east: [1, 0, 0], west: [-1, 0, 0], north: [0, 1, 0], south: [0, -1, 0], up: [0, 0, 1], down: [0, 0, -1],
 };
-const DIRWORD = {
+export const DIRWORD = {
   east: ["east", "to the east", "east", "in +x", "along +x", "to the right"],
   west: ["west", "to the west", "west", "in -x", "along -x", "to the left"],
   north: ["north", "to the north", "north", "back", "in +y"],
@@ -65,8 +65,8 @@ const DIRWORD = {
   up: ["up", "upward", "up", "higher"],
   down: ["down", "downward", "lower"],
 };
-const scaleV = (d, s) => d.map((x) => r4(x * s));
-const addV = (a, b) => a.map((x, i) => r4(x + b[i]));
+export const scaleV = (d, s) => d.map((x) => r4(x * s));
+export const addV = (a, b) => a.map((x, i) => r4(x + b[i]));
 
 // colors: name -> [r,g,b] whose colorClass (lib/check.mjs) is the class
 export const COLORS = {
@@ -78,13 +78,13 @@ export const COLORS = {
 };
 const COLORNAMES = Object.keys(COLORS);
 
-const pos2 = (r, x, y) => r.pick([`at ${fmt(x)}, ${fmt(y)}`, `at x ${fmt(x)}, y ${fmt(y)}`, `at (${fmt(x)}, ${fmt(y)})`, `at x ${fmt(x)} y ${fmt(y)}`, `at x=${fmt(x)}, y=${fmt(y)}`]);
+export const pos2 = (r, x, y) => r.pick([`at ${fmt(x)}, ${fmt(y)}`, `at x ${fmt(x)}, y ${fmt(y)}`, `at (${fmt(x)}, ${fmt(y)})`, `at x ${fmt(x)} y ${fmt(y)}`, `at x=${fmt(x)}, y=${fmt(y)}`]);
 const origin = (r) => r.pick(["at the origin", "at 0, 0", "at the origin", "at (0, 0)"]);
 
 // ---------- starting models ----------
 // Like the eval fixtures in kind, never the same dimensions and names (gen_data drops a state equal to an eval one).
 const HOUSE_NAMES = ["house", "house", "shed", "cabin", "hut", "garage", "studio", "barn", "kiosk", "annex", "office", "cottage"];
-function fxHouse(r, { name, sel = r.chance(0.3), at = r.chance(0.2) } = {}) {
+export function fxHouse(r, { name, sel = r.chance(0.3), at = r.chance(0.2) } = {}) {
   name ??= r.pick(HOUSE_NAMES);
   let w, d, h;
   do { w = r.step(2.5, 12, 0.5); d = r.step(2, 9, 0.5); h = r.step(2, 4.5, 0.1); } while (w === 4 && d === 3 && h === 2.4);
@@ -99,7 +99,7 @@ function fxHouse(r, { name, sel = r.chance(0.3), at = r.chance(0.2) } = {}) {
   const desc = `@${name} is a group named "${name}": a box ${fmt(w)} m (x) by ${fmt(d)} m (y) by ${fmt(h)} m tall, ${where} (x ${fmt(x0)}..${fmt(x0 + w)}, y ${fmt(y0)}..${fmt(y0 + d)}, z 0..${fmt(h)}). @top is its top face.${sel ? ` The ${name} is the selected group.` : ""}`;
   return { kind: "house", name, w, d, h, x0, y0, sel, setup, desc, min: [x0, y0, 0], max: [r4(x0 + w), r4(y0 + d), h] };
 }
-function fxTower(r) {
+export function fxTower(r) {
   const name = r.pick(["tower", "tower", "chimney", "silo", "pillar", "mast"]);
   let s, h;
   do { s = r.step(1, 4, 0.5); h = r.step(4, 20, 1); } while (s === 2 && h === 6);
@@ -107,7 +107,7 @@ function fxTower(r) {
   const desc = `@${name} is a group named "${name}": a box ${fmt(s)} m by ${fmt(s)} m and ${fmt(h)} m tall at the origin (x 0..${fmt(s)}, y 0..${fmt(s)}, z 0..${fmt(h)}). @top is its top face.`;
   return { kind: "tower", name, w: s, d: s, h, x0: 0, y0: 0, setup, desc, min: [0, 0, 0], max: [s, s, h] };
 }
-function fxPair(r) {
+export function fxPair(r) {
   const [an, bn] = r.pick([["a", "b"], ["a", "b"], ["left", "right"], ["box1", "box2"], ["red", "blue"], ["small", "big"], ["p", "q"]]);
   let s, gap;
   do { s = r.step(0.5, 3, 0.5); gap = r.step(1, 6, 0.5); } while (s === 1 && gap === 2);
@@ -130,13 +130,13 @@ function fxBlock(r) {
   do { w = r.step(2, 8, 0.5); d = r.step(2, 6, 0.5); h = r.step(1.5, 4, 0.1); } while (w === 4 && d === 3 && h === 2.4);
   return { kind: "block", w, d, h, setup: [{ cmd: "rect", from: [0, 0, 0], to: [w, d, 0], as: "f" }, { cmd: "pushpull", face: "@f", distance: h, as: "top" }], desc: `A loose (ungrouped) box ${fmt(w)} m (x) by ${fmt(d)} m (y) by ${fmt(h)} m tall, corner at the origin. @top is its top face. Its front face (facing -y) is the one at y = 0.` };
 }
-function fxFacade(r) {
+export function fxFacade(r) {
   const name = r.pick(["facade", "facade", "front", "elevation"]);
   let w, h;
   do { w = r.step(4, 14, 0.5); h = r.step(2.5, 8, 0.5); } while (w === 6 && h === 3);
   return { kind: "facade", name, w, h, setup: [{ cmd: "rect", from: [0, 0, 0], to: [w, 0, h], as: name }], desc: `@${name} is a flat vertical face in the plane y = 0, ${fmt(w)} m wide (x 0..${fmt(w)}) and ${fmt(h)} m tall (z 0..${fmt(h)}): the front of a building.` };
 }
-function fxRoom(r) {
+export function fxRoom(r) {
   let w, d, h;
   do { w = r.step(3, 12, 0.5); d = r.step(3, 9, 0.5); h = r.step(2.2, 3.5, 0.1); } while (w === 6 && d === 4 && h === 2.4);
   return { kind: "room", w, d, h, t: 0.2, setup: [{ cmd: "wall", points: [[0, 0, 0], [w, 0, 0], [w, d, 0], [0, d, 0]], closed: true, height: h, as: "room" }], desc: `@room is a group named "Wall": a closed room, walls 0.2 m thick and ${fmt(h)} m high, centerline ${fmt(w)} m (x) by ${fmt(d)} m (y) from the origin (outer size ${fmt(w + 0.2)} x ${fmt(d + 0.2)}).` };
@@ -156,13 +156,13 @@ function fxMoved(r) {
   return { ...f, kind: "moved", dir, dist, by, prevMin: f.min, prevMax: f.max, min, max, setup: [...f.setup, { cmd: "move", ids: [`@${f.name}`], by }],
     desc: `@${f.name} is a group named "${f.name}", a ${fmt(f.w)} m (x) by ${fmt(f.d)} m (y) by ${fmt(f.h)} m box. The last thing done was: move the ${f.name} ${fmt(dist)} m ${dir} (it now sits at x ${fmt(min[0])}..${fmt(max[0])}, y ${fmt(min[1])}..${fmt(max[1])}, z ${fmt(min[2])}..${fmt(max[2])}). Undo takes back that move.` };
 }
-function fxLast(r) {
+export function fxLast(r) {
   // a group just made by the previous request: "it" refers to it
   const f = fxHouse(r, { sel: false, at: false });
   const last = r.pick([`a ${f.name} ${fmt(f.w)} meters wide`, `a ${fmt(f.w)} by ${fmt(f.d)} ${f.name}`, `make a ${f.name}`, `a ${f.name} ${fmt(f.h)} m tall`]);
   return { ...f, kind: "wide", desc: `@${f.name} is a group named "${f.name}", a box ${fmt(f.w)} m wide (x) by ${fmt(f.d)} m (y) by ${fmt(f.h)} m tall, corner at the origin. The last request was "${last}".` };
 }
-function fxRoomDoor(r) {
+export function fxRoomDoor(r) {
   const room = fxRoom(r);
   const dw = r.step(0.8, 1.2, 0.1), dh = r.step(2, 2.3, 0.1);
   const x0 = r.step(0.5, room.w - dw - 0.5, 0.5);
@@ -170,14 +170,14 @@ function fxRoomDoor(r) {
     setup: [...room.setup, { cmd: "begin_group", name: "door", as: "door" }, { cmd: "rect", from: [x0, -0.05, 0], to: [r4(x0 + dw), 0.05, 0], as: "df" }, { cmd: "pushpull", face: "@df", distance: dh }, { cmd: "end_group" }],
     desc: `@room is a closed room (group "Wall"), walls 0.2 m thick and ${fmt(room.h)} m high, centerline ${fmt(room.w)} m (x) by ${fmt(room.d)} m (y) from the origin. @door is a group named "door": a flat door panel ${fmt(dw)} m wide, ${fmt(dh)} m tall, 0.1 m thick on the south wall at x ${fmt(x0)}..${fmt(x0 + dw)}, y -0.05..0.05. South is -y, north is +y, west is -x, east is +x.` };
 }
-function fxNorthWall(r) {
+export function fxNorthWall(r) {
   let w, h, y;
   do { w = r.step(4, 12, 0.5); h = r.step(2.4, 4, 0.1); y = r.step(3, 10, 0.5); } while (w === 6 && h === 2.4 && y === 4);
   return { kind: "northwall", w, h, y, setup: [{ cmd: "rect", from: [0, y, 0], to: [w, y, h], as: "nwall" }], desc: `@nwall is the north wall of a room as one flat vertical face in the plane y = ${fmt(y)}, from x 0 (west end, the left end) to x ${fmt(w)} (east end) and z 0..${fmt(h)}. South is -y, north is +y, west is -x, east is +x.` };
 }
 
 // ---------- helpers for answers ----------
-const boxCmds = (x, y, z, w, d, h, group = null) => {
+export const boxCmds = (x, y, z, w, d, h, group = null) => {
   const c = [{ cmd: "rect", from: [x, y, z], to: [r4(x + w), r4(y + d), z], as: "bf" }, { cmd: "pushpull", face: "@bf", distance: h, toward: [0, 0, 1], as: "bt" }];
   return group ? [{ cmd: "begin_group", name: group, as: group }, ...c, { cmd: "end_group" }] : c;
 };
@@ -285,7 +285,7 @@ T("stairs", "easy", "core", (r) => {
   return { request: req, commands: [c], check: { bbox: { size: [null, w ? w.v : 1, rise.v], tol: 0.1 } } };
 });
 const ASSETWORDS = { tree: ["tree", "tree", "an oak tree"], palm: ["palm tree", "palm"], car: ["car", "car", "parked car"], streetlight: ["streetlight", "street light", "lamp post"], bench: ["bench", "park bench"], hydrant: ["hydrant", "fire hydrant"], door: ["door"], window: ["window"], garage_door: ["garage door"] };
-const article = (w) => (/^an? /.test(w) ? w : (/^[aeiou]/.test(w) ? "an " : "a ") + w);
+export const article = (w) => (/^an? /.test(w) ? w : (/^[aeiou]/.test(w) ? "an " : "a ") + w);
 T("insert", "easy", "core", (r) => {
   const asset = r.pick(Object.keys(ASSETWORDS));
   const word = article(r.pick(ASSETWORDS[asset]));
@@ -460,7 +460,7 @@ T("room", "medium", "core", (r) => {
   const t = tk ? tk.v : 0.2;
   return { request: req, commands: [c], check: { bbox: { size: [r4(w.v + t), r4(d.v + t), h.v], xy_any: true, tol: 0.15 }, groups: { n: 1 } } };
 });
-const sideAt = (side, w, d, z = 0) => ({ south: [r4(w / 2 - 0.5), 0, z], north: [r4(w / 2 - 0.5), d, z], east: [w, r4(d / 2), z], west: [0, r4(d / 2), z] }[side]);
+export const sideAt = (side, w, d, z = 0) => ({ south: [r4(w / 2 - 0.5), 0, z], north: [r4(w / 2 - 0.5), d, z], east: [w, r4(d / 2), z], west: [0, r4(d / 2), z] }[side]);
 T("room_opening", "medium", "core", (r) => {
   const w = r.step(3, 10, 0.5), d = r.step(3, 8, 0.5), h = r.step(2.3, 3.2, 0.1);
   const asset = r.pick(["door", "door", "window"]), side = r.pick(["south", "north", "east", "west"]);
@@ -485,7 +485,7 @@ T("room_add_opening", "medium", "core", (r) => {
   }
   return { fx, request: req, commands: cmds, check: { instances: { name: asset, min: n }, groups: { n: 1 }, inst_at: cmds.map((c) => ({ asset, at: c.at, rotate: c.rotate || 0 })) } };
 });
-const roofRise = (kind, w, d, pitch) => (kind === "shed" ? Math.min(w, d) : Math.min(w, d) / 2) * Math.tan((pitch * Math.PI) / 180);
+export const roofRise = (kind, w, d, pitch) => (kind === "shed" ? Math.min(w, d) : Math.min(w, d) / 2) * Math.tan((pitch * Math.PI) / 180);
 T("roof", "medium", "core", (r) => {
   const fx = fxHouse(r, { at: false });
   const kind = r.pick(["gable", "gable", "hip", "shed"]), pitch = r.pick([15, 20, 22, 25, 30, 35, 40, 45]);

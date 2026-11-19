@@ -24,6 +24,7 @@ import { INSPECT, fixtureDesc, sig } from "./lib/run_case.mjs";
 import { COMMANDS } from "./lib/spec.mjs";
 import { makeHeldout, norm } from "./lib/heldout.mjs";
 import { TEMPLATES, dictate, makeRng } from "./gen/templates.mjs";
+import { V3 } from "./gen/templates_v3.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -132,13 +133,20 @@ const evalStates = new Set(Object.values(JSON.parse(readFileSync(join(here, "eva
 // bucket mix: ~28% accessibility-style, ~3% out of scope, the rest core split 40/40/20 easy/medium/hard
 const byBucket = { a11y: TEMPLATES.filter((t) => t.cat === "a11y"), scope: TEMPLATES.filter((t) => t.cat === "scope"), easy: [], medium: [], hard: [] };
 for (const t of TEMPLATES.filter((t) => t.cat === "core")) byBucket[t.tier].push(t);
+// --templates v3: only the targeted v3 templates (gen/templates_v3.mjs), picked by their weights
+const v3 = flag("templates") === "v3";
+const v3Total = V3.reduce((a, t) => a + t.weight, 0);
+function pickV3() { let u = r.f() * v3Total; for (const t of V3) { u -= t.weight; if (u <= 0) return t; } return V3.at(-1); }
 function pickTemplate() {
+  if (v3) return pickV3();
   const u = r.f();
   const b = u < 0.28 ? "a11y" : u < 0.31 ? "scope" : (() => { const v = r.f(); return v < 0.4 ? "easy" : v < 0.8 ? "medium" : "hard"; })();
   return r.pick(byBucket[b]);
 }
 
-const stats = { tried: 0, kept: 0, drop: {}, heldout: {}, byTemplate: {}, tiers: {}, cats: {}, simHi: 0 };
+const stats = { tried: 0, kept: 0, drop: {}, heldout: {}, byTemplate: {}, tiers: {}, cats: {}, simHi: 0, fam: {} };
+const famOf = (t) => t.family || "-";
+const famBump = (t, k) => { const f = (stats.fam[famOf(t)] ??= { tried: 0, kept: 0, dropped: {} }); if (k === "tried") f.tried++; else if (k === "kept") f.kept++; else f.dropped[k] = (f.dropped[k] || 0) + 1; };
 const bump = (o, k) => (o[k] = (o[k] || 0) + 1);
 const seen = new Set();
 const kept = [];
@@ -147,26 +155,26 @@ const failures = [];
 
 async function one() {
   const t = pickTemplate();
-  stats.tried++;
+  stats.tried++; famBump(t, "tried");
   let ex;
-  try { ex = t.fn(r); } catch (e) { bump(stats.drop, "template error"); failures.push(`${t.name}: ${e.message}`); return; }
-  if (!ex) { bump(stats.drop, "template declined"); return; }
+  try { ex = t.fn(r); } catch (e) { bump(stats.drop, "template error"); famBump(t, "template error"); failures.push(`${t.name}: ${e.message}`); return; }
+  if (!ex) { bump(stats.drop, "template declined"); famBump(t, "template declined"); return; }
   ex.fx ??= null;
-  if (ex.fx && evalStates.has(ex.fx.desc)) { bump(stats.drop, "state equals an eval fixture"); return; }
-  if (t.cat === "a11y" || r.chance(0.1)) ex.request = dictate(r, ex.request);
+  if (ex.fx && evalStates.has(ex.fx.desc)) { bump(stats.drop, "state equals an eval fixture"); famBump(t, "eval fixture"); return; }
+  if (t.cat === "a11y" || r.chance(v3 ? 0.15 : 0.1)) ex.request = dictate(r, ex.request);
   const key = norm(ex.request) + "|" + (ex.fx?.desc || "");
-  if (seen.has(key)) { bump(stats.drop, "duplicate request"); return; }
+  if (seen.has(key)) { bump(stats.drop, "duplicate request"); famBump(t, "duplicate"); return; }
   seen.add(key);
   const se = schemaErr(ex.commands) || (ex.fx && schemaErr(ex.fx.setup));
-  if (se) { bump(stats.drop, "schema"); failures.push(`${t.name}: schema ${se}`); return; }
+  if (se) { bump(stats.drop, "schema"); famBump(t, "schema"); failures.push(`${t.name}: schema ${se}`); return; }
   const h = heldout(ex.request, ex.fx?.kind, ex.commands);
-  if (h.bad) { bump(stats.heldout, h.bad); return; }
-  if (strict && h.sim >= 0.6) { bump(stats.heldout, "strict sim>=0.6"); return; }
+  if (h.bad) { bump(stats.heldout, h.bad); famBump(t, "heldout " + h.bad); return; }
+  if (strict && h.sim >= 0.6) { bump(stats.heldout, "strict sim>=0.6"); famBump(t, "heldout strict"); return; }
   const v = await verify(ex);
-  if (v) { bump(stats.drop, v.split(":")[0]); failures.push(`${t.name}: ${v} | ${ex.request}`); bump(stats.byTemplate, t.name + " FAIL"); return; }
-  const row = { id: `g${String(kept.length + 1).padStart(5, "0")}`, template: t.name, tier: t.tier, cat: t.cat, fixture_kind: ex.fx?.kind || null, state: ex.fx?.desc || "empty model", setup: ex.fx?.setup || [], request: ex.request, commands: ex.commands, check: ex.check, sim: h.sim, sim_eval: h.simId };
+  if (v) { bump(stats.drop, v.split(":")[0]); famBump(t, "verify " + v.split(":")[0]); failures.push(`${t.name}: ${v} | ${ex.request}`); bump(stats.byTemplate, t.name + " FAIL"); return; }
+  const row = { id: `${v3 ? "v3g" : "g"}${String(kept.length + 1).padStart(5, "0")}`, family: t.family || null, template: t.name, tier: t.tier, cat: t.cat, fixture_kind: ex.fx?.kind || null, state: ex.fx?.desc || "empty model", setup: ex.fx?.setup || [], request: ex.request, commands: ex.commands, check: ex.check, sim: h.sim, sim_eval: h.simId };
   kept.push(row);
-  stats.kept++; bump(stats.byTemplate, t.name); bump(stats.tiers, t.tier); bump(stats.cats, t.cat);
+  stats.kept++; famBump(t, "kept"); bump(stats.byTemplate, t.name); bump(stats.tiers, t.tier); bump(stats.cats, t.cat);
   if (h.sim >= 0.6) stats.simHi++;
   closest.push([h.sim, h.simId, ex.request]);
 }
@@ -187,7 +195,7 @@ const cases = Object.fromEntries(readFileSync(join(here, "eval/cases.jsonl"), "u
 const report = {
   seed, n: kept.length, train: train.length, dev: dev.length, seconds: Math.round((Date.now() - t0) / 1000), tried: stats.tried,
   tiers: stats.tiers, cats: stats.cats, dropped: stats.drop, heldout_dropped: stats.heldout, word_cosine_ge_0_6: stats.simHi, strict,
-  templates: stats.byTemplate, closest_20: closest.slice(0, 20).map(([s, id, q]) => ({ sim: s, train: q, eval: `${id}: ${cases[id]}` })),
+  templates: stats.byTemplate, families: stats.fam, closest_20: closest.slice(0, 20).map(([s, id, q]) => ({ sim: s, train: q, eval: `${id}: ${cases[id]}` })),
 };
 writeFileSync(join(out, "report.json"), JSON.stringify(report, null, 1));
 writeFileSync(join(out, "failures.txt"), failures.join("\n") + "\n");
@@ -199,4 +207,4 @@ if (sample) {
   mkdirSync(dirname(sample), { recursive: true });
   writeFileSync(sample, s.map((x) => JSON.stringify(x)).join("\n") + "\n");
 }
-console.log(JSON.stringify({ ...report, templates: undefined, closest_20: undefined }, null, 1));
+console.log(JSON.stringify({ ...report, templates: undefined, closest_20: undefined, families: stats.fam }, null, 1));
