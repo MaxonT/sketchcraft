@@ -11,8 +11,8 @@ export const loadCases = () => readFileSync(join(evalDir, "cases.jsonl"), "utf8"
 export const loadFixture = (name) => readFileSync(join(evalDir, "fixtures", `${name}.jsonl`), "utf8").split("\n").filter((l) => l.trim() && !l.startsWith("#")).map((l) => JSON.parse(l));
 export const fixtureDesc = (name) => JSON.parse(readFileSync(join(evalDir, "fixtures.json"), "utf8"))[name];
 
-const INSPECT = new Set(["info", "parts", "faces", "volume", "pick", "components", "levels", "report"]);
-const sig = (s) => JSON.stringify([s.info.faces, s.info.bounds, (s.info.groups || []).length, (s.info.instances || []).length, s.faces.map((f) => f.material).join("|")]);
+export const INSPECT = new Set(["info", "parts", "faces", "volume", "pick", "components", "levels", "report"]);
+export const sig = (s) => JSON.stringify([s.info.faces, s.info.bounds, (s.info.groups || []).length, (s.info.instances || []).length, s.faces.map((f) => f.material).join("|")]);
 
 /** @returns {{pass:boolean, errs:string[], stage:string, engineMs:number}} */
 export async function runCase(c, commands) {
