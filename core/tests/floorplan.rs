@@ -208,6 +208,8 @@ fn room_info_finds_rooms_loosely_and_does_the_maths() {
     assert!(near(m["perimeter_ft"].as_f64().unwrap(), 52.0));
     assert_eq!(m["level"], "Level 1");
     assert_eq!(run(&mut e, json!({"cmd": "room_info", "name": "bed 2"}))["room"], "Bedroom 2");
+    assert_eq!(run(&mut e, json!({"cmd": "room_info", "name": "owner's bedroom"}))["room"], "Primary Bedroom");
+    assert_eq!(run(&mut e, json!({"cmd": "room_info", "name": "Master Bedroom"}))["room"], "Primary Bedroom");
     assert_eq!(run(&mut e, json!({"cmd": "room_info", "name": "the kitchen"}))["room"], "Kitchen / Living / Dining");
     // ambiguous: say which ones; unknown: list the rooms
     assert!(err(&mut e, json!({"cmd": "room_info", "name": "bedroom"})).contains("Primary Bedroom, Bedroom 2") || err(&mut e, json!({"cmd": "room_info", "name": "bedroom"})).contains("Bedroom 2, Primary Bedroom"));

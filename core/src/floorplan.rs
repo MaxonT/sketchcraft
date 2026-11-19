@@ -9,8 +9,9 @@
 //!      and pulls it up `wall_height`;
 //!   4. cuts each door, window and opening through the wall the two rooms share (doors and openings reach the
 //!      floor), with reveals;
-//!   4b. leaves the wall out entirely where an opening is kind "open" (open-plan rooms);
-//!   5. puts a floor face in each room (unless "floor": false, e.g. a stairwell), in a group named after the room (tag "Rooms"); walls are tagged "Walls".
+//!   5. leaves the wall out entirely where an opening is kind "open" (open-plan rooms);
+//!   6. puts a floor face in each room (unless "floor": false, e.g. a stairwell), in a group named after the room (tag "Rooms"); walls are tagged "Walls".
+//!
 //! Everything sits in one group per floor inside one group for the plan, and the command is one undo step.
 //! No AI here: the same plan always builds the same model.
 
@@ -663,6 +664,7 @@ fn up_face(m: &mut Model, pts: &[DVec3]) -> Result<Id> {
 }
 
 /// Cut a rectangular hole through a wall of `group`: `s0..s1` along the run, `z0..z1` up, through `t`.
+#[allow(clippy::too_many_arguments)]
 fn cut_through(m: &mut Model, group: Id, seg: &Seg, s0: f64, s1: f64, z0: f64, z1: f64, t: f64, floor_z: f64) -> Result<()> {
     let h = t / 2.0;
     let p = |s: f64, off: f64, z: f64| {
@@ -758,6 +760,11 @@ fn sorted_names(mut v: Vec<&str>) -> String {
     v.join(" and ")
 }
 
+/// a floor's room edges and each opening's (wall run, start, end)
+type Placed = (Vec<Edge>, Vec<(Seg, f64, f64)>);
+/// a wall line: along x?, its coordinate, the intervals on it
+type WallLine = (bool, f64, Vec<(f64, f64)>);
+
 impl Model {
     /// Build a checked plan (see the module docs). Returns the reply.
     pub fn floorplan_build(&mut self, plan: &Plan) -> Result<Value> {
@@ -781,7 +788,7 @@ impl Model {
         }
     }
 
-    fn floorplan_inner(&mut self, plan: &Plan, placements: Vec<(Vec<Edge>, Vec<(Seg, f64, f64)>)>, top: Id) -> Result<Vec<Value>> {
+    fn floorplan_inner(&mut self, plan: &Plan, placements: Vec<Placed>, top: Id) -> Result<Vec<Value>> {
         let t = plan.thickness;
         let mut floors = Vec::new();
         for (fl, (es, places)) in plan.floors.iter().zip(placements) {
@@ -794,7 +801,7 @@ impl Model {
             };
             let fg = self.begin_group(level_name);
             // walls: every edge on a line merged into runs, the runs unioned into one footprint
-            let mut lines: Vec<(bool, f64, Vec<(f64, f64)>)> = Vec::new();
+            let mut lines: Vec<WallLine> = Vec::new();
             for e in &es {
                 match lines.iter_mut().find(|(h, c, _)| *h == e.horiz && (*c - e.c).abs() < EPS) {
                     Some(l) => l.2.push((e.lo, e.hi)),
@@ -929,7 +936,7 @@ const SYNONYMS: &[&[&str]] = &[
 ];
 
 fn words(s: &str) -> Vec<String> {
-    s.to_lowercase().split(|c: char| !c.is_ascii_alphanumeric()).filter(|w| !w.is_empty()).map(String::from).collect()
+    s.to_lowercase().replace(['\'', '\u{2019}'], "").split(|c: char| !c.is_ascii_alphanumeric()).filter(|w| !w.is_empty()).map(String::from).collect()
 }
 
 /// does query word `q` match name word `n` (same word, a synonym, or a prefix of 3+ letters)?

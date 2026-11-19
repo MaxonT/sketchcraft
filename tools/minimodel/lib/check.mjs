@@ -11,6 +11,10 @@
 //   painted:   [{color:"red", where:{group?:"regex", normal?:[..], z?:[lo,hi]}, all?:true, min?:n, none?:true}]
 //   tags:      ["name"]
 //   reply:     [{key:"volume", approx:28.8, tol?}]   a number some command replied with
+//   plan:      {floors:[{rooms:[[name, m2], ..], openings:{door:n, window:n, opening:n, open:n}}], tol?}   checked against
+//              the floorplan_build reply: per floor, the room count, each room by name (case/punctuation-blind, either
+//              name may contain the other) with its centerline area within tol (default 4% or 0.2 m2), and the
+//              number of openings of each kind
 const lerr = (a, b, tol) => Math.abs(a - b) <= tol;
 
 export function colorClass(hex) {
@@ -129,6 +133,36 @@ export function grade(check, state, replies, replyScope = []) {
   for (const r of check.reply || []) {
     const found = replies.some((x) => typeof x[r.key] === "number" && lerr(x[r.key], r.approx, r.tol ?? Math.max(0.05, Math.abs(r.approx) * 0.02)));
     if (!found) errs.push(`no reply with ${r.key} ~ ${r.approx}`);
+  }
+  if (check.plan) errs.push(...gradePlan(check.plan, replies));
+  // room: "Name" -> some reply is room_info about that room
+  if (check.room && !replies.some((x) => x.room === check.room && typeof x.area_m2 === "number" && (check.area_ft2 == null || Math.abs(x.area_ft2 - check.area_ft2) <= 1))) errs.push(`no room_info reply about "${check.room}"${check.area_ft2 != null ? ` with ${check.area_ft2} ft2` : ""}`);
+  return errs;
+}
+
+const nname = (s) => String(s).toLowerCase().replace(/[^a-z0-9]/g, "");
+export function gradePlan(want, replies) {
+  const errs = [];
+  const got = replies.find((x) => Array.isArray(x.floors));
+  if (!got) return ["no floorplan_build reply"];
+  if (got.floors.length !== want.floors.length) errs.push(`floors: ${got.floors.length}, want ${want.floors.length}`);
+  for (const [i, wf] of want.floors.entries()) {
+    const gf = got.floors[i];
+    if (!gf) break;
+    if (gf.rooms.length !== wf.rooms.length) errs.push(`floor ${i + 1} rooms: ${gf.rooms.length}, want ${wf.rooms.length}`);
+    const free = [...gf.rooms];
+    for (const [name, area] of wf.rooms) {
+      const n = nname(name);
+      const k = free.findIndex((r) => { const m = nname(r.name); return m === n || (m && n && (m.includes(n) || n.includes(m))); });
+      if (k < 0) { errs.push(`floor ${i + 1}: no room "${name}"`); continue; }
+      const a = free[k].gross_area;
+      free.splice(k, 1);
+      if (Math.abs(a - area) > Math.max(want.tol ?? 0.2, area * 0.04)) errs.push(`floor ${i + 1} ${name}: ${a.toFixed(2)} m2, want ${area.toFixed(2)}`);
+    }
+    for (const [kind, n] of Object.entries(wf.openings || {})) {
+      const m = gf.openings.filter((o) => o.kind === kind).length;
+      if (m !== n) errs.push(`floor ${i + 1} ${kind}s: ${m}, want ${n}`);
+    }
   }
   return errs;
 }

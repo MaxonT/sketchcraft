@@ -44,15 +44,23 @@ export const COMMANDS = [
   ["faces", {}, "READ-ONLY: every face (id, normal, center, area, material, group)"],
   ["volume", { id: "id" }, "READ-ONLY: volume of a closed group"],
   ["pick", { at: "v3", as: "s?" }, "the face under a point (remember it with as)"],
+  ["room_info", { name: "s" }, "READ-ONLY: a room by name (loose, \"master\" finds the primary bedroom): its floor area in m2 and ft2, perimeter, size, level"],
+  ["floorplan_build", { floors: "floors", units: "units?", wall_height: "n?", wall_thickness: "n?", name: "s?" }, "a whole house from a room plan, ONE command: floors[{rooms[{name, rect:[x,y,width,depth]}], openings[{kind door|window|opening|open, between:[room, room|\"outside\"], side?, width?}], stairs?[{room}]}]; rects on wall centerlines, front row at y=0, left to right from x=0; touching rooms share a wall; units ft|m"],
 ];
 
 const NAME = "^@?[A-Za-z0-9_]{1,32}$";
+const N = { type: "number" };
+const ROOM = { type: "object", properties: { name: { type: "string", maxLength: 40 }, rect: { type: "array", items: N, minItems: 4, maxItems: 4 }, polygon: { type: "array", items: { type: "array", items: N, minItems: 2, maxItems: 2 }, minItems: 4, maxItems: 32 }, floor: { type: "boolean" } }, required: ["name"], additionalProperties: false };
+const OPENING = { type: "object", properties: { kind: { enum: ["door", "window", "opening", "open"] }, between: { type: "array", items: { type: "string", maxLength: 40 }, minItems: 1, maxItems: 2 }, side: { enum: ["north", "south", "east", "west"] }, at: { type: "array", items: N, minItems: 2, maxItems: 2 }, width: N, height: N, sill: N }, required: ["kind", "between"], additionalProperties: false };
+const STAIR = { type: "object", properties: { room: { type: "string", maxLength: 40 }, at: { type: "array", items: N, minItems: 2, maxItems: 2 }, direction: N, width: N, rise: N }, additionalProperties: false };
+const FLOORS = { type: "array", minItems: 1, maxItems: 4, items: { type: "object", properties: { level: { type: "integer" }, elevation: N, wall_height: N, rooms: { type: "array", items: ROOM, minItems: 1, maxItems: 40 }, openings: { type: "array", items: OPENING, maxItems: 80 }, stairs: { type: "array", items: STAIR, maxItems: 4 } }, required: ["rooms"], additionalProperties: false } };
 const ID = { anyOf: [{ type: "integer" }, { type: "string", pattern: "^@[A-Za-z0-9_]{1,32}$" }] };
 const V3 = { type: "array", items: { type: "number" }, minItems: 3, maxItems: 3 };
 const TYPES = {
   v3: V3, n: { type: "number" }, i: { type: "integer", minimum: 1, maximum: 200 }, s: { type: "string", maxLength: 40 }, b: { type: "boolean" },
   id: ID, ids: { type: "array", items: ID, minItems: 1, maxItems: 12 }, pts: { type: "array", items: V3, minItems: 2, maxItems: 24 },
   fac: { anyOf: [{ type: "number" }, V3] }, roofkind: { enum: ROOFS }, asset: { enum: ASSETS },
+  floors: FLOORS, units: { enum: ["m", "ft", "in", "cm", "mm"] },
 };
 const T = (code) => TYPES[code.replace("?", "")];
 
@@ -70,7 +78,7 @@ export function buildSchema(only = null) {
   return { type: "object", properties: { commands: { type: "array", items: { anyOf: variants }, minItems: 1, maxItems: 40 } }, required: ["commands"], additionalProperties: false };
 }
 
-const SHORT = { v3: "[x,y,z]", n: "number", i: "int", s: "string", b: "bool", id: "id", ids: "[id,..]", pts: "[[x,y,z],..]", fac: "n|[x,y,z]", roofkind: "gable|hip|shed", asset: "asset" };
+const SHORT = { floors: "[floor,..]", units: "m|ft", v3: "[x,y,z]", n: "number", i: "int", s: "string", b: "bool", id: "id", ids: "[id,..]", pts: "[[x,y,z],..]", fac: "n|[x,y,z]", roofkind: "gable|hip|shed", asset: "asset" };
 /** The compact reference put in the prompt, generated from the table (about 900 tokens). */
 export function buildReference(only = null) {
   const lines = COMMANDS.filter(([n]) => !only || only.includes(n)).map(([name, fields, doc]) => {
@@ -105,7 +113,8 @@ export const FEW_SHOT = [
 export const SHORT_SYSTEM = [
   "You are SketchCraft's modeling assistant. Turn the request into SketchCraft commands.",
   "Reply with JSON only: {\"commands\":[...]}, each command an object with \"cmd\". Meters, Z up, +X east, +Y north, degrees.",
-  "Questions use only read-only commands (info, parts, faces, volume). Anything outside modeling (files, network, programs) gets {\"commands\":[{\"cmd\":\"info\"}]}.",
+  "Questions use only read-only commands (info, parts, faces, volume, room_info). Area or size of a named room: room_info {name}; never compute it yourself. Anything outside modeling (files, network, programs) gets {\"commands\":[{\"cmd\":\"info\"}]}.",
+  "A house or floor plan described room by room is ONE floorplan_build command in the person's units (units:\"ft\" or \"m\"): floors:[{rooms:[{name, rect:[x,y,width,depth]}], openings:[{kind:door|window|opening|open, between:[room, room or \"outside\"], side?, width?}], stairs?:[{room}]}]. Rooms go row by row from the front (y=0) to the back, left to right from x=0; rooms that touch share a wall. Front = south, back = north, left = west, right = east.",
 ].join("\n");
 /** one chat example as trained and as scored: [system, user, (assistant)] */
 export const chatMessages = (state, request, commands = null) => [

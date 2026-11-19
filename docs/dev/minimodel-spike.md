@@ -413,3 +413,27 @@ Order: report → data → train → AI box → push-to-talk → spoken feedback
   selection, the last AI request), quoted as data.
 - **Fully keyboard and screen-reader operable**, works with Switch Control and Voice Control.
 - **Clear limits** under the box: what it can do, and that it runs on this computer and sends nothing anywhere.
+
+## Route 2: plan -> house (on `feature/sketchcraft-ai`, local)
+
+The small model writes ONE compact plan; the engine expands it (no AI in the expander), all through MCP.
+
+- `floorplan_build` (core/src/floorplan.rs, tests core/tests/floorplan.rs): `{units?: m|ft|in|cm|mm, wall_height?,
+  wall_thickness?, floors:[{rooms:[{name, rect:[x,y,w,d] | polygon (orthogonal), floor?}], openings:[{kind:
+  door|window|opening|open, between:[room, room|"outside"], side?, at?, width?, height?, sill?}], stairs:[{room} |
+  {at, direction}]}]}`. Rooms are on wall centerlines; edges on one line merge into one wall run, runs are unioned
+  into one footprint per floor and pulled up; openings are cut through the shared wall (5 cm clear of wall ends);
+  `open` leaves the wall out; a stair fitted into a room takes its run, and the same-named room upstairs becomes the
+  stairwell. Errors name the field and what would fit (for the repair loop). One undo step; MODEL bucket.
+- `room_info {name}` (read-only): loose name match (master/primary/owner's, bed/bedroom, bath/bathroom, prefixes),
+  floor area between centerlines in m2 and ft2, perimeter, size, level; ambiguous names list the candidates.
+- Fixtures: tools/minimodel/fixtures/townhouse*.plan.json from the owner's two drawings (choices in townhouse.notes.md;
+  regenerate with townhouse.mjs). They are test-only.
+- Data: `node gen_plans.mjs --eval 30` writes eval/plan_cases.jsonl (30 synthetic plans + both townhouses + room
+  questions with eval-only phrasings, incl. "what is the square footage of the master" = 169 ft2);
+  `node gen_plans.mjs --n 3000 --questions 400` writes verified pairs (engine builds it, rooms/areas/opening counts
+  match, one undo restores; questions: room_info answers the right room and the person's loose words find it too)
+  to /private/tmp/claude-501/minimodel-data/v2-plans/ (train/dev JSONL + chat JSONL with SHORT_SYSTEM).
+  `run_eval.mjs --set plans` scores them (gold 100%, noop 0%).
+- Known limits: walls along x/y only; one wall thickness; no roofs, closets or slabs between floors; room layout in
+  the training data is rows from the front (the townhouse is not, which is the point of testing on it).

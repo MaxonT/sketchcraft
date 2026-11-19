@@ -34,11 +34,20 @@
      ]
     },
     {
-     "name": "Kitchen / Living / Dining",
+     "name": "Kitchen",
      "rect": [
       0,
       6.096,
-      6.706,
+      3.048,
+      4.572
+     ]
+    },
+    {
+     "name": "Living / Dining",
+     "rect": [
+      3.048,
+      6.096,
+      3.658,
       4.572
      ]
     },
@@ -102,13 +111,20 @@
      "kind": "door",
      "between": [
       "Primary Bedroom",
-      "Kitchen / Living / Dining"
+      "Kitchen"
      ],
      "at": [
-      3.322,
+      2.896,
       10.668
      ],
      "width": 0.853
+    },
+    {
+     "kind": "open",
+     "between": [
+      "Kitchen",
+      "Living / Dining"
+     ]
     },
     {
      "kind": "door",
@@ -138,7 +154,7 @@
      "kind": "door",
      "between": [
       "Pantry",
-      "Kitchen / Living / Dining"
+      "Living / Dining"
      ],
      "at": [
       3.886,
@@ -150,7 +166,7 @@
      "kind": "open",
      "between": [
       "Hall",
-      "Kitchen / Living / Dining"
+      "Living / Dining"
      ]
     },
     {
@@ -245,7 +261,7 @@
     {
      "kind": "window",
      "between": [
-      "Kitchen / Living / Dining",
+      "Living / Dining",
       "outside"
      ],
      "at": [
@@ -257,7 +273,7 @@
     {
      "kind": "window",
      "between": [
-      "Kitchen / Living / Dining",
+      "Living / Dining",
       "outside"
      ],
      "at": [
@@ -293,12 +309,7 @@
    ],
    "stairs": [
     {
-     "at": [
-      6.626,
-      2.4
-     ],
-     "direction": 90,
-     "width": 0.9
+     "room": "Stair"
     }
    ]
   },
@@ -369,8 +380,7 @@
       2.438,
       1.067,
       3.658
-     ],
-     "floor": false
+     ]
     },
     {
      "name": "Loft",

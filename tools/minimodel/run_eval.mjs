@@ -3,7 +3,8 @@
 //
 //   node run_eval.mjs --model qwen2.5-coder:1.5b [--mode constrained|free] [--shots 0..8] [--limit N]
 //                     [--retrieve K] [--max-sim 0.8] [--subset] [--timeout 120]
-//                     [--ids e001,m010] [--cat a11y] [--tag name] [--no-memory-guard]
+//                     [--ids e001,m010] [--cat a11y] [--tag name] [--no-memory-guard] [--set plans]
+// --set plans  the route 2 floor-plan cases (eval/plan_cases.jsonl: 30 synthetic held-out plans + the owner's townhouse)
 // --shots N    the first N hand-written worked examples (lib/spec.mjs FEW_SHOT)
 // --retrieve K K examples picked by similarity from the OTHER fold of the request set (lib/retrieve.mjs): never the
 //              scored request itself. --max-sim drops pool examples more similar than that (near-duplicate control).
@@ -57,9 +58,9 @@ const timeoutS = Number(flag("timeout", 120));
 const doRepair = !!flag("repair"), fixSchema = !!flag("fix-schema");
 if (fixSchema) COMMANDS.find(([n]) => n === "insert")[1].as = "s?";
 const variant = [flag("prompt", "long") === "short" && "short", shots && `${shots}shot`, retrieveK && `rag${retrieveK}`, maxSim <= 1 && `max${maxSim}`, subset && "subset", fixSchema && "fixschema", doRepair && "repair"].filter(Boolean).join("-");
-const tag = flag("tag", `${model.replace(/[:/]/g, "_")}-${mode}${variant ? "-" + variant : ""}`);
+const tag = flag("tag", `${model.replace(/[:/]/g, "_")}-${mode}${variant ? "-" + variant : ""}${flag("set", "core") === "plans" ? "-plans" : ""}`);
 const guard = !flag("no-memory-guard");
-let cases = loadCases();
+let cases = loadCases(flag("set", "core"));
 const pick = makeRetriever(cases);
 if (flag("ids")) { const s = new Set(flag("ids").split(",")); cases = cases.filter((c) => s.has(c.id)); }
 if (flag("cat")) cases = cases.filter((c) => c.cat === flag("cat"));
@@ -103,7 +104,7 @@ function prompt(c) {
   const only = subset ? subsetFor(c, got) : null;
   const m = [{ role: "system", content: system(only) }];
   for (const { q, a, fx } of ex) { m.push({ role: "user", content: `Model state: ${stateOf(fx)}\nRequest: ${q}` }); m.push({ role: "assistant", content: JSON.stringify(a) }); }
-  m.push({ role: "user", content: `Model state: ${stateOf(c.fixture)}\nRequest: ${c.request}` });
+  m.push({ role: "user", content: `Model state: ${c.state || stateOf(c.fixture)}\nRequest: ${c.request}` });
   return { messages: m, schema: only ? buildSchema(only) : SCHEMA, only, shotIds: got.map(({ p }) => p.id) };
 }
 
@@ -128,7 +129,7 @@ const schemaValid = (cmds) => Array.isArray(cmds) && cmds.length > 0 && cmds.eve
 
 async function ask(c) {
   const pr = prompt(c);
-  const body = { model, messages: pr.messages, stream: false, think: false, keep_alive: "10m", options: { temperature: 0, seed: 7, num_ctx: 4096, num_predict: 900 } };
+  const body = { model, messages: pr.messages, stream: false, think: false, keep_alive: "10m", options: { temperature: 0, seed: 7, num_ctx: flag("set", "core") === "plans" ? 8192 : 4096, num_predict: flag("set", "core") === "plans" ? 3000 : 900 } };
   if (mode === "constrained") body.format = pr.schema;
   const t0 = Date.now();
   const res = await fetch(`${HOST}/api/chat`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(timeoutS * 1000) });
