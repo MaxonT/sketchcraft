@@ -140,3 +140,24 @@ fn same_plan_same_model() {
     };
     assert_eq!(build(), build());
 }
+
+#[test]
+fn open_edges_have_no_wall_and_stairwells_no_floor() {
+    let mut e = Engine::new();
+    let plan = |kind: &str| json!({"cmd": "floorplan_build", "floors": [{"rooms": [{"name": "Kitchen", "rect": [0, 0, 3, 4]}, {"name": "Living", "rect": [3, 0, 5, 4]}, {"name": "Stair", "rect": [8, 0, 1, 4], "floor": false}],
+        "openings": [{"kind": kind, "between": ["Kitchen", "Living"]}]}]});
+    let top = |e: &mut Engine, r: &Value| -> f64 {
+        let w = r["floors"][0]["walls"].as_i64().unwrap();
+        faces(e).iter().filter(|f| f["group"] == w && near(f["center"][2].as_f64().unwrap(), 2.7)).map(|f| f["area"].as_f64().unwrap()).sum()
+    };
+    let walled = run(&mut e, plan("door"));
+    let with_wall = top(&mut e, &walled);
+    run(&mut e, json!({"cmd": "undo"}));
+    let open = run(&mut e, plan("open"));
+    assert_eq!(open["floors"][0]["openings"][0]["kind"], "open");
+    // the x=3 wall (3.8 m clear between the end walls) is gone
+    assert!(near(with_wall - top(&mut e, &open), 0.2 * 3.8), "{with_wall} vs {}", top(&mut e, &open));
+    // the stairwell room is a group with no floor face
+    let stair = open["floors"][0]["rooms"][2]["group"].as_i64().unwrap();
+    assert!(!faces(&mut e).iter().any(|f| f["group"] == stair));
+}

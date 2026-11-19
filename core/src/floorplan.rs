@@ -9,7 +9,8 @@
 //!      and pulls it up `wall_height`;
 //!   4. cuts each door, window and opening through the wall the two rooms share (doors and openings reach the
 //!      floor), with reveals;
-//!   5. puts a floor face in each room, in a group named after the room (tag "Rooms"); walls are tagged "Walls".
+//!   4b. leaves the wall out entirely where an opening is kind "open" (open-plan rooms);
+//!   5. puts a floor face in each room (unless "floor": false, e.g. a stairwell), in a group named after the room (tag "Rooms"); walls are tagged "Walls".
 //! Everything sits in one group per floor inside one group for the plan, and the command is one undo step.
 //! No AI here: the same plan always builds the same model.
 
@@ -31,12 +32,16 @@ pub enum Kind {
     Door,
     Window,
     Opening,
+    /// no wall at all on the shared edge (an open-plan kitchen and living room)
+    Open,
 }
 
 pub struct Room {
     pub name: String,
     /// counter-clockwise, orthogonal, on the wall centerlines (plan coordinates, origin applied)
     pub ring: Vec<DVec2>,
+    /// false: no floor face (a stairwell on the floor above)
+    pub floor: bool,
 }
 
 pub struct Opening {
@@ -235,7 +240,7 @@ pub fn parse(v: &Value) -> Result<Plan> {
             if name.eq_ignore_ascii_case("outside") {
                 bail!("{rp}: \"outside\" is reserved for exterior walls; rename the room");
             }
-            rooms.push(Room { name, ring: room_ring(r, origin, &rp)? });
+            rooms.push(Room { name, ring: room_ring(r, origin, &rp)?, floor: r.get("floor").and_then(|f| f.as_bool()).unwrap_or(true) });
         }
         check_overlaps(&rooms, &fp)?;
         let mut openings = Vec::new();
@@ -252,6 +257,7 @@ pub fn parse(v: &Value) -> Result<Plan> {
                 "door" | "doorway" => Kind::Door,
                 "window" => Kind::Window,
                 "opening" | "archway" | "arch" | "passage" => Kind::Opening,
+                "open" | "none" | "no wall" | "open plan" => Kind::Open,
                 k => bail!("{op}.kind must be door, window or opening, got \"{k}\""),
             };
             let names: Vec<String> = match o.get("between") {
@@ -281,7 +287,7 @@ pub fn parse(v: &Value) -> Result<Plan> {
             let (dw, dh, ds) = match kind {
                 Kind::Door => (0.9, 2.1, 0.0),
                 Kind::Window => (1.2, 1.2, 0.9),
-                Kind::Opening => (1.2, 2.1, 0.0),
+                Kind::Opening | Kind::Open => (1.2, 2.1, 0.0),
             };
             let width = opt_num(o, "width", &op)?.unwrap_or(dw);
             let sill = if kind == Kind::Window { opt_num(o, "sill", &op)?.unwrap_or(ds) } else { 0.0 };
@@ -643,6 +649,11 @@ fn place_openings(fl: &Floor, es: &[Edge], t: f64) -> Result<Vec<(Seg, f64, f64)
                 .unwrap(),
             None => *segs.iter().max_by(|x, y| (x.hi - x.lo).total_cmp(&(y.hi - y.lo))).unwrap(),
         };
+        if o.kind == Kind::Open {
+            // the whole shared edge goes; nothing to fit
+            placed.push((seg, seg.lo, seg.hi, -1.0, -1.0, o.path.clone()));
+            continue;
+        }
         let (u0, u1) = fits(&seg);
         if u1 - u0 < o.width - EPS {
             bail!("{}: the {:.2} m opening does not fit the {:.2} m clear wall between \"{an}\" and \"{other}\"; make it at most {:.2} m wide", o.path, o.width, (u1 - u0).max(0.0), ((u1 - u0) * 100.0).floor() / 100.0);
@@ -710,6 +721,22 @@ impl Model {
                     None => lines.push((e.horiz, e.c, vec![(e.lo, e.hi)])),
                 }
             }
+            // open edges: no wall there (merge first, then take the open piece out)
+            let opens: Vec<&(Seg, f64, f64)> = fl.openings.iter().zip(&places).filter(|(o, _)| o.kind == Kind::Open).map(|(_, p)| p).collect();
+            for l in &mut lines {
+                l.2.sort_by(|a, b| a.0.total_cmp(&b.0));
+                let mut merged: Vec<(f64, f64)> = Vec::new();
+                for &(lo, hi) in &l.2 {
+                    match merged.last_mut() {
+                        Some(last) if lo <= last.1 + EPS => last.1 = last.1.max(hi),
+                        _ => merged.push((lo, hi)),
+                    }
+                }
+                for (_, lo, hi) in opens.iter().filter(|(sg, ..)| sg.horiz == l.0 && (sg.c - l.1).abs() < EPS) {
+                    merged = subtract(merged, (*lo, *hi));
+                }
+                l.2 = merged;
+            }
             let mut rects = Vec::new();
             for (horiz, c, mut iv) in lines {
                 iv.sort_by(|a, b| a.0.total_cmp(&b.0));
@@ -735,17 +762,21 @@ impl Model {
             let mut ops = Vec::new();
             for (o, (seg, s0, s1)) in fl.openings.iter().zip(&places) {
                 self.check_deadline()?;
+                if o.kind == Kind::Open {
+                    ops.push(json!({"kind": "open", "between": [fl.rooms[o.a].name, o.b.map(|b| fl.rooms[b].name.clone()).unwrap_or_else(|| "outside".into())], "length": r3(s1 - s0)}));
+                    continue;
+                }
                 cut_through(self, wg, seg, *s0, *s1, z + o.sill, z + o.sill + o.height, t, z)?;
                 let c = seg.point((s0 + s1) / 2.0);
                 ops.push(json!({
-                    "kind": match o.kind { Kind::Door => "door", Kind::Window => "window", Kind::Opening => "opening" },
+                    "kind": match o.kind { Kind::Door => "door", Kind::Window => "window", Kind::Opening => "opening", Kind::Open => "open" },
                     "between": [fl.rooms[o.a].name, o.b.map(|b| fl.rooms[b].name.clone()).unwrap_or_else(|| "outside".into())],
                     "at": [r3(c.x), r3(c.y), r3(z + o.sill)], "width": r3(s1 - s0), "height": r3(o.height),
                 }));
             }
             // drawing a door's outline on the wall's underside lets the modeler re-find the room loops as faces,
             // so the underside is rebuilt from the footprint without the doorways
-            let gaps: Vec<[f64; 4]> = fl.openings.iter().zip(&places).filter(|(o, _)| o.sill < EPS).map(|(_, (sg, s0, s1))| {
+            let gaps: Vec<[f64; 4]> = fl.openings.iter().zip(&places).filter(|(o, _)| o.sill < EPS && o.kind != Kind::Open).map(|(_, (sg, s0, s1))| {
                 let h = t / 2.0;
                 if sg.horiz { [*s0, sg.c - h, *s1, sg.c + h] } else { [sg.c - h, *s0, sg.c + h, *s1] }
             }).collect();
@@ -766,8 +797,12 @@ impl Model {
             for r in &fl.rooms {
                 self.active_group = Some(fg);
                 let rg = self.begin_group(r.name.clone());
+                // the floor runs to the wall centerlines (under the walls and through doorways); the area
+                // reported is the clear area inside the walls
                 let inner = inset(&r.ring, t / 2.0);
-                up_face(self, &inner.iter().map(|p| p.extend(z)).collect::<Vec<_>>())?;
+                if r.floor {
+                    up_face(self, &r.ring.iter().map(|p| p.extend(z)).collect::<Vec<_>>())?;
+                }
                 room_ids.push(rg);
                 let b = r.ring.iter().fold((DVec2::splat(f64::MAX), DVec2::splat(f64::MIN)), |(a, b), p| (a.min(*p), b.max(*p)));
                 rooms.push(json!({"name": r.name, "group": rg, "area": r3(signed_area(&inner)), "gross_area": r3(signed_area(&r.ring)), "size": [r3(b.1.x - b.0.x), r3(b.1.y - b.0.y)]}));
