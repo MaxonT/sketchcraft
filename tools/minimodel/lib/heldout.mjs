@@ -3,8 +3,8 @@
 //
 // HARD rules (a pair that breaks one is dropped by the generator, and `gen_data.mjs --check` fails on it):
 //   exact     same request after normalising (lowercase, punctuation and extra spaces removed, numbers kept)
-//   masked    same request with every number (digits and number words) replaced by "#": the same sentence
-//             pattern as an eval request with other numbers in it
+//   masked    same request with every number (digits and number words) and its unit replaced by "#": the same
+//             sentence pattern as an eval request with other numbers or units in it
 //   shingle   character 8-gram Jaccard >= 0.7 with an eval request (numbers kept): a light rewording of it
 //   gold      same (starting-model kind, command names in order, sorted numbers) as an eval gold answer:
 //             the same answer, whatever the words (only for answers with numbers in them: a bare `parts`
@@ -19,7 +19,9 @@ import { loadCases } from "./run_case.mjs";
 const NUMWORDS = "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty hundred half quarter twice double triple".split(" ");
 const NUMRE = new RegExp(`\\b(${NUMWORDS.join("|")})\\b`, "g");
 export const norm = (s) => s.toLowerCase().replace(/[^a-z0-9.\s]/g, " ").replace(/\.(?!\d)/g, " ").replace(/\s+/g, " ").trim();
-export const mask = (s) => norm(s).replace(/\d+(\.\d+)?/g, "#").replace(NUMRE, "#").replace(/#( #)+/g, "#");
+// numbers AND their units become "#", so "8.5m", "8.5 metres" and "5.5 m" all read the same
+const UNITS = "(?:m|meters?|metres?|cm|centimet(?:er|re)s?|mm|millimet(?:er|re)s?|ft|feet|foot|in|inch(?:es)?|deg|degrees?)";
+export const mask = (s) => norm(s).replace(/-?\d+(\.\d+)?/g, " # ").replace(NUMRE, "#").replace(new RegExp(`#\\s*${UNITS}\\b`, "g"), "#").replace(/\s+/g, " ").replace(/#( #)+/g, "#").trim();
 const shingles = (s, n = 8) => { const t = norm(s); const out = new Set(); for (let i = 0; i + n <= t.length; i++) out.add(t.slice(i, i + n)); return out; };
 const jaccard = (a, b) => { let i = 0; for (const x of a) if (b.has(x)) i++; return i / (a.size + b.size - i || 1); };
 

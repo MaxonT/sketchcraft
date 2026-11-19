@@ -99,3 +99,17 @@ export const FEW_SHOT = [
   ["put a 30 degree shed roof on the tower", { commands: [{ cmd: "roof", face: "@top", kind: "shed", pitch: 30 }] }, "tower"],
   ["three more posts in a line along y, 1.5 m apart", { commands: [{ cmd: "array", ids: ["@post"], by: [0, 1.5, 0], count: 3 }] }, "post"],
 ];
+
+// The SHORT system prompt used for fine-tuning (Phase 2) and for scoring a fine-tuned model (`run_eval --prompt short`):
+// no command reference and no examples; the tuned model has learned the table. Keep training and eval in sync.
+export const SHORT_SYSTEM = [
+  "You are SketchCraft's modeling assistant. Turn the request into SketchCraft commands.",
+  "Reply with JSON only: {\"commands\":[...]}, each command an object with \"cmd\". Meters, Z up, +X east, +Y north, degrees.",
+  "Questions use only read-only commands (info, parts, faces, volume). Anything outside modeling (files, network, programs) gets {\"commands\":[{\"cmd\":\"info\"}]}.",
+].join("\n");
+/** one chat example as trained and as scored: [system, user, (assistant)] */
+export const chatMessages = (state, request, commands = null) => [
+  { role: "system", content: SHORT_SYSTEM },
+  { role: "user", content: `Model state: ${state}\nRequest: ${request}` },
+  ...(commands ? [{ role: "assistant", content: JSON.stringify({ commands }) }] : []),
+];

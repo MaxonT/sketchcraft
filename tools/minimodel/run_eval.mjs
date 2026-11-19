@@ -9,6 +9,7 @@
 //              scored request itself. --max-sim drops pool examples more similar than that (near-duplicate control).
 // --repair     deterministic glue on the model's output before the engine runs it (lib/retrieve.mjs repair())
 // --fix-schema the command table also allows `as` on insert (the engine accepts it; the original table left it out)
+// --prompt short  the fine-tuning prompt (no command reference); use it to score a fine-tuned model
 // --subset     the schema and the prompt reference list only the commands this request plausibly needs
 //              (core + the retrieved examples' commands + keyword triggers)
 //   node run_eval.mjs --model gold        # control: the reference solutions (must be 100%)
@@ -21,7 +22,7 @@ import { execSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { COMMANDS, FEW_SHOT, buildReference, buildSchema } from "./lib/spec.mjs";
+import { COMMANDS, FEW_SHOT, SHORT_SYSTEM, buildReference, buildSchema } from "./lib/spec.mjs";
 import { fixtureDesc, loadCases, loadFixture, runCase } from "./lib/run_case.mjs";
 import { makeRetriever, repair, subsetFor } from "./lib/retrieve.mjs";
 
@@ -55,7 +56,7 @@ const subset = !!flag("subset");
 const timeoutS = Number(flag("timeout", 120));
 const doRepair = !!flag("repair"), fixSchema = !!flag("fix-schema");
 if (fixSchema) COMMANDS.find(([n]) => n === "insert")[1].as = "s?";
-const variant = [shots && `${shots}shot`, retrieveK && `rag${retrieveK}`, maxSim <= 1 && `max${maxSim}`, subset && "subset", fixSchema && "fixschema", doRepair && "repair"].filter(Boolean).join("-");
+const variant = [flag("prompt", "long") === "short" && "short", shots && `${shots}shot`, retrieveK && `rag${retrieveK}`, maxSim <= 1 && `max${maxSim}`, subset && "subset", fixSchema && "fixschema", doRepair && "repair"].filter(Boolean).join("-");
 const tag = flag("tag", `${model.replace(/[:/]/g, "_")}-${mode}${variant ? "-" + variant : ""}`);
 const guard = !flag("no-memory-guard");
 let cases = loadCases();
@@ -86,8 +87,9 @@ async function waitForMemory() {
 }
 
 const SCHEMA = buildSchema();
+const promptKind = flag("prompt", "long"); // short = the fine-tuning prompt (lib/spec.mjs SHORT_SYSTEM), no reference
 const system = (only) => {
-  let s = buildReference(only);
+  let s = promptKind === "short" ? SHORT_SYSTEM : buildReference(only);
   if (mode === "free") s += "\nReply with ONLY the JSON object, no explanation.";
   return s;
 };

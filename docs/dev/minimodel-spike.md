@@ -23,8 +23,9 @@ model by sentence: "a wall 4.2 m long, 20 cm thick", "move the door 1 m left", "
 
 Not yet with prompting alone. The best prompting setup (qwen2.5-coder 1.5B, schema-constrained, 8 retrieved worked
 examples, the schema fix and the repair glue) builds the right thing for **60% of the 100-request subset** and
-**N_FULL of all 201** (easy E_FULL, medium M_FULL, hard H_FULL, accessibility A_FULL), with every output a valid
-command list and the engine accepting ENG_FULL. Four out of five failures are the model choosing wrong numbers or a
+(easy 80%, medium 50%, hard 33%, accessibility 68%), with every output a valid command list and the engine accepting
+92%. (The same configuration on all 201 was still running when this was written; its file will be
+`results/qwen2.5-coder_1.5b-constrained-rag8-fixschema-repair-full.json`.) Four out of five failures are the model choosing wrong numbers or a
 wrong approach, not broken syntax, which is what fine-tuning on verified examples fixes well. So: train (Phase 2),
 then hold the result to the owner's bar of **easy ≥ 90% and medium ≥ 75%** on the held-out eval before it ships.
 
@@ -161,7 +162,8 @@ What this says:
 `run_eval.mjs --model qwen2.5-coder:1.5b --retrieve 8 --fix-schema --repair` (results file
 `results/qwen2.5-coder_1.5b-constrained-rag8-fixschema-repair-full.json`):
 
-FULL_TABLE
+Running at the time of writing (slowed by the memory guard while other builds ran). The 100-request numbers above
+are the reference until it lands.
 
 ## Failure analysis
 
@@ -183,16 +185,16 @@ configuration's 40 failures out of 100:
 
 - *Geometry the model has to compute.* "four 3 m columns at the corners of a 6 by 6 square" put the columns 5 m
   apart; "8 columns evenly spaced on a circle of radius 5 m" became one `array` along x (it cannot do the sines and
-  cosines); "a table ... with four 5 cm legs at the corners" made 4 m legs from 0.75 m up. A 1.5B model writing
+  cosines); "a table: top ... 4 cm thick ... with four 5 cm square legs" turned "4 cm" into 4 m tall legs. A 1.5B model writing
   coordinates token by token does not do trigonometry or "at the corners of" reliably.
 - *Several objects that must relate.* "three houses in a row, 10 m apart, the middle one twice as tall" and "two rooms
   side by side sharing the wall at x = 4" lost one of the constraints. "a street of 4 houses, each with a roof" put
   one roof on the first house only: it does not repeat a multi-step pattern.
-- *Order of operations inside a group.* "a white 6 x 5 house with a dark gray hip roof" put the roof on a face whose
-  group was already closed and then referred to a name it never gave.
+- *Naming across steps.* "a white 6 x 5 house with a dark gray hip roof" named the group `h`, then painted `@house`,
+  a name it never gave, and the engine refused it.
 - *Verbs that need the right transform.* "mirror the house to the other side of the y axis" became a 180-degree
-  rotation; "move the tower against the east side of the house, then raise it 1 m" referred to a tower that did not
-  exist.
+  rotation; "move the tower against the east side of the house, then raise it 1 m" referred to a tower that
+  was not in the model yet (the request assumes one; the reference answer builds it first).
 
 **Accessibility requests fail on relative placement and edit verbs, not on vocabulary.** The model understands the
 dictated sentences; it gets the placement wrong:
@@ -240,7 +242,8 @@ and bookkeeping). `state` is a model-state description in the same form the app 
 4. **one `undo` restores the model exactly**: every answer is one Undo step;
 5. it passes the held-out rules below.
 
-**How it is generated.** About 70 *intent templates* written for this generator (none copied from the eval): boxes,
+**How it is generated.** 100 *intent templates* written for this generator (not generated from eval requests; where
+a template's wording happens to match an eval sentence pattern, the held-out rules drop those requests): boxes,
 cubes, slabs, flat rectangles, circles, cylinders, columns, walls, stairs, inserts, dimensions; move, rotate (quarter
 turns and any angle, about the origin or the center), uniform and one-axis scale, copy, delete, rename, tag, hide,
 paint (groups, the top, a chosen side via `pick`), volume; rooms with doors and windows, roofs of each kind, rows and
@@ -260,7 +263,8 @@ names and sizes**; a state equal to an eval fixture's is dropped.
 **Strict separation from the eval set** (`lib/heldout.mjs`; the eval stays test-only). Hard rules, each a drop:
 
 - *exact*: the same request after normalising (case, punctuation, spaces; numbers kept);
-- *masked*: the same sentence pattern with other numbers (every number and number word replaced by `#`);
+- *masked*: the same sentence pattern with other numbers or units (every number, number word and its unit replaced by
+  `#`, so "8.5m", "8.5 metres" and "5.5 m" read the same);
 - *shingle*: character 8-gram Jaccard ≥ 0.7 against an eval request (a light rewording);
 - *gold*: the same answer as an eval gold (starting-model kind + command names + sorted numbers), whatever the words.
 
@@ -270,7 +274,17 @@ is reported, not a drop rule. `--strict` drops everything at or above 0.6 to bui
 measures generalisation to unseen phrasing. `gen_data.mjs --check <file>` re-runs the hard rules over a dataset and
 exits non-zero on any hit; run it before every training run.
 
-**Status of the first run:** DATA_STATUS
+**Status of the first run** (seed 1, about 8 minutes on the M1): **5,000 verified pairs** (4,750 train, 250 dev) in
+`/private/tmp/claude-501/minimodel-data/v1/` (not committed; 2.9 MB; `data/sample.jsonl` holds 200 of them).
+2,163 easy, 2,152 medium, 685 hard; 1,437 accessibility-style, 110 out of scope; 2,541 start from a model; 310 use
+imperial units. Of 5,571 tried, **0 failed engine verification** (the check, the one-undo test or the schema); 484
+were dropped by the held-out rules (239 same sentence pattern, 221 same gold answer, 17 light rewording, 7 exact)
+and 87 as duplicates or declined. `--check` on train and dev: **0 held-out hits**. 1,369 train requests (29%)
+share vocabulary with an eval request at word cosine ≥ 0.6 (different numbers and states); `--strict` removes them.
+A mutation test (one number in each answer changed) still passed in 7% of cases, nearly all where the change does
+not alter the result (a `pick` point elsewhere on the same face, an interior column of a grid). `to_chat.mjs` turns
+the data into chat JSONL with the short training prompt (`lib/spec.mjs` `SHORT_SYSTEM`); `run_eval.mjs --prompt
+short` scores a tuned model with the same prompt.
 
 **Still to do for the dataset:** paraphrases from a bigger local model (for example Qwen2.5-7B-Instruct, Apache-2.0,
 in Ollama on pc-11's GPU; only the English is rewritten, a paraphrase is kept only if every number and unit is still
@@ -329,8 +343,8 @@ Unsloth is optional: it would roughly halve training time, but on native Windows
 
 | | spike best (prompting) | **required to ship** |
 |---|---|---|
-| easy | E_FULL | **≥ 90%** |
-| medium | M_FULL | **≥ 75%** |
+| easy | 80% (subset) | **≥ 90%** |
+| medium | 50% (subset) | **≥ 75%** |
 
 **Also tracked and reported** (not a gate unless the owner makes it one): hard (aim ≥ 50%), accessibility (aim
 ≥ 85%: it is the reason to ship), questions 100% read-only (a question must never change the model: this one *is* a

@@ -20,6 +20,9 @@ Nothing here ships in the app. It needs Node 20+, a built `sketchcraft` binary a
 | `report.mjs` | `results/*.json` to markdown tables / failure examples |
 | `run_all.sh` | one model at a time: pull, run three configurations, `ollama rm` |
 | `results/` | raw per-request results from the runs in the doc |
+| `gen_data.mjs`, `gen/templates.mjs` | Phase 2 training-data generator: (state, request -> command list) pairs, each verified in the engine (see below) |
+| `lib/heldout.mjs` | the rules that keep training data apart from the eval set |
+| `data/sample.jsonl` | a small sample of generated pairs (one or two per template); full runs go to a scratch folder, not the repo |
 
 ## Run it
 
@@ -67,3 +70,19 @@ precise numbers ("a wall 4.2 m long, 2.4 m high, 20 cm thick starting at the ori
 left end of the north wall, 1.2 m wide"), edit-by-sentence follow-ups ("make it 5 meters instead", "move the door 1 m left",
 "undo that") and read-only questions ("how big is the room?", "what's on the south wall?"). They are also graded
 easy/medium/hard and counted in the tier totals; `run_eval` reports them separately too.
+
+## Training data (Phase 2)
+
+```sh
+node tools/minimodel/gen_data.mjs --n 5000 --seed 1 --out /private/tmp/claude-501/minimodel-data/v1 --sample tools/minimodel/data/sample.jsonl
+node tools/minimodel/gen_data.mjs --check /private/tmp/claude-501/minimodel-data/v1/train.jsonl    # held-out rules, exit 1 on any hit
+```
+
+Each pair is kept only if: every command is in the `lib/spec.mjs` table; a fresh `sketchcraft mcp` (agent policy, scratch
+folder) runs the starting model and then the answer inside `begin_batch`/`end_batch` and accepts every command; the result
+passes a check computed from the request's numbers (inserted assets are checked by position from the bounds; questions
+must be read-only and change nothing); one `undo` restores the model exactly; and `lib/heldout.mjs` finds no collision with
+the eval set. Failures are dropped and counted in `report.json` / `failures.txt`, never fixed by hand. `--strict` also
+drops pairs whose wording is close to an eval request (word cosine >= 0.6). The eval set is never used as training data.
+Each row: `{id, template, tier, cat, fixture_kind, state, setup, request, commands, check, sim, sim_eval}`; `check.inst_at`
+is a generator-only check (not a `lib/check.mjs` key).
