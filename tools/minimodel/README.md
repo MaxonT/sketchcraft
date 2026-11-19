@@ -86,3 +86,23 @@ the eval set. Failures are dropped and counted in `report.json` / `failures.txt`
 drops pairs whose wording is close to an eval request (word cosine >= 0.6). The eval set is never used as training data.
 Each row: `{id, template, tier, cat, fixture_kind, state, setup, request, commands, check, sim, sim_eval}`; `check.inst_at`
 is a generator-only check (not a `lib/check.mjs` key).
+
+## Training data (v3: targeted at the v2 failures)
+
+v2 scored 87.6% on the core eval and 96.4% on the plan eval. v3 adds pairs for the failure families (written from the eval
+CHECKS' conventions, never from the eval sentences; `lib/heldout.mjs` still gates every pair):
+
+```sh
+node tools/minimodel/gen_data.mjs --templates v3 --n 3000 --seed 301 --out DIR/route1      # gen/templates_v3.mjs
+node tools/minimodel/gen_plans.mjs --notch --n 1000 --seed 33 --out DIR/plans               # route 2: notch / carved-corner plans
+```
+
+Families (`family` field on each row): f1 spacing words ("N between them" / "gap of N" = the gap; "N apart" / "every N" /
+"N to the east" = origin-to-origin; "array X n times" = n copies in total), f2 "a box ... at x X, y Y" = min corner (and
+"centered at" = center), f3 polygons / circles / vertical faces / tables / stacked slabs / L-shaped rooms, f4 roofs
+(`roof {face: @top-face, kind, pitch}`; roofs after a scale; painting roof vs walls), f5 openings (windows cut in a wall at a
+position from either end, facade windows, hollow open-top boxes, rooms sharing walls, door + windows + slab), f6 edits
+(relative resize, mirror = a copy offset because `mirror` is not in the agent allowlist, tower against the house, wall
+questions that use `parts`/`faces`, never a made-up name), f7 plans (`--notch`: a tall garage/living room with a stack of small
+rooms beside it, or a large room that is L-shaped because a small room is carved from its corner; polygon rooms; ft and m).
+`data/sample_v3.jsonl` has two pairs per template.
