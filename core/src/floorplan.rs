@@ -61,6 +61,11 @@ pub struct Stair {
     pub direction: f64,
     pub width: f64,
     pub rise: Option<f64>,
+    pub tread: f64,
+    /// fitted into a room: the run it has (the tread shrinks to fit, down to 0.22 m)
+    fit: Option<f64>,
+    room: Option<usize>,
+    path: String,
 }
 
 pub struct Floor {
@@ -87,7 +92,7 @@ fn num(v: &Value, path: &str) -> Result<f64> {
         _ => None,
     };
     match x {
-        Some(x) if x.is_finite() && x.abs() <= MAX_SIZE * 10.0 => Ok((x * 1000.0).round() / 1000.0),
+        Some(x) if x.is_finite() && x.abs() <= MAX_SIZE * 10.0 => Ok(x),
         Some(_) => bail!("{path}: number out of range"),
         None => bail!("{path}: expected a number in meters, got {v}"),
     }
@@ -145,8 +150,9 @@ fn room_ring(o: &Value, origin: DVec2, path: &str) -> Result<Vec<DVec2>> {
     } else {
         bail!("{path}: a room needs \"rect\": [x, y, width, depth] or \"polygon\": [[x, y], ...]");
     };
+    // corners snap to the millimeter (after any unit conversion), so rooms that touch share exact edges
     for p in &mut ring {
-        *p += origin;
+        *p = ((*p + origin) * 1000.0).round() / 1000.0;
     }
     // drop repeated and in-line corners
     ring.dedup_by(|a, b| a.distance(*b) < EPS);
@@ -200,7 +206,35 @@ fn find_room(rooms: &[Room], name: &str, path: &str) -> Result<usize> {
 }
 
 /// Read and check a plan. `v` is the whole command object.
+/// Plan lengths in `units` (m by default; ft, in, cm, mm) become meters. Levels, directions and names are not lengths.
+fn to_meters(v: &Value, k: f64) -> Value {
+    match v {
+        Value::Number(n) => n.as_f64().map(|x| json!(x * k)).unwrap_or(Value::Null),
+        Value::Array(a) => Value::Array(a.iter().map(|x| to_meters(x, k)).collect()),
+        Value::Object(o) => Value::Object(o.iter().map(|(key, x)| (key.clone(), if matches!(key.as_str(), "level" | "direction") { x.clone() } else { to_meters(x, k) })).collect()),
+        other => other.clone(),
+    }
+}
+
 pub fn parse(v: &Value) -> Result<Plan> {
+    let k = match v.get("units").and_then(|u| u.as_str()).map(|u| u.trim().to_ascii_lowercase()) {
+        None => 1.0,
+        Some(u) => match u.as_str() {
+            "m" | "meter" | "meters" | "metre" | "metres" => 1.0,
+            "cm" => 0.01,
+            "mm" => 0.001,
+            "ft" | "foot" | "feet" => 0.3048,
+            "in" | "inch" | "inches" => 0.0254,
+            other => bail!("units must be m, cm, mm, ft or in, got \"{other}\""),
+        },
+    };
+    let scaled;
+    let v = if k == 1.0 {
+        v
+    } else {
+        scaled = to_meters(v, k);
+        &scaled
+    };
     let origin = match v.get("origin") {
         None | Some(Value::Null) => DVec2::ZERO,
         Some(o) => xy(o, "origin")?,
@@ -306,7 +340,7 @@ pub fn parse(v: &Value) -> Result<Plan> {
         let mut stairs = Vec::new();
         if let Some(s) = f.get("stairs").filter(|s| !s.is_null()) {
             for (si, st) in s.as_array().ok_or_else(|| anyhow!("{fp}.stairs: expected a list"))?.iter().enumerate() {
-                stairs.push(stair(st, origin, &format!("{fp}.stairs[{si}]"))?);
+                stairs.push(stair(st, origin, &format!("{fp}.stairs[{si}]"), &rooms, thickness)?);
             }
         }
         floors.push(Floor { level: f.get("level").cloned().unwrap_or(json!(fi + 1)), elevation, height: h, rooms, openings, stairs });
@@ -317,14 +351,63 @@ pub fn parse(v: &Value) -> Result<Plan> {
             let sp = format!("stairs[{si}]");
             let lv = st.get("level").cloned().unwrap_or(json!(1));
             let fi = floors.iter().position(|f| f.level == lv || f.level.as_f64().is_some_and(|x| Some(x) == lv.as_f64())).ok_or_else(|| anyhow!("{sp}.level: no floor with level {lv}"))?;
-            floors[fi].stairs.push(stair(st, origin, &sp)?);
+            let s = stair(st, origin, &sp, &floors[fi].rooms, thickness)?;
+            floors[fi].stairs.push(s);
+        }
+    }
+    // each stair climbs to the floor above (or one floor height); one fitted into a room takes the room's run, and the
+    // room of the same name upstairs is its stairwell (no floor)
+    for fi in 0..floors.len() {
+        let next_z = floors.get(fi + 1).map(|n| n.elevation);
+        let (z, h) = (floors[fi].elevation, floors[fi].height);
+        let mut wells = Vec::new();
+        let fl = &mut floors[fi];
+        let names: Vec<String> = fl.rooms.iter().map(|r| r.name.to_lowercase()).collect();
+        for s in &mut fl.stairs {
+            let rise = s.rise.unwrap_or_else(|| next_z.map(|n| n - z).filter(|r| *r > 0.2).unwrap_or(h));
+            s.rise = Some(rise);
+            if let Some(len) = s.fit {
+                let n = (rise / 0.19).ceil().max(2.0);
+                s.tread = (len / (n - 1.0)).min(0.28);
+                if s.tread < 0.22 {
+                    bail!("{}: a {rise:.2} m stair needs about {:.2} m of run; the room gives {len:.2} m", s.path, 0.22 * (n - 1.0));
+                }
+            }
+            if let Some(r) = s.room {
+                wells.push(names[r].clone());
+            }
+        }
+        if let Some(up) = floors.get_mut(fi + 1) {
+            for r in &mut up.rooms {
+                if wells.contains(&r.name.to_lowercase()) {
+                    r.floor = false;
+                }
+            }
         }
     }
     Ok(Plan { name, thickness, floors })
 }
 
-fn stair(v: &Value, origin: DVec2, path: &str) -> Result<Stair> {
-    let at = xy(v.get("at").ok_or_else(|| anyhow!("{path}: needs \"at\": [x, y] (the foot of the stair)"))?, &format!("{path}.at"))? + origin;
+fn stair(v: &Value, origin: DVec2, path: &str, rooms: &[Room], t: f64) -> Result<Stair> {
+    let width = opt_num(v, "width", path)?.unwrap_or(1.0);
+    let rise = opt_num(v, "rise", path)?;
+    if !(0.5..=5.0).contains(&width) || rise.is_some_and(|r| !(0.2..=20.0).contains(&r)) {
+        bail!("{path}: width must be 0.5 to 5 m and rise 0.2 to 20 m");
+    }
+    if let Some(name) = v.get("room").and_then(|r| r.as_str()) {
+        // along the room's long side, against its east (or north) wall, from its south (or west) end
+        let ri = find_room(rooms, name, &format!("{path}.room"))?;
+        let r = &rooms[ri];
+        let (lo, hi) = r.ring.iter().fold((DVec2::splat(f64::MAX), DVec2::splat(f64::MIN)), |(a, b), p| (a.min(*p), b.max(*p)));
+        let (dx, dy) = (hi.x - lo.x, hi.y - lo.y);
+        let m = t / 2.0 + 0.01;
+        let (at, direction, room_w, len) = if dy >= dx { (DVec2::new(hi.x - m, lo.y + m), 90.0, dx - 2.0 * m, dy - 2.0 * m) } else { (DVec2::new(lo.x + m, lo.y + m), 0.0, dy - 2.0 * m, dx - 2.0 * m) };
+        if room_w < 0.6 {
+            bail!("{path}: \"{name}\" is too narrow for a stair (needs 0.6 m clear, has {room_w:.2} m)");
+        }
+        return Ok(Stair { at, direction, width: width.min(room_w), rise, tread: 0.28, fit: Some(len), room: Some(ri), path: path.into() });
+    }
+    let at = xy(v.get("at").ok_or_else(|| anyhow!("{path}: needs \"room\": name (the stair fills that room) or \"at\": [x, y] (its foot)"))?, &format!("{path}.at"))? + origin;
     let direction = match v.get("direction") {
         Some(Value::String(s)) => {
             let d = side(s, &format!("{path}.direction"))?;
@@ -333,12 +416,7 @@ fn stair(v: &Value, origin: DVec2, path: &str) -> Result<Stair> {
         Some(x) => num(x, &format!("{path}.direction"))?,
         None => 0.0,
     };
-    let width = opt_num(v, "width", path)?.unwrap_or(1.0);
-    let rise = opt_num(v, "rise", path)?;
-    if !(0.5..=5.0).contains(&width) || rise.is_some_and(|r| !(0.2..=20.0).contains(&r)) {
-        bail!("{path}: width must be 0.5 to 5 m and rise 0.2 to 20 m");
-    }
-    Ok(Stair { at, direction, width, rise })
+    Ok(Stair { at, direction, width, rise, tread: 0.28, fit: None, room: None, path: path.into() })
 }
 
 fn inside(p: DVec2, ring: &[DVec2]) -> bool {
@@ -638,7 +716,8 @@ fn place_openings(fl: &Floor, es: &[Edge], t: f64) -> Result<Vec<(Seg, f64, f64)
             }
         }
         // usable part of each run: clear of the walls at its ends
-        let fits = |s: &Seg| (s.lo + t / 2.0, s.hi - t / 2.0);
+        // 5 cm clear of the wall faces at each end, so a cut never lands on a corner
+        let fits = |s: &Seg| (s.lo + t / 2.0 + 0.05, s.hi - t / 2.0 - 0.05);
         let seg = match o.at {
             Some(p) => *segs
                 .iter()
@@ -659,7 +738,8 @@ fn place_openings(fl: &Floor, es: &[Edge], t: f64) -> Result<Vec<(Seg, f64, f64)
             bail!("{}: the {:.2} m opening does not fit the {:.2} m clear wall between \"{an}\" and \"{other}\"; make it at most {:.2} m wide", o.path, o.width, (u1 - u0).max(0.0), ((u1 - u0) * 100.0).floor() / 100.0);
         }
         let want = o.at.map(|p| seg.coord(p)).unwrap_or((seg.lo + seg.hi) / 2.0);
-        let mid = want.clamp(u0 + o.width / 2.0, u1 - o.width / 2.0);
+        let (m0, m1) = (u0 + o.width / 2.0, u1 - o.width / 2.0);
+        let mid = if m1 > m0 { want.clamp(m0, m1) } else { (m0 + m1) / 2.0 };
         let (s0, s1) = (mid - o.width / 2.0, mid + o.width / 2.0);
         let (z0, z1) = (o.sill, o.sill + o.height);
         for (ps, a0, a1, b0, b1, pp) in &placed {
@@ -704,7 +784,7 @@ impl Model {
     fn floorplan_inner(&mut self, plan: &Plan, placements: Vec<(Vec<Edge>, Vec<(Seg, f64, f64)>)>, top: Id) -> Result<Vec<Value>> {
         let t = plan.thickness;
         let mut floors = Vec::new();
-        for (fi, (fl, (es, places))) in plan.floors.iter().zip(placements).enumerate() {
+        for (fl, (es, places)) in plan.floors.iter().zip(placements) {
             self.check_deadline()?;
             let z = fl.elevation;
             self.active_group = Some(top);
@@ -812,8 +892,8 @@ impl Model {
             let mut st = Vec::new();
             for s in &fl.stairs {
                 self.active_group = Some(fg);
-                let rise = s.rise.unwrap_or_else(|| plan.floors.get(fi + 1).map(|n| n.elevation - z).filter(|r| *r > 0.2).unwrap_or(fl.height));
-                let (g, n) = self.stairs(s.at.extend(z), s.direction, s.width, rise, 0.28)?;
+                let rise = s.rise.unwrap_or(fl.height);
+                let (g, n) = self.stairs(s.at.extend(z), s.direction, s.width, rise, s.tread)?;
                 st.push(json!({"group": g, "risers": n, "rise": r3(rise)}));
             }
             floors.push(json!({"level": fl.level, "elevation": r3(z), "group": fg, "walls": wg, "rooms": rooms, "openings": ops, "stairs": st}));
@@ -835,6 +915,79 @@ fn faces_with_holes(m: &mut Model, outers: &[Vec<DVec2>], holes: &[Vec<DVec2>], 
         out.push(f);
     }
     Ok(out)
+}
+
+const SYNONYMS: &[&[&str]] = &[
+    &["master", "primary", "main", "owner", "owners"],
+    &["bath", "bathroom", "washroom", "restroom"],
+    &["bed", "bedroom", "br"],
+    &["wic", "closet"],
+    &["living", "lounge", "family", "great"],
+    &["entry", "foyer", "entrance"],
+    &["hall", "hallway", "corridor"],
+    &["study", "office", "den"],
+];
+
+fn words(s: &str) -> Vec<String> {
+    s.to_lowercase().split(|c: char| !c.is_ascii_alphanumeric()).filter(|w| !w.is_empty()).map(String::from).collect()
+}
+
+/// does query word `q` match name word `n` (same word, a synonym, or a prefix of 3+ letters)?
+fn word_hit(q: &str, n: &str) -> bool {
+    if q == n || (q.len() >= 3 && n.starts_with(q)) {
+        return true;
+    }
+    SYNONYMS.iter().any(|g| g.contains(&q) && g.iter().any(|s| *s == n || (s.len() >= 3 && n.starts_with(s))))
+}
+
+impl Model {
+    /// A room built by floorplan_build (a group tagged "Rooms"), found loosely by name: its floor area and size.
+    pub fn room_info(&self, name: &str) -> Result<Value> {
+        let rooms: Vec<(Id, &crate::model::Group)> = self.groups.iter().filter(|(_, g)| g.tag.as_deref() == Some("Rooms")).map(|(k, g)| (*k, g)).collect();
+        if rooms.is_empty() {
+            bail!("this model has no rooms (rooms come from floorplan_build: groups tagged \"Rooms\")");
+        }
+        let skip = ["the", "a", "room", "of", "my", "sq", "ft"];
+        let q: Vec<String> = words(name).into_iter().filter(|w| !skip.contains(&w.as_str())).collect();
+        let exact: Vec<_> = rooms.iter().filter(|(_, g)| words(&g.name) == words(name)).collect();
+        let hits: Vec<_> = if exact.len() == 1 {
+            exact
+        } else {
+            rooms.iter().filter(|(_, g)| {
+                let nw = words(&g.name);
+                !q.is_empty() && q.iter().all(|qw| nw.iter().any(|n| word_hit(qw, n)))
+            }).collect()
+        };
+        let list = |v: &[&(Id, &crate::model::Group)]| v.iter().map(|(_, g)| g.name.clone()).collect::<Vec<_>>().join(", ");
+        let (gid, g) = match hits.len() {
+            1 => *hits[0],
+            0 => bail!("no room matches \"{name}\" (rooms: {})", list(&rooms.iter().collect::<Vec<_>>())),
+            _ => bail!("\"{name}\" could be {}; which one?", list(&hits)),
+        };
+        // the room's floor: its biggest up-facing face
+        let floor = self.faces.iter().filter(|(id, f)| f.group == Some(gid) && self.normal(**id).z > 0.9).map(|(id, f)| {
+            let pts: Vec<DVec3> = f.outer.iter().map(|v| self.p(*v)).collect();
+            (crate::geom::area(&pts), pts, *id)
+        }).max_by(|a, b| a.0.total_cmp(&b.0));
+        let level = g.parent.and_then(|p| self.groups.get(&p)).map(|p| p.name.clone());
+        let Some((area, pts, _)) = floor else {
+            return Ok(json!({"room": g.name, "level": level, "group": gid, "floor": false, "note": "this room has no floor (a stairwell)"}));
+        };
+        let per: f64 = (0..pts.len()).map(|i| pts[i].distance(pts[(i + 1) % pts.len()])).sum();
+        let (lo, hi) = pts.iter().fold((DVec3::splat(f64::MAX), DVec3::splat(f64::MIN)), |(a, b), p| (a.min(*p), b.max(*p)));
+        const FT: f64 = 0.3048;
+        let imperial = matches!(self.units.as_str(), "ft" | "in" | "feet" | "inches");
+        let r1 = |x: f64| (x * 10.0).round() / 10.0;
+        let say = if imperial { format!("{} ft² ({} m²)", r1(area / (FT * FT)).round(), r1(area)) } else { format!("{} m² ({} ft²)", r1(area), r1(area / (FT * FT)).round()) };
+        Ok(json!({
+            "room": g.name, "level": level, "group": gid,
+            "area_m2": r3(area), "area_ft2": r1(area / (FT * FT)),
+            "perimeter_m": r3(per), "perimeter_ft": r1(per / FT),
+            "size_m": [r3(hi.x - lo.x), r3(hi.y - lo.y)], "size_ft": [r1((hi.x - lo.x) / FT), r1((hi.y - lo.y) / FT)],
+            "elevation_m": r3(lo.z), "units": self.units, "area": say,
+            "measured": "floor area between the wall centerlines",
+        }))
+    }
 }
 
 fn r3(x: f64) -> f64 {

@@ -161,3 +161,59 @@ fn open_edges_have_no_wall_and_stairwells_no_floor() {
     let stair = open["floors"][0]["rooms"][2]["group"].as_i64().unwrap();
     assert!(!faces(&mut e).iter().any(|f| f["group"] == stair));
 }
+
+#[test]
+fn feet_and_a_stair_fitted_into_its_room() {
+    let mut e = Engine::new();
+    let r = run(&mut e, json!({"cmd": "floorplan_build", "units": "ft", "wall_height": 9, "floors": [
+        {"rooms": [{"name": "Living", "rect": [0, 0, 16, 14]}, {"name": "Stairs", "rect": [16, 0, 4, 14]}], "openings": [{"kind": "open", "between": ["Living", "Stairs"]}], "stairs": [{"room": "Stairs"}]},
+        {"rooms": [{"name": "Bedroom", "rect": [0, 0, 16, 14]}, {"name": "Stairs", "rect": [16, 0, 4, 14]}], "openings": [{"kind": "door", "between": ["Bedroom", "Stairs"], "width": 2.5}]}]}));
+    // 16 x 14 ft = 20.81 m² between centerlines; the upper floor starts at 9 ft
+    assert!(near(r["floors"][0]["rooms"][0]["gross_area"].as_f64().unwrap(), 16.0 * 14.0 * 0.3048 * 0.3048));
+    assert!(near(r["floors"][1]["elevation"].as_f64().unwrap(), 9.0 * 0.3048));
+    assert!(near(r["floors"][1]["openings"][0]["width"].as_f64().unwrap(), 2.5 * 0.3048));
+    // the stair climbs the whole floor height inside the Stairs room, and upstairs the Stairs room is a stairwell
+    assert!(near(r["floors"][0]["stairs"][0]["rise"].as_f64().unwrap(), 9.0 * 0.3048));
+    let stair = r["floors"][0]["stairs"][0]["group"].as_i64().unwrap();
+    let parts = run(&mut e, json!({"cmd": "parts", "ids": [stair]}));
+    let size: Vec<f64> = parts["parts"][0]["size"].as_array().unwrap().iter().map(|v| v.as_f64().unwrap()).collect();
+    assert!(size[0] <= 14.0 * 0.3048 - 0.2 + 1e-6, "{parts}");
+    let well = r["floors"][1]["rooms"][1]["group"].as_i64().unwrap();
+    assert!(!faces(&mut e).iter().any(|f| f["group"] == well));
+    // a room too short for the stair says how much run it needs
+    let short = err(&mut e, json!({"cmd": "floorplan_build", "floors": [{"rooms": [{"name": "S", "rect": [0, 0, 1.2, 2]}], "stairs": [{"room": "S"}]}, {"rooms": [{"name": "S", "rect": [0, 0, 1.2, 2]}]}]}));
+    assert!(short.contains("needs about"), "{short}");
+}
+
+#[test]
+fn an_opening_as_wide_as_the_clear_wall_is_refused_cleanly() {
+    // found by gen_plans: a 1.2 m opening in a 1.4 m wall (1.2 m clear) used to panic in the cut
+    let mut e = Engine::new();
+    let r = e.exec_json(&json!({"cmd": "floorplan_build", "units": "cm", "floors": [{"rooms": [{"name": "Den", "rect": [0, 550, 370, 490]}, {"name": "Hall", "rect": [0, 1040, 140, 390]}, {"name": "Kitchen", "rect": [140, 1040, 230, 390]}],
+        "openings": [{"kind": "opening", "between": ["Den", "Hall"]}]}]}).to_string());
+    assert!(r["error"].as_str().unwrap_or_default().contains("does not fit"), "{r}");
+    assert_eq!(faces(&mut e).len(), 0);
+}
+
+#[test]
+fn room_info_finds_rooms_loosely_and_does_the_maths() {
+    let mut e = Engine::new();
+    run(&mut e, json!({"cmd": "floorplan_build", "units": "ft", "floors": [{"rooms": [
+        {"name": "Primary Bedroom", "rect": [0, 0, 13, 13]}, {"name": "Bedroom 2", "rect": [13, 0, 12, 13]}, {"name": "Kitchen / Living / Dining", "rect": [0, 13, 25, 15]}]}]}));
+    let before = faces(&mut e).len();
+    let m = run(&mut e, json!({"cmd": "room_info", "name": "master"}));
+    assert_eq!(m["room"], "Primary Bedroom");
+    assert!(near(m["area_ft2"].as_f64().unwrap(), 169.0), "{m}");
+    assert!((m["area_m2"].as_f64().unwrap() - 169.0 * 0.3048 * 0.3048).abs() < 0.01); // corners snap to the mm
+    assert!(near(m["perimeter_ft"].as_f64().unwrap(), 52.0));
+    assert_eq!(m["level"], "Level 1");
+    assert_eq!(run(&mut e, json!({"cmd": "room_info", "name": "bed 2"}))["room"], "Bedroom 2");
+    assert_eq!(run(&mut e, json!({"cmd": "room_info", "name": "the kitchen"}))["room"], "Kitchen / Living / Dining");
+    // ambiguous: say which ones; unknown: list the rooms
+    assert!(err(&mut e, json!({"cmd": "room_info", "name": "bedroom"})).contains("Primary Bedroom, Bedroom 2") || err(&mut e, json!({"cmd": "room_info", "name": "bedroom"})).contains("Bedroom 2, Primary Bedroom"));
+    assert!(err(&mut e, json!({"cmd": "room_info", "name": "garage"})).contains("rooms:"));
+    // read-only, and the agent may ask
+    assert_eq!(faces(&mut e).len(), before);
+    let agent = sketchcraft::policy::Caller::Mcp(sketchcraft::policy::Workspace::anywhere());
+    assert!(sketchcraft::policy::permits(&agent, "room_info"));
+}

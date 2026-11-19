@@ -1217,6 +1217,8 @@ pub enum Command {
         #[serde(default)]
         closed: bool,
     },
+    /// Read-only: a room by name (loose: "master" finds "Primary Bedroom"): its floor area in m² and ft², perimeter, level.
+    RoomInfo { name: String },
     /// A whole house from a compact plan: floors of rooms (rect or orthogonal polygon on the wall centerlines)
     /// and openings between two rooms (or a room and "outside"). See `floorplan.rs`. One undo step.
     FloorplanBuild {
