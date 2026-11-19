@@ -12,6 +12,7 @@
 //
 //   node gen_plans.mjs --n 3000 [--seed 11] [--out DIR] [--jobs 4]       training pairs (+ chat JSONL)
 //   node gen_plans.mjs --eval 30 [--seed 90210]                            (re)write the held-out plan eval cases
+//   node gen_plans.mjs --notch --n 1000 [--seed 31] [--out DIR]           v3: small rooms beside / carved into a large room
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -45,6 +46,7 @@ const TYPES = {
   mudroom: { w: [5, 8], d: [6, 10], say: ["mudroom", "mud room"] },
   loft: { w: [10, 18], d: [10, 18], say: ["loft", "bonus room"], hab: 1 },
   closet: { w: [3, 6], d: [3, 8], say: ["closet", "storage room"] },
+  utility: { w: [4, 7], d: [4, 8], say: ["mechanical room", "utility closet"] },
   stairs: { w: [3.5, 4.5], d: [11, 16], say: ["stairs", "stairs", "stairwell", "stair hall"] },
 };
 const GROUND = ["living", "kitchen", "dining", "family", "bedroom", "primary", "bath", "half", "hall", "entry", "laundry", "office", "pantry", "mudroom", "closet"];
@@ -159,7 +161,7 @@ function makePlan(r, floorsN, maxRooms) {
 }
 
 // ---------- the plan in a unit, with names, openings and the gold command ----------
-function build(r, raw, U) {
+function build(r, raw, U, carve = false) {
   const conv = (ft) => U.fromFt(ft);
   const total = raw.floors.flat(2).length;
   if (total < 3 || total > 12) return null;
@@ -191,11 +193,26 @@ function build(r, raw, U) {
     return { rooms, rows: rows.length, depth: r3(conv(yFt)) };
   });
   if (floors.some((f) => !f)) return null;
-  const Wu = conv(raw.W);
+  if (carve) { if (total + 1 > 12 || !carveInto(r, floors[0], counts, said, U)) return null; return finish(r, floors, conv(raw.W), U, { narrow: true, share: 0.12 / U.k }); }
+  return finish(r, floors, conv(raw.W), U);
+}
+
+// openings, doors, windows, stairs and the gold command for rooms already placed (rect or polygon, in the unit)
+function finish(r, floors, Wu, U, opts = {}) {
   const tU = T2 / U.k;
   const doorU = 0.9 / U.k;
   // shared wall length between two rects (centerlines)
+  const edgesOf = (q) => (q.polygon ? q.polygon.map((p, i) => [...p, ...q.polygon[(i + 1) % q.polygon.length]]) : [[q.rect[0], q.rect[1], q.rect[0] + q.rect[2], q.rect[1]], [q.rect[0] + q.rect[2], q.rect[1], q.rect[0] + q.rect[2], q.rect[1] + q.rect[3]], [q.rect[0], q.rect[1] + q.rect[3], q.rect[0] + q.rect[2], q.rect[1] + q.rect[3]], [q.rect[0], q.rect[1], q.rect[0], q.rect[1] + q.rect[3]]]);
+  const sharedEdges = (a, b) => {
+    let best = 0;
+    for (const [x0, y0, x1, y1] of edgesOf(a)) for (const [u0, v0, u1, v1] of edgesOf(b)) {
+      if (Math.abs(y0 - y1) < 1e-6 && Math.abs(v0 - v1) < 1e-6 && Math.abs(y0 - v0) < 1e-6) best = Math.max(best, Math.min(Math.max(x0, x1), Math.max(u0, u1)) - Math.max(Math.min(x0, x1), Math.min(u0, u1)));
+      if (Math.abs(x0 - x1) < 1e-6 && Math.abs(u0 - u1) < 1e-6 && Math.abs(x0 - u0) < 1e-6) best = Math.max(best, Math.min(Math.max(y0, y1), Math.max(v0, v1)) - Math.max(Math.min(y0, y1), Math.min(v0, v1)));
+    }
+    return Math.max(0, best);
+  };
   const shared = (a, b) => {
+    if (a.polygon || b.polygon) return sharedEdges(a, b);
     const [ax, ay, aw, ad] = a.rect, [bx, by, bw, bd] = b.rect;
     const ov = (l1, h1, l2, h2) => Math.max(0, Math.min(h1, h2) - Math.max(l1, l2));
     if (Math.abs(ax + aw - bx) < 1e-6 || Math.abs(bx + bw - ax) < 1e-6) return ov(ay, ay + ad, by, by + bd);
@@ -217,7 +234,7 @@ function build(r, raw, U) {
       for (const b of r.shuffle(R.map((_, i) => i))) {
         if (reached.has(b)) continue;
         const len = shared(R[a], R[b]);
-        if (len < doorU + tU + 0.3 / U.k) continue;
+        if (len < doorU + tU + (opts.share ?? 0.3 / U.k)) continue;
         reached.add(b); queue.push(b);
         const both = SOCIAL.has(R[a].t) && SOCIAL.has(R[b].t);
         const stair = R[a].t === "stairs" || R[b].t === "stairs";
@@ -229,6 +246,7 @@ function build(r, raw, U) {
         if (R[a].t === "garage" || R[b].t === "garage") kind = "door";
         if (kind === "opening" && len < (1.2 + 0.2 + 0.15) / U.k) kind = "door";
         const o = { kind, between: [R[a].name, R[b].name] };
+        if (opts.narrow && kind === "door" && len < 1.6 / U.k) o.width = U.key === "ft" ? 2.5 : 0.75;
         if (kind === "door" && r.chance(0.15)) { const w = U.key === "ft" ? r.pick([2.5, 2.67, 3]) : U.key === "m" ? r.pick([0.8, 0.85, 0.9]) : r.pick([80, 90]); if (w + tU < len - 0.15 / U.k) o.width = w; }
         if (kind === "opening" && r.chance(0.4)) { const w = U.key === "ft" ? r.pick([4, 5, 6]) : U.key === "m" ? r.pick([1.2, 1.5, 1.8]) : r.pick([120, 150]); if (w + tU < len - 0.15 / U.k) o.width = w; }
         ops.push(o);
@@ -239,6 +257,16 @@ function build(r, raw, U) {
     const ext = (q) => {
       const [x, y, w, d] = q.rect;
       const s = [];
+      if (q.polygon) {
+        for (const [x0, y0, x1, y1] of edgesOf(q)) {
+          const L = Math.hypot(x1 - x0, y1 - y0);
+          if (Math.abs(y0 - y1) < 1e-6 && Math.abs(y0) < 1e-6) s.push(["south", L]);
+          if (Math.abs(y0 - y1) < 1e-6 && Math.abs(y0 - fl.depth) < 1e-6) s.push(["north", L]);
+          if (Math.abs(x0 - x1) < 1e-6 && Math.abs(x0) < 1e-6) s.push(["west", L]);
+          if (Math.abs(x0 - x1) < 1e-6 && Math.abs(x0 - Wu) < 1e-6) s.push(["east", L]);
+        }
+        return s;
+      }
       if (y === 0) s.push(["south", w]);
       if (Math.abs(y + d - fl.depth) < 1e-6) s.push(["north", w]);
       if (x === 0) s.push(["west", d]);
@@ -275,11 +303,11 @@ function build(r, raw, U) {
   }
   const wallH = r.chance(0.25) ? (U.key === "ft" ? r.pick([8, 9, 10]) : U.key === "m" ? r.pick([2.4, 2.6, 2.7, 3]) : r.pick([240, 260, 270])) : null;
   const cmd = { cmd: "floorplan_build", units: U.key, ...(wallH ? { wall_height: wallH } : {}), floors: outF.map((f) => ({
-    rooms: f.rooms.map((q) => ({ name: q.name, rect: q.rect })),
+    rooms: f.rooms.map((q) => ({ name: q.name, ...(q.polygon ? { polygon: q.polygon } : { rect: q.rect }) })),
     ...(f.openings.length ? { openings: f.openings.map(({ front, garage, ...o }) => o) } : {}),
     ...(f.stairs.length ? { stairs: f.stairs } : {}),
   })) };
-  const check = { plan: { floors: outF.map((f) => ({ rooms: f.rooms.map((q) => [q.name, +(q.rect[2] * q.rect[3] * U.k * U.k).toFixed(3)]), openings: ["door", "window", "opening", "open"].reduce((o, k) => ({ ...o, [k]: f.openings.filter((x) => x.kind === k).length }), {}) })) } };
+  const check = { plan: { floors: outF.map((f) => ({ rooms: f.rooms.map((q) => [q.name, +((q.polygon ? Math.abs(q.polygon.reduce((a, p, i) => a + p[0] * q.polygon[(i + 1) % q.polygon.length][1] - q.polygon[(i + 1) % q.polygon.length][0] * p[1], 0)) / 2 : q.rect[2] * q.rect[3]) * U.k * U.k).toFixed(3)]), openings: ["door", "window", "opening", "open"].reduce((o, k) => ({ ...o, [k]: f.openings.filter((x) => x.kind === k).length }), {}) })) } };
   return { cmd, check, floors: outF, U, wallH, Wu };
 }
 
@@ -319,9 +347,11 @@ function describe(r, P) {
     const rowsN = Math.max(...f.rooms.map((q) => q.row)) + 1;
     const ltr = r.pick([" (left to right)", ", left to right", ""]);
     const rowText = [];
-    for (let i = 0; i < rowsN; i++) {
-      const rr = f.rooms.filter((q) => q.row === i);
-      const items = rr.map((q) => style === "prose" ? `${r.chance(0.5) ? "a " : "the "}${q.spoken} (${dim(q.rect[2], q.rect[3])})` : `${q.spoken} ${dim(q.rect[2], q.rect[3])}`);
+    if (P.custom && fi === 0) for (const t of P.custom(r, f, { dim, len })) rowText.push(style === "prose" ? `${t}.` : t);
+    else for (let i = 0; i < rowsN; i++) {
+      const rr = f.rooms.filter((q) => q.row === i && !q.carvedFrom);
+      const itemOf = (q) => `${q.spoken} ${dim(q.rect[2], q.rect[3])}`;
+      const items = rr.map((q) => (q.carves ? q.carves.text(r, dim, itemOf(q), style === "prose") : style === "prose" ? `${r.chance(0.5) ? "a " : "the "}${q.spoken} (${dim(q.rect[2], q.rect[3])})` : itemOf(q)));
       const joined = style === "prose" ? (items.length > 1 ? items.slice(0, -1).join(", ") + " and " + items.at(-1) : items[0]) : items.join(", ");
       rowText.push(style === "prose" ? `${rowName(i, rowsN)}${ltr}: ${joined}.` : `${rowName(i, rowsN)}${ltr}: ${joined}`);
     }
@@ -439,6 +469,151 @@ async function verify(ex) {
 
 const sigOf = (cmd) => cmd.floors.map((f) => f.rooms.map((q) => `${norm(q.name)}:${(q.rect ? q.rect.slice(2) : [q.polygon.length]).map((v) => +(+v * ({ ft: 0.3048, m: 1, cm: 0.01 }[cmd.units] || 1)).toFixed(1)).join("x")}`).sort().join(",")).join("|");
 
+
+// ---------- route 2, v3: a small room tucked beside / into a large one ----------
+// The v2 model put a small pantry beside a garage ON TOP of the garage. These layouts teach the geometry:
+//   A: a tall room (garage / living) on one side, a stack of small rooms (pantry, laundry, closet, powder, mudroom,
+//      utility, hall) behind the front room on the other side, and full-width rooms across the back;
+//   B: a normal row plan where a large room (living, garage, family, kitchen) is L-shaped (a polygon) because a small
+//      room is carved out of one of its corners.
+const SMALL = ["pantry", "laundry", "closet", "half", "mudroom", "utility", "hall"];
+const fits = (t, w, d) => w >= TYPES[t].w[0] * 0.85 && w <= TYPES[t].w[1] * 1.4 && d >= TYPES[t].d[0] * 0.8 && d <= TYPES[t].d[1] * 1.5;
+const titleCase = (t) => t.replace(/\b\w/g, (c) => c.toUpperCase());
+function nameRooms(r, rooms) {
+  const counts = {}, said = {}, seen = {};
+  for (const q of rooms) counts[q.t] = (counts[q.t] || 0) + 1;
+  for (const t of Object.keys(counts)) said[t] = r.pick(TYPES[t].say);
+  for (const q of rooms) { const n = (seen[q.t] = (seen[q.t] || 0) + 1); q.spoken = said[q.t] + (counts[q.t] > 1 ? ` ${n}` : ""); q.name = titleCase(q.spoken); }
+}
+function layoutA(r) {
+  const bigT = r.pick(["garage", "garage", "garage", "living"]);
+  const bw = bigT === "garage" ? r.int(11, 14) : r.int(12, 15), bd = bigT === "garage" ? r.int(19, 24) : r.int(17, 22);
+  if (bigT === "garage" && bw === 11 && bd === 20) return null; // the owner's townhouse is not training data
+  const rw = r.int(9, 16), W = bw + rw, d1 = r.int(6, 9), H = bd - d1;
+  const rooms = [{ t: bigT, x: 0, y: 0, w: bw, d: bd, layer: "big" }];
+  if (rw >= 13 && r.chance(0.4)) { const pw = r.int(4, 5); rooms.push({ t: "entry", x: bw, y: 0, w: rw - pw, d: d1, layer: "front" }, { t: "half", x: bw + rw - pw, y: 0, w: pw, d: d1, layer: "front" }); }
+  else rooms.push({ t: "entry", x: bw, y: 0, w: rw, d: d1, layer: "front" });
+  const used = new Set(rooms.map((q) => q.t));
+  // the block behind the front room, beside the tall room: 2-3 columns, each one room or two stacked
+  const nc = rw >= 13 ? r.pick([2, 3]) : 2;
+  const ws = [];
+  let left = rw;
+  for (let i = 0; i < nc - 1; i++) { const w = r.step(3.5, left - 3.5 * (nc - 1 - i), 0.5); ws.push(w); left = r4n(left - w); }
+  ws.push(left);
+  let cx = bw;
+  for (const [ci, w] of ws.entries()) {
+    const stacked = H >= 9 && r.chance(0.65);
+    if (stacked) {
+      const dA = r.step(4, H - 4, 0.5), dB = r4n(H - dA);
+      const tA = r.pick(SMALL.filter((t) => !used.has(t) && fits(t, w, dA))), tB = r.pick(SMALL.filter((t) => !used.has(t) && t !== tA && fits(t, w, dB)));
+      if (!tA || !tB) return null;
+      used.add(tA); used.add(tB);
+      rooms.push({ t: tA, x: cx, y: d1, w, d: dA, layer: "mid", col: ci }, { t: tB, x: cx, y: r4n(d1 + dA), w, d: dB, layer: "mid", col: ci });
+    } else {
+      const t = r.pick(SMALL.filter((t) => !used.has(t) && fits(t, w, H)));
+      if (!t) return null;
+      used.add(t);
+      rooms.push({ t, x: cx, y: d1, w, d: H, layer: "mid", col: ci });
+    }
+    cx = r4n(cx + w);
+  }
+  // back bands, full width
+  const band = (pool, depth, y, layer) => {
+    const k = r.int(2, 3);
+    let leftW = W, x = 0;
+    const row = [];
+    for (let i = 0; i < k; i++) {
+      const w = i === k - 1 ? leftW : r.step(8, Math.max(8, leftW - 8 * (k - 1 - i)), 1);
+      const t = r.pick(pool.filter((t) => !used.has(t) && fits(t, w, depth)));
+      if (!t) return false;
+      used.add(t); row.push({ t, x, y, w, d: depth, layer }); leftW = r4n(leftW - w); x = r4n(x + w);
+    }
+    rooms.push(...row);
+    return true;
+  };
+  const bd2 = r.int(12, 16);
+  if (!band(["living", "kitchen", "dining", "family", "office"], bd2, bd, "back")) return null;
+  let D = bd + bd2;
+  if (r.chance(0.55)) { const bd3 = r.int(10, 13); const k = r.int(1, 2); let x = 0, leftW = W; const row = [];
+    for (let i = 0; i < k; i++) { const w = i === k - 1 ? leftW : r.step(9, Math.max(9, leftW - 9), 1); const t = r.pick(["primary", "bedroom", "bath", "office", "loft"].filter((t) => (!used.has(t) || t === "bedroom" || t === "bath") && fits(t, w, bd3))); if (!t) return null; used.add(t); row.push({ t, x, y: D, w, d: bd3, layer: "rear" }); leftW = r4n(leftW - w); x = r4n(x + w); }
+    rooms.push(...row); D += bd3; }
+  if (r.chance(0.35)) for (const q of rooms) q.x = r4n(W - q.x - q.w); // mirrored: the tall room on the right
+  return { rooms, W, D };
+}
+const r4n = (v) => +v.toFixed(3);
+function buildA(r, lay, U) {
+  const conv = (ft) => U.fromFt(ft), r3 = (v) => +v.toFixed(3);
+  nameRooms(r, lay.rooms);
+  const rooms = lay.rooms.map((q) => { const x0 = conv(q.x), x1 = conv(q.x + q.w), y0 = conv(q.y), y1 = conv(q.y + q.d); if (x1 - x0 <= 0 || y1 - y0 <= 0) return null; return { ...q, rect: [r3(x0), r3(y0), r3(x1 - x0), r3(y1 - y0)], row: 0 }; });
+  if (rooms.some((q) => !q)) return null;
+  if (rooms.length > 12) return null;
+  const P = finish(r, [{ rooms, rows: 1, depth: r3(conv(lay.D)) }], conv(lay.W), U, { narrow: true, share: 0.12 / U.k });
+  if (!P) return null;
+  P.custom = (r2, f, { dim, len }) => {
+    const R = f.rooms, big = R.find((q) => q.layer === "big"), entry = R.find((q) => q.t === "entry");
+    const dm = (q) => dim(q.rect[2], q.rect[3]);
+    const byX = (a, b) => a.rect[0] - b.rect[0];
+    const frontRooms = R.filter((q) => q.layer === "big" || q.layer === "front").sort(byX);
+    const bigLeft = big.rect[0] === 0;
+    const out = [];
+    out.push(`${r2.pick(["Front, left to right", "Along the front, left to right", "At the front (left to right)"])}: ${frontRooms.map((q) => `${q.spoken} ${dm(q)}`).join(", ")}`);
+    const cols = [];
+    for (const c of [...new Set(R.filter((q) => q.layer === "mid").map((q) => q.col))]) {
+      const m = R.filter((q) => q.layer === "mid" && q.col === c).sort((a, b) => a.rect[1] - b.rect[1]);
+      const x = m[0].rect[0];
+      cols.push({ x, text: m.length === 1 ? `${m[0].spoken} ${dm(m[0])}` : r2.pick([`${m[0].spoken} ${dm(m[0])} in front with ${m[1].spoken} ${dm(m[1])} behind it`, `${m[1].spoken} ${dm(m[1])} tucked behind ${m[0].spoken} ${dm(m[0])}`, `${m[0].spoken} ${dm(m[0])}, and behind it ${m[1].spoken} ${dm(m[1])}`]) });
+    }
+    cols.sort((a, b) => a.x - b.x);
+    const side = bigLeft ? "left" : "right";
+    const fr = R.filter((q) => q.layer === "front");
+    const behind = fr.length === 1 ? `the ${entry.spoken}` : "the front rooms";
+    out.push(r2.pick([`Behind ${behind}, beside the ${big.spoken}, left to right: ${cols.map((c) => c.text).join("; ")}`, `Behind ${behind}, in the space next to the ${big.spoken} (the ${big.spoken} is ${len(big.rect[3])} deep on the ${side}), left to right: ${cols.map((c) => c.text).join("; ")}`, `The ${big.spoken} runs ${len(big.rect[3])} deep along the ${side} side. Beside it and behind ${behind}, left to right: ${cols.map((c) => c.text).join("; ")}`]));
+    for (const [layer, label] of [["back", ["Across the back of that, the full width", "Behind all that, across the whole width", "Next, full width"]], ["rear", ["At the very back", "Last row at the back", "Rear row"]]]) {
+      const rr = R.filter((q) => q.layer === layer).sort(byX);
+      if (rr.length) out.push(`${r2.pick(label)}, ${len(rr[0].rect[3])} deep, left to right: ${rr.map((q) => `${q.spoken} ${dm(q)}`).join(", ")}`);
+    }
+    return out;
+  };
+  return P;
+}
+function carveInto(r, fl, counts, said, U) {
+  const ft = (v) => U.fromFt(v), r3 = (v) => +v.toFixed(3);
+  const cands = fl.rooms.filter((q) => ["living", "garage", "family", "kitchen"].includes(q.t) && q.rect[2] >= ft(9) && q.rect[3] >= ft(9));
+  const pool = SMALL.filter((t) => t !== "hall" && !counts[t]);
+  if (!cands.length || !pool.length) return false;
+  const big = r.pick(cands), t2 = r.pick(pool);
+  const swFt = r.int(Math.ceil(TYPES[t2].w[0]), Math.floor(TYPES[t2].w[1])), sdFt = r.int(Math.ceil(TYPES[t2].d[0]), Math.floor(TYPES[t2].d[1]));
+  const sw = ft(swFt), sd = ft(sdFt);
+  const [x0, y0, w, d] = big.rect;
+  if (w - sw < ft(4) || d - sd < ft(4)) return false;
+  const c = r.pick(big.t === "garage" ? ["nw", "ne"] : ["sw", "se", "nw", "ne"]); // a garage keeps its whole front wall (the overhead door)
+  const sx = c[1] === "w" ? x0 : r3(x0 + w - sw), sy = c[0] === "s" ? y0 : r3(y0 + d - sd);
+  const P = { sw: [[x0 + sw, y0], [x0 + w, y0], [x0 + w, y0 + d], [x0, y0 + d], [x0, y0 + sd], [x0 + sw, y0 + sd]], se: [[x0, y0], [x0 + w - sw, y0], [x0 + w - sw, y0 + sd], [x0 + w, y0 + sd], [x0 + w, y0 + d], [x0, y0 + d]], nw: [[x0, y0], [x0 + w, y0], [x0 + w, y0 + d], [x0 + sw, y0 + d], [x0 + sw, y0 + d - sd], [x0, y0 + d - sd]], ne: [[x0, y0], [x0 + w, y0], [x0 + w, y0 + d - sd], [x0 + w - sw, y0 + d - sd], [x0 + w - sw, y0 + d], [x0, y0 + d]] }[c];
+  const spoken = r.pick(TYPES[t2].say);
+  const small = { t: t2, name: titleCase(spoken), spoken, rect: [sx, sy, sw, sd], row: big.row, col: big.col + 0.5, carvedFrom: big };
+  big.polygon = P.map(([x, y]) => [r3(x), r3(y)]);
+  const cw = { sw: ["south-west", "front left", "front-left"], se: ["south-east", "front right", "front-right"], nw: ["north-west", "back left", "back-left"], ne: ["north-east", "back right", "back-right"] }[c];
+  big.carves = { text: (r2, dim, item) => r2.pick([`${item} overall, L-shaped, with the ${spoken} (${dim(sw, sd)}) cut out of its ${r2.pick(cw)} corner`, `${item}, with a ${dim(sw, sd)} ${spoken} carved out of the ${r2.pick(cw)} corner (so the ${big.spoken} is L-shaped)`, `${item}; the ${r2.pick(cw)} corner is taken by the ${spoken}, ${dim(sw, sd)}, so the room is L-shaped`]) };
+  fl.rooms.push(small);
+  return true;
+}
+function generateNotch(r) {
+  const U = UNITS[r.pick(["ft", "ft", "m", "m"])];
+  if (r.chance(0.55)) {
+    const lay = layoutA(r);
+    if (!lay) return null;
+    const P = buildA(r, lay, U);
+    if (!P) return null;
+    return { request: describe(r, P), cmd: P.cmd, check: P.check, floors: 1, rooms: P.cmd.floors[0].rooms.length, units: U.key, variant: "A" };
+  }
+  const nf = r.pick([1, 1, 2]);
+  const raw = makePlan(r, nf, r.int(Math.max(4, nf * 2), 10));
+  if (!raw) return null;
+  const P = build(r, raw, U, true);
+  if (!P) return null;
+  return { request: describe(r, P), cmd: P.cmd, check: P.check, floors: nf, rooms: P.cmd.floors.reduce((a, f) => a + f.rooms.length, 0), units: U.key, variant: "B" };
+}
+
 function generate(r) {
   const nf = r.pick([1, 1, 1, 2, 2, 2, 3]);
   const maxRooms = r.int(Math.max(3, nf * 2), 12);
@@ -456,6 +631,7 @@ async function pool(n, jobs, fn) {
 }
 
 const jobs = Number(flag("jobs", 4));
+const NOTCH = !!flag("notch"); // v3: small rooms beside / carved into a large room (see generateNotch)
 if (flag("eval")) {
   const n = Number(flag("eval")), r = makeRng(Number(flag("seed", 90210)));
   const out = [];
@@ -524,7 +700,7 @@ while (kept.length < N && stats.tried < N * 6) {
   const batch = [];
   for (let j = 0; j < jobs * 4; j++) {
     stats.tried++;
-    const ex = generate(r);
+    const ex = NOTCH ? generateNotch(r) : generate(r);
     if (!ex) { bump(stats.drop, "layout"); continue; }
     const sg = sigOf(ex.cmd);
     if (evalSigs.has(sg)) { bump(stats.drop, "heldout: eval plan"); continue; }
@@ -537,15 +713,15 @@ while (kept.length < N && stats.tried < N * 6) {
     const ex = batch[k];
     if (kept.length >= N) return;
     const v = await verify(ex);
-    if (v) { bump(stats.drop, v.split(":")[0]); failures.push(`${v} | ${ex.request.slice(0, 160)}${/bug/.test(v) ? " | " + JSON.stringify(ex.cmd) : ""}`); return; }
-    kept.push({ id: `pl${String(kept.length + 1).padStart(5, "0")}`, template: "plan", tier: "plan", cat: "plan", fixture_kind: null, state: "empty model", setup: [], request: ex.request, commands: [ex.cmd], check: ex.check, floors: ex.floors, rooms: ex.rooms, units: ex.units });
+    if (v) { bump(stats.drop, v.split(":")[0]); failures.push(`${ex.variant || ""} ${v} | ${ex.request.slice(0, 160)}${/bug/.test(v) ? " | " + JSON.stringify(ex.cmd) : ""}`); return; }
+    kept.push({ id: `pl${String(kept.length + 1).padStart(5, "0")}`, template: NOTCH ? "plan_notch_" + ex.variant : "plan", family: NOTCH ? "f7" : null, tier: "plan", cat: "plan", fixture_kind: null, state: "empty model", setup: [], request: ex.request, commands: [ex.cmd], check: ex.check, floors: ex.floors, rooms: ex.rooms, units: ex.units });
     bump(stats.floors, ex.floors); bump(stats.units, ex.units); bump(stats.rooms, ex.rooms);
   });
   if (Date.now() - last > 15000) { last = Date.now(); console.error(`${kept.length}/${N} kept, ${stats.tried} tried, ${((Date.now() - t0) / 1000).toFixed(0)} s`); }
 }
 stats.kept = kept.length;
 // room questions on some of the kept training plans (never an eval plan: those were held out above)
-const Q = Number(flag("questions", 400));
+const Q = Number(flag("questions", NOTCH ? 0 : 400));
 const qs = [];
 const evalReqs = new Set(evalCases.filter((c) => c.cat === "room_q").map((c) => norm(c.request)));
 let qi = 0;
