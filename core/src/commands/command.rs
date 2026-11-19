@@ -1217,6 +1217,12 @@ pub enum Command {
         #[serde(default)]
         closed: bool,
     },
+    /// A whole house from a compact plan: floors of rooms (rect or orthogonal polygon on the wall centerlines)
+    /// and openings between two rooms (or a room and "outside"). See `floorplan.rs`. One undo step.
+    FloorplanBuild {
+        #[serde(flatten)]
+        plan: serde_json::Map<String, Value>,
+    },
     /// A straight stair climbing `rise` along `direction` (degrees from +X).
     Stairs {
         at: [f64; 3],

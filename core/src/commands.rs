@@ -953,7 +953,7 @@ impl Engine {
             c @ (
                 Command::RaiseWalls { .. } | Command::DoorSwing { .. } | Command::TerrainFromContours { .. } |
                 Command::TerrainGrid { .. } | Command::Smoove { .. } | Command::Stamp { .. } |
-                Command::Drape { .. } | Command::Wall { .. } | Command::Stairs { .. } | Command::Roof { .. } |
+                Command::Drape { .. } | Command::Wall { .. } | Command::Stairs { .. } | Command::FloorplanBuild { .. } | Command::Roof { .. } |
                 Command::Column { .. } | Command::Insert { .. } | Command::Assets { .. }
             ) => self.run_build(c),
             c @ (

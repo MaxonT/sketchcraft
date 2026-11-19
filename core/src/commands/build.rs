@@ -36,6 +36,10 @@ impl Engine {
                 let pts: Vec<DVec3> = points.into_iter().map(v3).collect();
                 json!({"group": m.wall(&pts, thickness, height, closed)?})
             }
+            Command::FloorplanBuild { plan } => {
+                let plan = crate::floorplan::parse(&Value::Object(plan))?;
+                m.floorplan_build(&plan)?
+            }
             Command::Stairs { at, rise, direction, width, tread } => {
                 let (g, risers) = m.stairs(v3(at), direction, width, rise, tread)?;
                 json!({"group": g, "risers": risers, "riser_height": rise / risers as f64})
