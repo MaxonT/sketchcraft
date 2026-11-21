@@ -25,6 +25,8 @@ import { COMMANDS } from "./lib/spec.mjs";
 import { makeHeldout, norm } from "./lib/heldout.mjs";
 import { TEMPLATES, dictate, makeRng } from "./gen/templates.mjs";
 import { V3 } from "./gen/templates_v3.mjs";
+import { V4 } from "./gen/templates_v4.mjs";
+import { probeErrs, probePre } from "./lib/probe.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -48,6 +50,14 @@ const TYPECHECK = {
   v3: isV3, n: (v) => typeof v === "number" && Number.isFinite(v), i: (v) => Number.isInteger(v) && v >= 1 && v <= 200, s: (v) => typeof v === "string" && v.length <= 40, b: (v) => typeof v === "boolean",
   id: isId, ids: (v) => Array.isArray(v) && v.length >= 1 && v.length <= 12 && v.every(isId), pts: (v) => Array.isArray(v) && v.length >= 2 && v.length <= 24 && v.every(isV3),
   fac: (v) => (typeof v === "number" && Number.isFinite(v)) || isV3(v), roofkind: (v) => ["gable", "hip", "shed"].includes(v),
+  col: (v) => Array.isArray(v) && (v.length === 3 || v.length === 4) && v.every((x) => typeof x === "number" && x >= 0 && x <= 1),
+  m6: (v) => Array.isArray(v) && v.length === 6 && v.every((x) => typeof x === "number" && Number.isFinite(x)),
+  pts1: (v) => Array.isArray(v) && v.length >= 1 && v.length <= 24 && v.every(isV3),
+  pts2: (v) => Array.isArray(v) && v.length >= 1 && v.length <= 24 && v.every((p) => Array.isArray(p) && p.length === 2 && p.every((x) => typeof x === "number")),
+  tf: (v) => v && typeof v === "object" && !Array.isArray(v) && Object.keys(v).every((k) => ["offset", "rotation", "scale", "skew", "pivot"].includes(k)),
+  pmode: (v) => ["planar", "box", "cylinder", "sphere", "clear"].includes(v), rmode: (v) => ["new", "combine", "subtract"].includes(v),
+  scope: (v) => ["face", "connected", "all", "object"].includes(v), falloff: (v) => ["smooth", "linear", "hard"].includes(v),
+  umethod: (v) => ["conformal", "angle", "planar_islands"].includes(v), useams: (v) => ["marked", "auto"].includes(v),
   asset: (v) => ["door", "window", "garage_door", "tree", "palm", "car", "streetlight", "bench", "hydrant"].includes(v),
 };
 function schemaErr(cmds) {
@@ -98,12 +108,13 @@ async function verify(ex) {
     const before = await s.inspect();
     // as the app will run it: the whole answer is ONE undo step (begin_batch/end_batch). An answer that is itself an
     // undo is run as it is.
+    const pre = await probePre(s, ex.check);
     const wrap = !ex.commands.some((c) => c.cmd === "undo");
     const ran = await s.run(wrap ? [{ cmd: "begin_batch" }, ...ex.commands, { cmd: "end_batch" }] : ex.commands);
     const r = wrap ? { ...ran, replies: ran.replies.slice(1, -1), failedAt: ran.failedAt == null ? null : ran.failedAt - 1 } : ran;
     if (!r.ok) return `engine: command ${r.failedAt} ${r.error || r.stopped}`;
     const after = await s.inspect();
-    const { inst_at, ...check } = ex.check;
+    const { inst_at, ...check } = ex.check; // check.probes is run below
     const errs = grade(check, after, r.replies);
     if (inst_at) {
       const want = await instBounds(inst_at, before.info.bounds);
@@ -114,6 +125,7 @@ async function verify(ex) {
       if (!ex.commands.every((c) => INSPECT.has(c.cmd))) errs.push("question used a changing command");
       if (sig(before) !== sig(after)) errs.push("question changed the model");
     }
+    errs.push(...(await probeErrs(s, ex.check, pre)));
     if (errs.length) return `check: ${errs[0]}`;
     if (wrap && !ex.check.readonly) {
       // one Undo must take the whole answer back
@@ -129,14 +141,17 @@ const out = flag("out", "/private/tmp/claude-501/minimodel-data");
 mkdirSync(out, { recursive: true });
 const r = makeRng(seed);
 const evalStates = new Set(Object.values(JSON.parse(readFileSync(join(here, "eval/fixtures.json"), "utf8"))));
+try { for (const l of readFileSync(join(here, "eval/new_cases.jsonl"), "utf8").trim().split("\n")) evalStates.add(JSON.parse(l).state); } catch {}
 
 // bucket mix: ~28% accessibility-style, ~3% out of scope, the rest core split 40/40/20 easy/medium/hard
 const byBucket = { a11y: TEMPLATES.filter((t) => t.cat === "a11y"), scope: TEMPLATES.filter((t) => t.cat === "scope"), easy: [], medium: [], hard: [] };
 for (const t of TEMPLATES.filter((t) => t.cat === "core")) byBucket[t.tier].push(t);
 // --templates v3: only the targeted v3 templates (gen/templates_v3.mjs), picked by their weights
-const v3 = flag("templates") === "v3";
-const v3Total = V3.reduce((a, t) => a + t.weight, 0);
-function pickV3() { let u = r.f() * v3Total; for (const t of V3) { u -= t.weight; if (u <= 0) return t; } return V3.at(-1); }
+const v4 = flag("templates") === "v4";
+const v3 = flag("templates") === "v3" || v4;
+const TPL = v4 ? V4 : V3;
+const v3Total = TPL.reduce((a, t) => a + t.weight, 0);
+function pickV3() { let u = r.f() * v3Total; for (const t of TPL) { u -= t.weight; if (u <= 0) return t; } return TPL.at(-1); }
 function pickTemplate() {
   if (v3) return pickV3();
   const u = r.f();
@@ -165,14 +180,14 @@ async function one() {
   const key = norm(ex.request) + "|" + (ex.fx?.desc || "");
   if (seen.has(key)) { bump(stats.drop, "duplicate request"); famBump(t, "duplicate"); return; }
   seen.add(key);
-  const se = schemaErr(ex.commands) || (ex.fx && schemaErr(ex.fx.setup));
+  const se = schemaErr(ex.commands) || (ex.fx && !ex.fx.trusted && schemaErr(ex.fx.setup));
   if (se) { bump(stats.drop, "schema"); famBump(t, "schema"); failures.push(`${t.name}: schema ${se}`); return; }
   const h = heldout(ex.request, ex.fx?.kind, ex.commands);
   if (h.bad) { bump(stats.heldout, h.bad); famBump(t, "heldout " + h.bad); return; }
   if (strict && h.sim >= 0.6) { bump(stats.heldout, "strict sim>=0.6"); famBump(t, "heldout strict"); return; }
   const v = await verify(ex);
   if (v) { bump(stats.drop, v.split(":")[0]); famBump(t, "verify " + v.split(":")[0]); failures.push(`${t.name}: ${v} | ${ex.request}`); bump(stats.byTemplate, t.name + " FAIL"); return; }
-  const row = { id: `${v3 ? "v3g" : "g"}${String(kept.length + 1).padStart(5, "0")}`, family: t.family || null, template: t.name, tier: t.tier, cat: t.cat, fixture_kind: ex.fx?.kind || null, state: ex.fx?.desc || "empty model", setup: ex.fx?.setup || [], request: ex.request, commands: ex.commands, check: ex.check, sim: h.sim, sim_eval: h.simId };
+  const row = { id: `${v4 ? "v4g" : v3 ? "v3g" : "g"}${String(kept.length + 1).padStart(5, "0")}`, family: t.family || null, template: t.name, tier: t.tier, cat: t.cat, fixture_kind: ex.fx?.kind || null, state: ex.fx?.desc || "empty model", setup: ex.fx?.setup || [], request: ex.request, commands: ex.commands, check: ex.check, sim: h.sim, sim_eval: h.simId };
   kept.push(row);
   stats.kept++; famBump(t, "kept"); bump(stats.byTemplate, t.name); bump(stats.tiers, t.tier); bump(stats.cats, t.cat);
   if (h.sim >= 0.6) stats.simHi++;
