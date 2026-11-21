@@ -9,6 +9,8 @@ Nothing here ships in the app. It needs Node 20+, a built `sketchcraft` binary a
 
 | Path | What |
 | --- | --- |
+| `eval/new_cases.jsonl`, `eval/build_new_cases.mjs` | the v4 new-features set (52 cases: Room mode, picture materials, projection, Position Texture, vertex paint, UV, lightmap UV, texture painting); `--set new`; its own category so core and plan numbers stay comparable |
+| `lib/probe.mjs` | result probes: a check may run read-only commands (`rooms`, `uv_info`, `vertex_colors`, `texture_frame`, `texture_pixels`) after the answer and test their replies |
 | `eval/cases.jsonl` | 201 requests: easy / medium / hard, 45 of them also tagged `"cat":"a11y"` (see below) |
 | `eval/fixtures/*.jsonl` | starting models (a house group, a room, two cubes...). A case with `"fixture"` runs it first; its `# ...` header line is what the model is told about the model state |
 | `eval/build_cases.mjs` | the single source: `node eval/build_cases.mjs` regenerates `cases.jsonl`, `fixtures/` and `fixtures.json` |
@@ -106,3 +108,20 @@ position from either end, facade windows, hollow open-top boxes, rooms sharing w
 questions that use `parts`/`faces`, never a made-up name), f7 plans (`--notch`: a tall garage/living room with a stack of small
 rooms beside it, or a large room that is L-shaped because a small room is carved from its corner; polygon rooms; ft and m).
 `data/sample_v3.jsonl` has two pairs per template.
+
+## Training data (v4: the 0.3.9 commands)
+
+v3 never saw Room mode, wall pull, picture materials, projection, Position Texture, vertex paint, UV, lightmap UVs or
+texture painting. `gen/templates_v4.mjs` adds them (families r1 rooms, t1 materials/projection/position, t2 vertex paint,
+t3 UV, t4 texture painting, x1 combos); the command table in `lib/spec.mjs` grew from 37 to 58 commands. The model still
+only names materials that are already in the state (it never writes image data). Pairs are verified exactly like v3, plus
+`probes` (lib/probe.mjs) for state `info`/`parts`/`faces` cannot show.
+
+```sh
+node tools/minimodel/gen_data.mjs --templates v4 --n 10500 --seed 401 --jobs 8 --out DIR/new     # gen/templates_v4.mjs
+node tools/minimodel/eval/build_new_cases.mjs --validate                                          # the new-features eval set
+node tools/minimodel/run_eval.mjs --model MODEL --mode free --prompt short --set new              # score it
+```
+
+The v4 training mix is all of the v3 mix plus the new pairs (same short prompt). `train/train_v4.py` and `train/launch_v4.py` are
+the pc-11 scripts (v3 recipe; a deadline callback stops at 07:15 so the merge always happens).
