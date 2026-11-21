@@ -1,3 +1,4 @@
+import { useLocale } from "./locale";
 // A small in-app text prompt. window.prompt doesn't show in the desktop
 // app's web view, so anything that needs a name or a label asks here.
 
@@ -5,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Sheet } from "./sheet";
 
 interface Ask {
+  titleId?: string;
   title: string;
   value: string;
   hint?: string;
@@ -16,9 +18,9 @@ interface Ask {
 let show: ((a: Ask) => void) | null = null;
 
 /** Ask for a line of text; null if cancelled. */
-export function ask(title: string, value = "", hint?: string): Promise<string | null> {
+export function ask(title: string, value = "", hint?: string, titleId?: string): Promise<string | null> {
   return new Promise((done) => {
-    if (show) show({ title, value, hint, done });
+    if (show) show({ title, value, hint, titleId, done });
     else done(null);
   });
 }
@@ -32,6 +34,7 @@ export function confirm(title: string, hint: string, ok = "OK"): Promise<boolean
 }
 
 export function AskHost() {
+  const { t } = useLocale();
   const [a, setA] = useState<Ask | null>(null);
   const [text, setText] = useState("");
   const input = useRef<HTMLInputElement>(null);
@@ -59,8 +62,8 @@ export function AskHost() {
     setA(null);
   };
   return (
-    <Sheet onClose={() => finish(null)} label={a.title} className="ask">
-      <b>{a.title}</b>
+    <Sheet onClose={() => finish(null)} label={a.titleId ? t(a.titleId) : a.title} className="ask">
+      <b>{a.titleId ? t(a.titleId) : a.title}</b>
       {a.hint && <p className="muted small" style={{ whiteSpace: "pre-line" }}>{a.hint}</p>}
       {!a.confirm && <input
         ref={input}
@@ -73,10 +76,10 @@ export function AskHost() {
       />}
       <div className="row gap">
         <button className="btn small" onClick={() => finish(text)}>
-          {a.confirm ?? "OK"}
+          {a.confirm ?? t("dialog.ok")}
         </button>
         <button className="btn small ghost" onClick={() => finish(null)}>
-          Cancel
+          {t("dialog.cancel")}
         </button>
       </div>
     </Sheet>

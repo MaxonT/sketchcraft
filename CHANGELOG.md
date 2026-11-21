@@ -6,6 +6,154 @@ What changed in each SketchCraft release, newest first. The format follows
 
 ## [Unreleased]
 
+## [0.3.9] - 2026-11-20
+
+### Added
+- **A SketchUp-like Classic look, and a right-click that always works.** New models start in a **Classic** style: a light
+  blue sky over a grey-green ground, thick dark profiles on outlines, thin dark edges elsewhere, no line weights, off-white
+  front faces and blue-grey backs. It is the first entry in **Style > Preset** (the earlier look is **Default**, and every
+  other preset is still there); the look you pick is remembered, and a saved scene keeps its own style.
+  Right-clicking now opens the context menu even when the mouse jitters, a touchpad two-finger tap raises only a
+  context-menu event, or the pointer is captured by the view; a real right-drag still pans. **Shift+F10** and the Menu key
+  open it for the current selection. The menu on a selection now always says **Make group** (it used to say
+  "Group these (nest them)" for groups).
+- **Texture painting.** **Tools > Texture Paint** paints straight onto a model's texture picture. Select faces (or a group),
+  make a **New paint texture** (512, 1024 or 2048 pixels, starting from a flat colour or from what the faces look like now;
+  if they have no UVs, or UVs that overlap, one click unwraps them first) and drag over the model: the brush reaches every
+  part of the picture it touches in 3D, even across the cuts between UV islands, and the picture updates as you drag.
+  Size, hardness and opacity are in the panel; **[** and **]** change the size, **Alt** erases back to the base colour,
+  **Cmd / Ctrl-click** picks up the colour under the cursor, **Fill** floods the selection. The UV editor has a **Paint**
+  mode that paints the flat picture the same way. A stroke is one Undo step. The picture is saved inside the model like any
+  texture (older versions open it fine), goes into glTF / GLB and is written beside OBJ, FBX and Collada files;
+  **File > Export texture…** saves it as a PNG. Agents use `texture_paint_new`, `texture_paint_stroke`,
+  `texture_paint_status` and `texture_pixels`.
+- **UV editor: unwrap, pack and edit a model's UVs.** **Tools > UV editor** (or **Window > UV editor**) opens a floating
+  2D view of the selected faces with the material's picture under their UVs. Mark seams on edges (**Mark seam** on edges
+  you chose in the 3D view or here, or **Auto seams** for every hard edge), press **Unwrap** and the model is cut along
+  the seams, each piece flattened without stretching it (and cut further where a surface cannot be flattened whole) and
+  all pieces packed into the square. Click an island to select its faces in the 3D view (and the other way round), drag
+  islands, points or edges, move / turn / scale with **G / R / S** or the arrow keys, flip and turn 90, **Pin** points and
+  unwrap again to keep them where they are, **Pack** again after moving things, **Reset**. The **Checker** toggle shows a
+  checker here and on the model so stretching is easy to see. Every edit is one Undo step. Seams show red in the 3D view.
+  Seams and UVs are saved in the model (older versions open such a file read-only). Agents use `uv_seam`, `uv_unwrap`,
+  `uv_pack`, `uv_set`, `uv_transform` and `uv_info`.
+- **Lightmap UVs.** **Lightmap UVs** in the UV editor makes a second UV set with no overlaps, packed into the square, for
+  baked light. It is never drawn on the model; glTF / GLB carries it as `TEXCOORD_1` and FBX as a second UV layer
+  ("LightmapUV"). Agents use `uv_lightmap`.
+- **Vertex painting.** **Tools > Vertex Paint** (or search for it) lays colour straight onto the corners of faces with a
+  brush: drag over the model and every corner inside the brush circle moves toward the colour you picked, fading out
+  toward the circle's edge. **[** and **]** change the brush size, the panel has Strength and the edge (soft, linear,
+  hard) and Fill / Clear for the selection, and **Alt** brushes the colour away. A stroke is one Undo step. The colours
+  blend smoothly across each face and multiply with its material, so a plain white face shows the colour as painted;
+  **View > Vertex colours** hides them. They are saved in the model (a model that has them opens read-only in older
+  versions, so they are not lost) and go into glTF / GLB as vertex colours, into FBX as a colour layer, and into renders.
+  Agents use `vertex_paint`, `vertex_paint_clear` and `vertex_colors`.
+- **Position Texture: move, rotate, scale and skew a picture on a face.** Right-click a face that has a picture and choose
+  **Texture › Position** (or Tools › Position texture…). The whole picture shows see-through over the face with four pins:
+  **red** moves it, **green** scales and turns it around the red pin, **blue** stretches or leans its height, **yellow**
+  skews it; dragging the picture itself moves it too. The face follows live; **Enter** (or a click on empty space) keeps it
+  as one Undo step, **Esc** takes it back. Right-click inside for Flip left/right, Flip up/down, Rotate 90/180/270 and
+  Reset. It works on a plain, a painted-through and a projected face alike. Agents use `texture_position`.
+- **Painted-through pictures are now marked in the file.** A model with a picture carried across faces by paint-through is
+  saved so that older versions open it read-only instead of silently dropping the placement on their next save.
+- **Export to FBX.** File > Export > FBX writes a model for Unity, Unreal, Blender and Maya: each group and component is
+  its own object, nested as in your model and keeping its name, with normals, texture coordinates, materials and the
+  pictures used as textures (saved in a folder beside the file). Metres, Y up. Agents use `export_fbx`.
+- **Project texture: planar, box, cylinder and sphere.** Select faces, a group or a component and choose **Tools ›
+  Project texture…** (or right-click, or search for it) to lay a picture on them. A small panel shows the result live
+  while you pick the shape, the picture, its size and turn, and whether it fits the selection once; Apply keeps it as one
+  Undo step. A cylinder wraps once around like a label on a can (caps stay flat), a sphere like a map on a globe, a box
+  gives each face the side of the box that fits it. It is saved in the model, shows in renders, and goes into glTF, OBJ
+  and Collada. A model that uses it is marked so older versions open it read-only instead of dropping it. Agents can use
+  `texture_project`.
+- **A texturing test set in the Library.** Six small models made to try textures on: the beaver, dice, a drinks can, a
+  globe on a stand, a wooden crate of separate planks, and a soccer ball with 12 pentagons and 20 hexagons. Open the
+  Library's **Texturing test set** section and click one to place it at its real size (Italian names included). The
+  coming texturing features are built and tested on them.
+- **Paint-through: a texture that carries on across faces.** Hold **Ctrl** (**Option** on a Mac) with the Paint Bucket
+  to paint every touching face that has the same material, and a texture now runs on across the corners and folds as
+  one sheet (same tile size, lined up on each edge) instead of restarting on every face. **Shift** paints every
+  face with the same material, and **Ctrl+Shift** every matching face on the whole connected object. One click is one
+  undo, the step hint beside the model lists the keys, and agents get the same reach with `scope` on the paint command.
+- **The Vertical layout has one sidebar with four full-height tabs.** Outliner, Library and Views are joined by
+  **Properties** (Document, Style, Paint, Finish and the selection details), which used to sit in a fixed panel below
+  and squeeze everything. Now every tab uses the whole height, so there is less scrolling. A dot on Properties shows
+  when something is selected (you stay on your tab), the arrow keys move between the tabs, and your last tab is
+  remembered. Classic and Floating are unchanged.
+- **A real menu bar: File, Edit, View, Camera, Draw, Tools, Window and Help.** It replaces the single File drop-down
+  next to the logo. File holds New, Open, Save, Save As, Restore from backup, Import, Export, Render, blueprints,
+  drawing sheets, Layout, Timeline, locations, 3D text, reports and Plugins; Edit has Undo and Redo, Cut, Copy, Paste
+  (and Paste in place), Delete, Select all and none, Make group and component, Explode, Hide and Unhide; View has the
+  workspaces, face styles, backgrounds, Shadows, X-Ray, Back edges and the other style switches, the section cut, the
+  panels, the toolbar layout, Themes and Language; Camera has the standard views, Perspective and Parallel, Zoom extents
+  and the Orbit, Pan, Walk and other camera tools; Draw and Tools list the drawing and editing tools; Window shows the
+  Outliner, Library, Views and the right panel and opens the shortcut editor and the plugin manager; Help has the Learn
+  center, Keyboard shortcuts, Search commands, Check for updates (desktop app), Report a bug and About. Each item shows
+  its keyboard shortcut (the one you have set), and items that don't apply right now are greyed out. Click a name to
+  open a menu, point at another name to move between menus, and use the keyboard: F10 (or a tap on Alt on Windows and
+  Linux) focuses the bar, the arrow keys move and open submenus, Enter runs an item and Esc closes. Nothing that was in
+  the old File menu is gone: Keyboard shortcuts and Check for updates moved to Help, Customize shortcuts to Window,
+  Language to View, and the version to About. On narrow windows the workspace switch is hidden (View > Workspaces has
+  the same choices). Italian wording for the menus and About is welcome from Italian speakers (Kad26 has been asked to
+  review it).
+- **Help > About SketchCraft.** The app's name and version, then "Always free. Never freemium. Never paid." and "It's
+  a promise.", links to the source on GitHub, the MIT license and the changelog, and a **Thank you** to everyone who has
+  written code for SketchCraft. That list is made when the app is built, from the authors in the project's git history
+  (bots are left out), so it never needs updating by hand.
+- **Fixtures & furniture for your rooms.** The Library has a new "Fixtures & furniture" section with 26 ready-made pieces
+  at common US/EU sizes, in five rooms: Bath (toilet, 0.6 m and 1.2 m vanities with sinks, bathtub, shower stall, towel
+  bar), Kitchen (base cabinet, sink base, wall cabinet, pantry, fridge, range, dishwasher, island), Bedroom (queen, king
+  and twin beds, nightstand, dresser), Living & dining (3-seat sofa, armchair, coffee table, TV stand, dining table with
+  four chairs) and Laundry (washer, dryer). Each shows its name and size (metric and inches) when you hover it, shows a
+  thumbnail, and is found by searching for its name or its room. Each stands on the floor with the middle of its back edge
+  at its origin, so it can sit against a wall. While you place one, bring the cursor within about 40 cm of a wall and it
+  turns to face into the room and slides back flush against the wall ("Against the wall"); hold Shift to place it freely.
+  One click is one Undo step. Italian wording is included; a review by Kad26 is welcome.
+- **Room mode: draw a room by dragging it out, like in The Sims.** Pick **Room** in the Build panel (or on the Arch
+  toolbar), press on the ground, drag a rectangle and let go: you get four walls of the usual height and thickness and a
+  floor, snapped to a 0.1 m grid (6 in in feet and inches). While you drag, the inside width, depth and area show in
+  your units (m² or ft²). Each room is a group named Room 1, Room 2 and so on (rename it in the Room options) on the
+  "Rooms" tag, with its walls on the "Walls" tag, so it saves, exports and undoes like anything else, and one Undo
+  removes a whole room. A room dragged against another shares that wall instead of doubling it, a side within one wall
+  thickness of a neighbour's wall snaps onto it, and a room that would overlap another is refused with a message and
+  nothing changes. While Room mode is on, every room shows its name and area, and they update as walls move. Dragging a
+  wall in Room mode is Wall pull, so the rooms on both sides grow and shrink together; clicking a wall adds a door or a
+  window (your choice in the Room options). **Walls down** shows the walls low so you can see inside; it only changes
+  the view, never the model. Agents can use `room_rect`, `room_preview` and `rooms`. Italian wording for the new tool
+  is welcome from Italian speakers.
+- **Drag a room over another room to combine with it, or hold Alt (Option) to cut a notch out of it.** Rooms are no
+  longer only rectangles. Drag a new room so it overlaps an existing one and the two become one room with an L-shaped
+  (or T-shaped, or any square-cornered) outline: the walls inside the overlap disappear and walls run round the new
+  outline. Hold Alt (Option) while you drag and the box is cut out of the room instead, leaving a notch. The preview
+  shows the result, not the box you are dragging, the floating label says what will happen ("Combine with Kitchen",
+  "Subtract from Kitchen") with the new area, and the step hint explains the Alt key. The room keeps its name, its other
+  neighbours' walls are left alone, and doors and windows on walls that still exist are put back in the new walls (the
+  ones whose wall is gone are removed, and you are told how many). A cut that would split the room in two or leave a
+  hole in it is refused with a reason, and one Undo takes back the whole change. Room labels now sit inside L-shaped
+  rooms instead of in the notch. Agents can pass `mode: "combine"` or `"subtract"` to `room_rect` and `room_preview`.
+- **Pull a whole wall, like in The Sims.** The new **Pull wall** tool (in the Build panel) lights up a wall as one piece
+  when you point at it, and drags it sideways; type a distance and press Enter for an exact pull, or Esc to cancel. The
+  wall keeps its thickness, the walls joined to it at corners and T-junctions stretch or shrink to stay joined (so a
+  room grows or shrinks), and the doors and windows in the wall go with it. Doors and windows in the walls that stretch
+  stay where they are, and if one would no longer fit the pull is refused with a message and nothing changes. It works on
+  walls made with the Wall tool and on plain box-shaped walls in other models; walls that are sloped, curved, or carry
+  on in a straight line past their end are refused with a reason. The whole pull is one Undo step. Agents can use it
+  as `wall_pull`. Italian wording for the new tool is welcome from Italian speakers.
+
+### Fixed
+- **A fast app on computers without a graphics card.** The model view now draws a picture only when something in it
+  changes (the camera, the model, a highlight, a style), instead of redrawing it 60 times a second while nothing moves.
+  On a virtual machine or an older laptop that draws 3D on the processor, an idle view used to keep every core busy and
+  slow everything else down: a plugin's stud wall took a minute or more, and is now a few seconds again. With a graphics
+  card nothing looks different; the computer just does less work while you think.
+- On Linux, right-dragging to pan no longer opens the context menu, and clicking a submenu's name after hovering it no longer shuts it again.
+- **The top bar fits a 1366-pixel laptop screen.** On wider system fonts (Linux) the menus ran under the workspace
+  switch at that width. The product name now steps aside below 1400 pixels, and a long file name is shortened with an
+  ellipsis before it can crowd the menus. Wider windows look as before.
+- Security: hardened limits on texture painting, UV editing and texture export (WildLeopard).
+
+## [0.3.8] - 2026-11-18
+
 ### Added
 - **Build a whole house from a room list.** `floorplan_build` (for AI agents and plugins) takes floors of rooms, doors,
   windows, open-plan sides and stairs, in meters or feet, and builds the walls (shared walls once), cuts the openings,
@@ -32,8 +180,20 @@ What changed in each SketchCraft release, newest first. The format follows
   them, as the same fix already did for newer files. On that file the import now gives about 5,000 faces, 25,200 edges
   and 377 placements, against 4,990, 25,140 and 377 in SketchUp 2026's re-save. Dimensions in large classic files
   (over 32,767 objects) are read correctly too. (part of #70)
+- Security: hardened limits on sheets, tables, rendering and imported text (WildLeopard).
 
 ### Added
+- **Tables and text blocks on sheets.** A Table tool (B) in Layout: click for a table, or drag the size you want, and
+  type straight into its cells (Tab goes across, Enter goes down, Alt+Enter starts a new line in a cell); double-click
+  any cell to change it. Paste rows copied from a spreadsheet (or comma-separated text, quotes and all) onto the page
+  for a new table, or into a picked table from the cell you clicked; it grows to fit. The inspector sets a title, adds
+  and removes rows and columns, the header rows and a bold first column, the borders (grid, rules, outline or none),
+  the text height, each column's width and the alignment. "Drawing index" fills a table with every sheet's number and
+  name and keeps it up to date. Drag across with the Text tool for a text block whose paragraphs wrap to its width,
+  left, centred or right aligned. Tables and text blocks print in the PDF (each table a real table for screen
+  readers), SVG and DXF, are saved with the model, and every edit is one Undo. A 200-row schedule or a page of notes
+  stays quick. Agents can make them too (`sheet_table`, `sheet_table_paste`, `sheet_text` with `width_mm`).
+  (part of #7)
 - **Lay out a sheet entirely by mouse.** Layout has a tool bar down the left of the paper: Select, Viewport, Line,
   Polyline, Rectangle, Arc, Text, Dimension, Trim, Extend, Offset and Delete, each with a key (V, W, L, P, R, A, T, D,
   X, E, O, K), its icon as the cursor, and a hint under the paper saying what to do next. Drag a frame with Viewport
@@ -628,7 +788,9 @@ The first build with installers (never published as a release).
   import and export, and PNG renders with dimensions and labels.
 - Installers for macOS, Windows and Linux, and the CLI for each.
 
-[Unreleased]: https://github.com/jasonsutter87/sketchcraft/compare/v0.3.7...HEAD
+[Unreleased]: https://github.com/jasonsutter87/sketchcraft/compare/v0.3.9...HEAD
+[0.3.9]: https://github.com/jasonsutter87/sketchcraft/compare/v0.3.8...v0.3.9
+[0.3.8]: https://github.com/jasonsutter87/sketchcraft/compare/v0.3.7...v0.3.8
 [0.3.7]: https://github.com/jasonsutter87/sketchcraft/compare/v0.3.6...v0.3.7
 [0.3.6]: https://github.com/jasonsutter87/sketchcraft/compare/v0.3.5...v0.3.6
 [0.3.5]: https://github.com/jasonsutter87/sketchcraft/compare/v0.3.4...v0.3.5

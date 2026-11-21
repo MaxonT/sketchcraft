@@ -57,6 +57,58 @@ extrudes, C creases; Tab switches between the cage and the smooth surface.
 
 ![SubD mode](../demos/subd-mode.gif)
 
+## Pictures on shapes (projection mapping)
+
+Add a picture in the **Materials** panel (the **+** under Textures), select the faces, group or component it should go
+on, and choose **Tools › Project texture…** (also in the right-click menu and the command search). A small panel opens
+beside the model and the picture appears at once:
+
+- **Planar** shines the picture straight through the selection, like a slide projector (from where you are looking, or
+  from above, the front or the right).
+- **Box** gives every face the flat side of an imaginary box that fits it best: good for crates, dice and walls.
+- **Cylinder** wraps the picture once around, like the label on a can; the ends get it flat.
+- **Sphere** wraps it like a map on a globe.
+
+**Size** and **Turn** change it as you watch (on a cylinder or sphere, Turn moves the seam), **Fit once** makes the
+picture cover the selection exactly once instead of repeating at its own size, and **Axis and center…** moves the
+projection. **Apply** keeps it (one Undo takes it back), **Cancel** drops it, **Remove projection** goes back to the
+picture's own placement. The result is saved with the model and goes into glTF, OBJ and Collada exports. A model that
+uses it is saved so that older SketchCraft versions open it read-only rather than lose it.
+
+## Moving a picture on a face (Position Texture)
+
+Right-click a face that has a picture and choose **Texture › Position** (or **Tools › Position texture…**). The whole
+picture appears see-through over the face, with four pins on its corners:
+
+- **Red** moves the picture. So does dragging the picture itself.
+- **Green** scales and turns it around the red pin.
+- **Blue** stretches or leans its height.
+- **Yellow** skews it.
+
+The face follows as you drag. Press **Enter** (or click empty space) to keep the result as one Undo step, **Esc** to take it
+back. Right-click inside for **Flip left/right**, **Flip up/down**, **Rotate 90/180/270**, **Reset** and **Done**. You can
+still orbit by dragging away from the picture. It works on faces painted with the Paint Bucket, carried on by paint-through
+or laid by a projection. The yellow pin skews rather than bending the picture in perspective.
+
+## Unwrapping a model (the UV editor)
+
+To put a picture exactly where you want it on a whole model, unwrap it. Select the faces (or a group) and choose **Tools ›
+UV editor**. A window opens with the picture, or a checker, under the outlines of the selected faces' UVs.
+
+1. **Mark seams** where the surface should be cut, like the seam of a shirt: choose edges in the 3D view (or in the UV
+   window) and press **Mark seam**. **Auto seams** marks every hard edge for you. Seams show red in the 3D view.
+2. Press **Unwrap**. The model is cut along the seams, each piece is flattened without stretching it, and the pieces
+   (islands) are fitted into the square. A surface that cannot be flattened in one piece, such as a closed sphere with no
+   seams, is cut further for you.
+3. Click an island to select it, and its faces in the 3D view. Drag it, or press **G** to move, **R** to turn and **S** to
+   scale (click to keep, **Esc** to cancel); the arrow keys nudge. **1 / 2 / 3** switch between points, edges and islands.
+   **Pin** (**P**) holds points in place so the next **Unwrap** leaves them where they are. **Pack** fits the islands in again
+   after you move things. Every change is one Undo step.
+4. Turn on **Checker** to see how the picture stretches, on the model too.
+
+**Lightmap UVs** makes a second set for baked light: no overlaps, packed into the square. It is not shown on the model;
+glTF / GLB (as `TEXCOORD_1`) and FBX (a second UV layer) carry it, so Blender, Unity and Unreal can bake into it.
+
 ## Terrain
 
 The Sandbox tools shape ground: **Smoove** raises and lowers it, **Stamp**

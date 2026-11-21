@@ -69,7 +69,7 @@ const info = async () => (await pageExec(p, { cmd: 'sheets_info' })).sheets?.[0]
 await until(async () => !!(await info()));
 const sheet = (await info()).id;
 await p.waitForSelector('.paper-tools');
-check((await p.locator('.paper-tools .paper-tool').count()) === 12, 'the paper has a tool bar of 12 tools');
+check((await p.locator('.paper-tools .paper-tool').count()) === 13, 'the paper has a tool bar of 13 tools');
 check((await p.locator('.paper-tools .paper-tool.on').getAttribute('aria-label')) === 'Select', 'Select is the tool to begin with');
 const items = async () => (await info())?.items ?? [];
 const ofKind = async (k) => (await items()).filter((i) => i.kind === k);
@@ -131,6 +131,8 @@ await p.locator('.paper-chooser').getByRole('button', { name: 'Floor plan' }).cl
 await until(async () => (await ofKind('viewport')).length === 1);
 const plan = (await ofKind('viewport'))[0];
 check(JSON.stringify(plan.rect_mm) === JSON.stringify([20, 20, 180, 140]) && plan.view?.type === 'plan', `the plan's frame is where it was dragged, on the 5 mm grid (${JSON.stringify(plan.rect_mm)}, ${plan.view?.type})`);
+// the engine has the frame before the page has finished switching tool and picking it: wait for the page
+await until(async () => (await p.locator('.paper-tools .paper-tool.on').getAttribute('aria-label')) === 'Select' && (await p.locator('.layout-inspector[aria-label="Viewport"]').count()) === 1, 3000).catch(() => {});
 check((await p.locator('.paper-tools .paper-tool.on').getAttribute('aria-label')) === 'Select' && (await p.locator('.layout-inspector[aria-label="Viewport"]').count()) === 1, 'placing it goes back to Select with the new view picked');
 await undo();
 await until(async () => (await ofKind('viewport')).length === 0);
@@ -146,9 +148,12 @@ await p.waitForSelector('.paper-chooser');
 await p.locator('.paper-chooser').getByRole('button', { name: 'Front elevation' }).click();
 await until(async () => (await ofKind('viewport')).length === 2);
 const front = (await ofKind('viewport')).find((v) => v.id !== plan.id);
+// the page picks the new frame and goes back to Select a moment after the engine has it
+await until(async () => (await p.locator('.paper-tools .paper-tool.on').getAttribute('aria-label')) === 'Select' && (await p.locator('.layout-inspector[aria-label="Viewport"]').count()) === 1, 3000).catch(() => {});
 check(front?.view?.type === 'elevation' && JSON.stringify(front.rect_mm) === JSON.stringify([220, 20, 180, 140]), `a second viewport, a front elevation (${JSON.stringify(front?.rect_mm)})`);
 // a frame can be escaped before a view is chosen
 await tool('Viewport');
+await p.locator('.paper-tools .paper-tool.on[aria-label="Viewport"]').waitFor({ timeout: 5000 });
 release = await dragMm([30, 170], [80, 200]);
 await release();
 await p.waitForSelector('.paper-chooser');

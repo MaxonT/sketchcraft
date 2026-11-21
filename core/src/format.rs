@@ -20,8 +20,8 @@ use serde_json::Value;
 /// can still open it wherever that is possible.
 pub const FORMAT: u64 = 2;
 
-/// Features (the `needs` list) this build understands. "sheets": drawing sheets in the model (0.3.8).
-pub const KNOWN_NEEDS: &[&str] = &["sheets"];
+/// Features (the `needs` list) this build understands. "sheets": drawing sheets in the model (0.3.8). "face_uv": faces with their own texture coordinates (projection mapping, 0.3.9). "face_vcol": faces with vertex colours. "face_tex": faces with a painted-through picture placement (`tex`).
+pub const KNOWN_NEEDS: &[&str] = &["sheets", "face_uv", "face_vcol", "face_tex", "edge_seam", "face_uv2"];
 
 /// Every top-level key this build knows: the serialized fields of `Model` (kept in step by the test
 /// `known_keys_match_the_model_struct`, which reads model.rs) and the two the guard adds.
@@ -125,9 +125,59 @@ fn has_sheets(m: &crate::model::Model) -> bool {
         || m.has_attached_dims()
 }
 
-/// The format number a file of this model is written with: 2 when it holds sheets, 1 otherwise.
+/// Does any face (here or in a component) carry its own texture coordinates? An older build would drop them on save.
+fn has_face_uv(m: &crate::model::Model) -> bool {
+    m.faces.values().any(|f| f.uv.is_some()) || m.definitions.values().any(|d| has_face_uv(&d.model))
+}
+
+/// Does any face (here or in a component) carry vertex colours? An older build would drop them on save.
+fn has_face_vcol(m: &crate::model::Model) -> bool {
+    m.faces.values().any(|f| f.vcol.is_some()) || m.definitions.values().any(|d| has_face_vcol(&d.model))
+}
+
+/// Does any face (here or in a component) carry a painted-through picture placement? An older build would drop it on save.
+fn has_face_tex(m: &crate::model::Model) -> bool {
+    m.faces.values().any(|f| f.tex.is_some()) || m.definitions.values().any(|d| has_face_tex(&d.model))
+}
+
+/// Does any edge carry a UV seam mark?
+fn has_edge_seam(m: &crate::model::Model) -> bool {
+    m.edges.values().any(|e| e.seam) || m.definitions.values().any(|d| has_edge_seam(&d.model))
+}
+
+/// Does any face carry a lightmap UV set?
+fn has_face_uv2(m: &crate::model::Model) -> bool {
+    m.faces.values().any(|f| f.uv2.is_some()) || m.definitions.values().any(|d| has_face_uv2(&d.model))
+}
+
+/// The features a file of this model needs a reader to understand.
+fn needs_of(m: &crate::model::Model) -> Option<Vec<&'static str>> {
+    let mut v = Vec::new();
+    if has_sheets(m) {
+        v.push("sheets");
+    }
+    if has_face_uv(m) {
+        v.push("face_uv");
+    }
+    if has_face_vcol(m) {
+        v.push("face_vcol");
+    }
+    if has_face_tex(m) {
+        v.push("face_tex");
+    }
+    if has_edge_seam(m) {
+        v.push("edge_seam");
+    }
+    if has_face_uv2(m) {
+        v.push("face_uv2");
+    }
+    Some(v).filter(|v| !v.is_empty())
+}
+
+/// The format number a file of this model is written with: 2 when it holds sheets, per-face texture coordinates or painted-through placements,
+/// 1 otherwise.
 pub fn format_of(m: &crate::model::Model) -> u64 {
-    if has_sheets(m) { 2 } else { 1 }
+    if needs_of(m).is_some() { 2 } else { 1 }
 }
 
 /// A model as a file: the model's own fields with `format` first (and `needs`, when it holds sheets).
@@ -135,17 +185,17 @@ pub fn format_of(m: &crate::model::Model) -> u64 {
 struct Stamped<'a> {
     format: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
-    needs: Option<[&'static str; 1]>,
+    needs: Option<Vec<&'static str>>,
     #[serde(flatten)]
     model: &'a crate::model::Model,
 }
 
 pub fn to_vec(m: &crate::model::Model) -> Result<Vec<u8>> {
-    Ok(serde_json::to_vec(&Stamped { format: format_of(m), needs: has_sheets(m).then_some(["sheets"]), model: m })?)
+    Ok(serde_json::to_vec(&Stamped { format: format_of(m), needs: needs_of(m), model: m })?)
 }
 
 pub fn to_string(m: &crate::model::Model) -> Result<String> {
-    Ok(serde_json::to_string(&Stamped { format: format_of(m), needs: has_sheets(m).then_some(["sheets"]), model: m })?)
+    Ok(serde_json::to_string(&Stamped { format: format_of(m), needs: needs_of(m), model: m })?)
 }
 
 #[cfg(test)]
@@ -192,6 +242,13 @@ mod tests {
         assert!(check(br#"{"format":1,"next_id":1,"needs":[]}"#).is_none());
         // what this build writes when it holds sheets, it reads
         assert!(check(br#"{"format":2,"needs":["sheets"],"next_id":1,"sheets":{},"sheet_items":{},"drafting":{},"title_blocks":{}}"#).is_none());
+        // and projected texture coordinates (0.3.9)
+        assert!(check(br#"{"format":2,"needs":["face_uv"],"next_id":1}"#).is_none());
+        assert!(check(br#"{"format":2,"needs":["face_uv","nope"],"next_id":1}"#).is_some());
+        // and painted-through placements
+        assert!(check(br#"{"format":2,"needs":["face_tex"],"next_id":1}"#).is_none());
+        // and UV seams and the lightmap set
+        assert!(check(br#"{"format":2,"needs":["edge_seam","face_uv2"],"next_id":1}"#).is_none());
         assert!(check(b"not json").is_none());
         assert!(check(b"[1,2]").is_none());
     }

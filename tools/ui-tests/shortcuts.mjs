@@ -20,7 +20,7 @@ const KEY = 'sketchcraft.shortcuts';
 const b = await launch();
 const problems = [];
 const open = async (storage = {}) => {
-  const ctx = await b.newContext({ viewport: { width: 1280, height: 860 } });
+  const ctx = await b.newContext({ locale: 'en-US', viewport: { width: 1280, height: 860 } });
   await ctx.addInitScript(
     ([s, key]) => {
       try {
@@ -79,6 +79,37 @@ const isMac = process.platform === 'darwin';
   await press(p, 'c');
   check((await activeTool(p)) === 'Circle', 'C picks Circle');
   check(/\(L\)/.test((await tip(p, 'Line')) ?? ''), `the Line button's tooltip shows its key: ${await tip(p, 'Line')}`);
+  await ctx.close();
+}
+
+// ---- a language change only affects the presentation -------------------------------------------------------------
+{
+  const { p, ctx } = await open({ 'sketchcraft.language': 'en' });
+  const sendNew = async (name) => {
+    const request = p.waitForRequest((r) => r.method() === 'POST' &&
+      new URL(r.url()).pathname === '/exec' && r.postDataJSON()?.cmd === 'new');
+    await p.getByRole('menuitem', { name }).click();
+    return (await request).postDataJSON();
+  };
+  await p.getByRole('menuitem', { name: 'File', exact: true }).click();
+  const english = await sendNew(/^New/);
+  await press(p, 'l');
+  check((await activeTool(p)) === 'Line', 'L selects Line before changing language');
+
+  await p.getByRole('menuitem', { name: 'View', exact: true }).click();
+  await p.getByRole('menuitem', { name: 'Language' }).click();
+  await p.getByRole('menuitemradio', { name: 'Italiano' }).click();
+  check(await p.locator('html').getAttribute('lang') === 'it', 'the language switches without a reload');
+  await p.getByRole('menuitem', { name: 'File', exact: true }).click();
+  const italian = await sendNew(/^Nuovo/);
+  check(JSON.stringify(english) === JSON.stringify(italian), 'New and Nuovo send the same engine command');
+  await p.locator('body').click({ position: { x: 5, y: 450 } });
+  await press(p, 'c');
+  await press(p, 'l');
+  check((await activeTool(p)) === 'Linea', 'L still selects Line with the Italian label');
+  check(/\(L\)/.test((await tip(p, 'Linea')) ?? ''), 'the Italian tool retains its original shortcut');
+  await p.reload();
+  await p.waitForSelector('html[lang="it"]');
   await ctx.close();
 }
 

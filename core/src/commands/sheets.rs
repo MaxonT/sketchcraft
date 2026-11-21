@@ -164,6 +164,34 @@ impl Engine {
         if self.untrusted { "agent".into() } else { String::new() }
     }
 
+    /// An agent or a plugin is adding viewports (`adding`: how many on each sheet) and the model gains `new` of them
+    /// (0 when they only move between sheets): within `MAX_VIEWPORTS_PER_SHEET_UNTRUSTED` on a sheet and
+    /// `MAX_VIEWPORTS_UNTRUSTED` in the model? The person is not limited here.
+    pub(super) fn viewport_room(&self, adding: &BTreeMap<Id, usize>, new: usize) -> Result<()> {
+        use crate::policy::{MAX_VIEWPORTS_PER_SHEET_UNTRUSTED as PER_SHEET, MAX_VIEWPORTS_UNTRUSTED as TOTAL};
+        if !self.untrusted || adding.values().all(|n| *n == 0) {
+            return Ok(());
+        }
+        let mut per: BTreeMap<Id, usize> = BTreeMap::new();
+        let mut total = 0usize;
+        for i in self.model.sheet_items.values() {
+            if let SheetItem::Known(ItemKind::Viewport(v)) = &**i {
+                *per.entry(v.sheet).or_default() += 1;
+                total += 1;
+            }
+        }
+        if total.saturating_add(new) > TOTAL {
+            bail!("that would make {} viewports in the model; an agent or a plugin can make at most {TOTAL} (the person can add more)", total.saturating_add(new));
+        }
+        for (s, n) in adding {
+            let now = per.get(s).copied().unwrap_or(0).saturating_add(*n);
+            if now > PER_SHEET {
+                bail!("that would put {now} viewports on sheet {s}; an agent or a plugin puts at most {PER_SHEET} on one sheet (the person can add more)");
+            }
+        }
+        Ok(())
+    }
+
     /// A new viewport from what a command gave, with defaults for the rest (and the anchor fixed here, once).
     fn viewport_from(&self, a: &ViewportArgs, fallback_sheet: Option<Id>, b: Bounds) -> Result<Viewport> {
         let m = &self.model;
@@ -209,6 +237,7 @@ impl Engine {
         short("a page title", &page.title)?;
         let id = self.model.new_id();
         self.model.sheets.insert(id, Sheet { name: page.title.clone(), paper: paper.clone(), order, fields: fields.clone(), ..Default::default() });
+        self.viewport_room(&BTreeMap::from([(id, page.viewports.len())]), page.viewports.len())?;
         let mut vps = page.viewports.clone();
         crate::layout::place(&mut vps, paper.w_mm, paper.h_mm);
         let who = self.made_by();
@@ -222,9 +251,15 @@ impl Engine {
             self.model.sheet_items.insert(vid, Arc::new(SheetItem::Known(ItemKind::Viewport(v))));
         }
         if !page.table.is_empty() {
-            let cols = page.table.iter().map(|r| r.len()).max().unwrap_or(0);
-            let cols_mm: Vec<f64> = (0..cols).map(|c| page.table.iter().map(|r| r.get(c).map_or(0, |s| s.chars().count())).max().unwrap_or(0) as f64 * 1.6 + 6.0).collect();
-            let t = Table { sheet: id, at_mm: [20.0, 24.0], cols_mm, rows: page.table.clone(), made_by: who, ..Default::default() };
+            // a schedule or index: titled with the page, its first column heading the rows, columns fitted to the text
+            // the same limits and cell rules as `sheet_table`
+            let (r, c) = (page.table.len(), page.table.iter().map(Vec::len).max().unwrap_or(0));
+            if r > MAX_TABLE_ROWS || c > MAX_TABLE_COLS || r.saturating_mul(c) > MAX_TABLE_CELLS {
+                bail!("a page's table has at most {MAX_TABLE_ROWS} rows, {MAX_TABLE_COLS} columns and {MAX_TABLE_CELLS} cells (this is {r} by {c})");
+            }
+            let rows = page.table.iter().map(|r| r.iter().map(|c| super::tables::clean_cell(c)).collect::<Result<Vec<_>>>()).collect::<Result<Vec<_>>>()?;
+            let t = Table { sheet: id, at_mm: [20.0, 26.0], rows, title: page.title.to_uppercase(), header_cols: 1, made_by: who, ..Default::default() };
+            super::tables::check(&t)?;
             let tid = self.model.new_id();
             self.model.sheet_items.insert(tid, Arc::new(SheetItem::Known(ItemKind::Table(t))));
         }
@@ -380,6 +415,9 @@ impl Engine {
                 if self.untrusted && items.len() > crate::policy::MAX_SHEET_ITEMS_UNTRUSTED {
                     bail!("sheet {sheet} has {} items; an agent or plugin copies at most {}", items.len(), crate::policy::MAX_SHEET_ITEMS_UNTRUSTED);
                 }
+                // the copy's viewports all land on a new sheet (no id yet: one no sheet has)
+                let vps = items.iter().filter(|(_, i)| matches!(&**i, SheetItem::Known(ItemKind::Viewport(_)))).count();
+                self.viewport_room(&BTreeMap::from([(Id::MAX, vps)]), vps)?;
                 let name = name.unwrap_or_else(|| format!("{} copy", orig.name));
                 short("the name", &name)?;
                 // right after the original: everything after it moves down one
@@ -413,6 +451,11 @@ impl Engine {
                 // check all of them before adding any (a bad one in the list adds nothing)
                 let bounds = self.model.world_bounds();
                 let built: Vec<Viewport> = list.iter().map(|a| self.viewport_from(a, fallback, bounds)).collect::<Result<_>>()?;
+                let mut adding: BTreeMap<Id, usize> = BTreeMap::new();
+                for v in &built {
+                    *adding.entry(v.sheet).or_default() += 1;
+                }
+                self.viewport_room(&adding, built.len())?;
                 for v in built {
                     let id = self.model.new_id();
                     self.model.sheet_items.insert(id, Arc::new(SheetItem::Known(ItemKind::Viewport(v))));
@@ -428,6 +471,9 @@ impl Engine {
                 if let Some(s) = args.sheet {
                     if !self.model.sheets.contains_key(&s) {
                         bail!("no sheet {s}");
+                    }
+                    if s != v.sheet {
+                        self.viewport_room(&BTreeMap::from([(s, 1)]), 0)?;
                     }
                     v.sheet = s;
                 }
@@ -605,7 +651,8 @@ impl Engine {
                 }
                 json!({"item": made.first(), "items": made})
             }
-            Command::SheetText { id, sheet, at_mm, text, height_mm, z } => {
+            c @ (Command::SheetTable { .. } | Command::SheetTablePaste { .. }) => self.run_tables(c)?,
+            Command::SheetText { id, sheet, at_mm, text, height_mm, width_mm, align, z } => {
                 let mut t = match id {
                     Some(id) => {
                         let Some(item) = self.model.sheet_items.get(&id) else { bail!("no sheet item {id}") };
@@ -651,6 +698,15 @@ impl Engine {
                         bail!("height_mm is between {} and {} mm", TEXT_HEIGHT_RANGE.0, TEXT_HEIGHT_RANGE.1);
                     }
                     t.height_mm = (h != TEXT_HEIGHT).then_some(h);
+                }
+                if let Some(w) = width_mm {
+                    if !(w.is_finite() && (w == 0.0 || (BLOCK_WIDTH_RANGE.0..=BLOCK_WIDTH_RANGE.1).contains(&w))) {
+                        bail!("width_mm is 0 (plain text) or {} to {} mm (a text block wrapped to it)", BLOCK_WIDTH_RANGE.0, BLOCK_WIDTH_RANGE.1);
+                    }
+                    t.box_mm = (w > 0.0).then_some([w, 0.0]);
+                }
+                if let Some(a) = align {
+                    t.align = a;
                 }
                 if let Some(z) = z {
                     t.z = z;
@@ -773,6 +829,13 @@ impl Engine {
                                 o.insert("paper_mm".into(), json!(pts));
                             }
                         }
+                        // a table's rows and columns on the paper (and a linked one's live rows); a text's box
+                        if let SheetItem::Known(ItemKind::Table(t)) = i {
+                            o.insert("layout".into(), super::tables::table_info(m, t));
+                        }
+                        if let SheetItem::Known(ItemKind::Text(t)) = i {
+                            o.insert("layout".into(), super::tables::text_info(t));
+                        }
                     }
                     v
                 };
@@ -785,7 +848,11 @@ impl Engine {
                     .collect();
                 let unsupported: Vec<Value> = m.sheet_items.iter().filter(|(_, i)| i.is_raw()).map(|(k, i)| json!({"id": k, "kind": i.kind_name(), "sheet": i.sheet()})).collect();
                 let orphans: Vec<&Id> = m.sheet_items.iter().filter(|(_, i)| i.sheet().is_none_or(|s| !m.sheets.contains_key(&s))).map(|(k, _)| k).collect();
-                json!({"sheets": sheets, "items": m.sheet_items.len(), "unsupported": unsupported, "orphans": orphans})
+                let mut v = json!({"sheets": sheets, "items": m.sheet_items.len(), "unsupported": unsupported, "orphans": orphans});
+                if self.untrusted {
+                    v["content_is_data"] = json!(crate::policy::TEXT_IS_DATA);
+                }
+                v
             }
             Command::ExportSheets { path, format, sheet, project, pages, blueprint, notes, page } => {
                 if let Some(f) = format.as_deref().filter(|f| !matches!(f.to_ascii_lowercase().as_str(), "pdf" | "svg" | "dxf")) {
@@ -860,12 +927,15 @@ fn drop_legacy(v: &mut Viewport, key: &str) {
     }
 }
 
-/// A saved sheet as the page description the PDF writer takes: its viewports in stacking order, and its first table.
+/// A saved sheet as the page description the PDF writer takes: its viewports, line work, text, dimensions and tables
+/// in stacking order.
 pub(super) fn page_of(m: &Model, sheet: Id) -> PageSpec {
     let s = &m.sheets[&sheet];
     let mut vps: Vec<(i32, Id, &Viewport)> = m.sheet_items.iter().filter_map(|(id, i)| if let SheetItem::Known(ItemKind::Viewport(v)) = &**i { (v.sheet == sheet).then_some((v.z, *id, v)) } else { None }).collect();
     vps.sort_by_key(|(z, id, _)| (*z, *id));
-    let table = m.sheet_items.values().find_map(|i| if let SheetItem::Known(ItemKind::Table(t)) = &**i { (t.sheet == sheet).then(|| t.rows.clone()) } else { None }).unwrap_or_default();
+    let mut tables: Vec<(i32, Id, &Table)> = m.sheet_items.iter().filter_map(|(id, i)| if let SheetItem::Known(ItemKind::Table(t)) = &**i { (t.sheet == sheet).then_some((t.z, *id, t)) } else { None }).collect();
+    tables.sort_by_key(|(z, id, _)| (*z, *id));
+    let tables = tables.iter().map(|(_, _, t)| super::tables::table_draw(m, t)).collect();
     // dimensions are worked out against the model as it is now: a moved wall has moved them
     let mut dims: Vec<(i32, Id, &Dimension)> = m.sheet_items.iter().filter_map(|(id, i)| if let SheetItem::Known(ItemKind::Dimension(d)) = &**i { (d.sheet == sheet).then_some((d.z, *id, d)) } else { None }).collect();
     dims.sort_by_key(|(z, id, _)| (*z, *id));
@@ -875,8 +945,8 @@ pub(super) fn page_of(m: &Model, sheet: Id) -> PageSpec {
     let lines = shapes.iter().filter_map(|(_, _, k)| crate::draft::linework::draw(k)).collect();
     let mut texts: Vec<(i32, Id, &Text)> = m.sheet_items.iter().filter_map(|(id, i)| if let SheetItem::Known(ItemKind::Text(t)) = &**i { (t.sheet == sheet).then_some((t.z, *id, t)) } else { None }).collect();
     texts.sort_by_key(|(z, id, _)| (*z, *id));
-    let texts = texts.iter().map(|(_, _, t)| crate::layout::TextDraw { at_mm: t.at_mm, lines: t.paragraphs.clone(), height_mm: t.height_mm.unwrap_or(TEXT_HEIGHT) }).collect();
-    PageSpec { title: s.name.clone(), viewports: vps.iter().map(|(_, _, v)| viewport_to_spec(v)).collect(), table, dims, lines, texts }
+    let texts = texts.iter().map(|(_, _, t)| super::tables::text_draw(t)).collect();
+    PageSpec { title: s.name.clone(), viewports: vps.iter().map(|(_, _, v)| viewport_to_spec(v)).collect(), table: Vec::new(), dims, lines, texts, tables }
 }
 
 /// The page description of an old-style viewport becomes a saved viewport. What the saved form has no field for

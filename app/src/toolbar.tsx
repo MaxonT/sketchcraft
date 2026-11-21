@@ -1,3 +1,4 @@
+import { useLocale, translate, type Language } from "./locale";
 // The tool bar along the bottom of the model. When the window is too narrow
 // for every tool, the ones that don't fit go behind a "+N more" button; its
 // list can be searched by typing a tool's name or shortcut.
@@ -20,7 +21,7 @@ export interface ExtraButton {
 }
 let EXTRA = new Map<string, ExtraButton>();
 
-const info = (id: string) => (EXTRA.has(id) ? { name: `${EXTRA.get(id)!.name} (plugin)`, key: keyText(id) } : { ...TOOL_INFO[id as ToolId], key: keyText(`tool:${id}`) });
+const toolInfo = (id: string, language: Language) => (EXTRA.has(id) ? { name: `${EXTRA.get(id)!.name} (plugin)`, key: keyText(id) } : { ...TOOL_INFO[id as ToolId], name: translate(language, `tool.${id}`, TOOL_INFO[id as ToolId]?.name), key: keyText(`tool:${id}`) });
 /** The tool's icon: the worn skin's own image if it has one, else the built-in. */
 const icon = (id: string, style: ToolIconStyle) => {
   const ex = EXTRA.get(id);
@@ -52,6 +53,8 @@ export function Toolbar({
   extra?: ExtraButton[];
   iconStyle?: ToolIconStyle;
 }) {
+  const { language } = useLocale();
+  const info = (id: string) => toolInfo(id, language);
   useKeymap();
   EXTRA = new Map(extra.map((b) => [b.id, b]));
   const groups = useMemo(() => (extra.length ? [...toolGroups, extra.map((b) => b.id)] : toolGroups), [toolGroups, extra]);
@@ -201,6 +204,8 @@ function MoreTools({
   onCustomize: () => void;
   onClose: () => void;
 }) {
+  const { language } = useLocale();
+  const info = (id: string) => toolInfo(id, language);
   const [q, setQ] = useState("");
   const [at, setAt] = useState(0);
   const box = useRef<HTMLDivElement>(null);

@@ -25,7 +25,7 @@ const check = (ok, what) => {
 };
 
 const b = await launch();
-const ctx = await b.newContext({ viewport: { width: 1400, height: 900 } });
+const ctx = await b.newContext({ locale: 'en-US', viewport: { width: 1400, height: 900 } });
 const p = await ctx.newPage();
 const problems = [];
 p.on('pageerror', (e) => problems.push(String(e)));
@@ -102,6 +102,8 @@ check(s.tagStyles?.Walls?.weight_mm === 0.7 && s.tagStyles?.Walls?.line === 'das
 const toggle = p.getByLabel('Line weights');
 if (await toggle.count()) {
   const bucketCount = () => p.evaluate(() => { let n = 0; window.__sketchcraftView.current.model.traverse((o) => { if (o.userData?.pen) n++; }); return n; });
+  await toggle.check(); // the Classic look starts with it off
+  await wait(500);
   const on = await bucketCount();
   await toggle.uncheck();
   await wait(500);

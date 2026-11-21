@@ -3,6 +3,7 @@
 //   node tools/ui-tests/run.mjs                 every suite
 //   node tools/ui-tests/run.mjs tools gestures  only the suites whose file name contains one of these
 //   node tools/ui-tests/run.mjs --list
+//   node tools/ui-tests/run.mjs --shard=2/3     the second of three fixed, balanced groups of the suites (CI runs the groups in parallel)
 //   node tools/ui-tests/run.mjs visual -- --update   (what follows -- is passed to the suites)
 //
 // It makes a scratch folder (SKETCHCRAFT_SCRATCH, else a new one under the system temp folder), points HOME,
@@ -21,30 +22,63 @@ const SUITES = [
   ['undo-and-restore', 'tools/ui-tests/undo-and-restore.mjs', 240],
   ['read-only', 'tools/ui-tests/read-only.mjs', 240],
   ['gestures-and-escape', 'tools/ui-tests/gestures-and-escape.mjs', 240],
+  ['right-click', 'tools/ui-tests/right-click.mjs', 240],
   ['overlay-layout', 'tools/ui-tests/overlay-layout.mjs', 300],
+  ['side-tabs', 'tools/ui-tests/side-tabs.mjs', 300],
   ['line-styles', 'tools/ui-tests/line-styles.mjs', 300],
   ['hatches', 'tools/ui-tests/hatches.mjs', 300],
   ['cut-fills', 'tools/ui-tests/cut-fills.mjs', 300],
   ['cut-priority', 'tools/ui-tests/cut-priority.mjs', 300],
   ['layout-workspace', 'tools/ui-tests/layout-workspace.mjs', 300],
   ['sheet-editor', 'tools/ui-tests/sheet-editor.mjs', 420],
+  ['sheet-tables', 'tools/ui-tests/sheet-tables.mjs', 300],
   ['subdivide', 'tools/ui-tests/subdivide.mjs', 300],
+  ['wall-pull', 'tools/ui-tests/wall-pull.mjs', 300],
+  ['room-mode', 'tools/ui-tests/room-mode.mjs', 300],
+  ['fixtures', 'tools/ui-tests/fixtures.mjs', 300],
+  ['texturing-set', 'tools/ui-tests/texturing-set.mjs', 300],
+  ['projection', 'tools/ui-tests/projection.mjs', 300],
+  ['vertex-paint', 'tools/ui-tests/vertex-paint.mjs', 300],
+  ['texture-paint', 'tools/ui-tests/texture-paint.mjs', 420],
+  ['position-texture', 'tools/ui-tests/position-texture.mjs', 300],
+  ['uv-editor', 'tools/ui-tests/uv-editor.mjs', 420],
   ['shortcuts', 'tools/ui-tests/shortcuts.mjs', 300],
+  ['menu-bar', 'tools/ui-tests/menu-bar.mjs', 420],
   ['tools', 'tools/ui-tests/tools.mjs', 900],
   ['plugin-sandbox', 'tools/security-tests/plugin-sandbox.mjs', 240],
   ['ruby', 'tools/ruby-tests/run.mjs', 300],
   ['visual', 'tools/ui-tests/visual.mjs', 600],
 ];
 const args = process.argv.slice(2);
-if (args.includes('--list')) {
-  for (const [n, f] of SUITES) console.log(`${n.padEnd(22)} ${f}`);
-  process.exit(0);
-}
 // `run.mjs visual -- --update`: what follows `--` goes to every suite that runs
 const dd = args.indexOf('--');
 const extra = dd >= 0 ? args.slice(dd + 1) : [];
 const want = (dd >= 0 ? args.slice(0, dd) : args).filter((a) => !a.startsWith('--'));
-const chosen = SUITES.filter(([n, f]) => fs.existsSync(path.join(ROOT, f)) && (!want.length || want.some((w) => n.includes(w))));
+// --shard=i/n: the suites are dealt into n groups, longest time budget first, each to the group with the least so far,
+// so every group is the same each run and they take about the same time
+const shardArg = (dd >= 0 ? args.slice(0, dd) : args).find((a) => a.startsWith('--shard='));
+let shardOf = null;
+if (shardArg) {
+  const m = /^--shard=(\d+)\/(\d+)$/.exec(shardArg);
+  if (!m || +m[1] < 1 || +m[1] > +m[2]) {
+    console.error('--shard=i/n wants 1 <= i <= n, like --shard=1/3');
+    process.exit(2);
+  }
+  const [i, n] = [+m[1], +m[2]];
+  const load = Array(n).fill(0);
+  shardOf = new Map();
+  for (const [name, , secs] of [...SUITES].sort((a, b) => b[2] - a[2])) {
+    const g = load.indexOf(Math.min(...load));
+    load[g] += secs;
+    shardOf.set(name, g + 1);
+  }
+  shardOf.mine = i;
+}
+const chosen = SUITES.filter(([n, f]) => fs.existsSync(path.join(ROOT, f)) && (!want.length || want.some((w) => n.includes(w))) && (!shardOf || shardOf.get(n) === shardOf.mine));
+if (args.includes('--list')) {
+  for (const [n, f] of chosen) console.log(`${n.padEnd(22)} ${f}`);
+  process.exit(0);
+}
 if (!chosen.length) {
   console.error('no suite matches', want);
   process.exit(2);

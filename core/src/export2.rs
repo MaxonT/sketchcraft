@@ -44,6 +44,7 @@ pub fn write_dae(m: &Model, path: &str) -> Result<usize> {
     let color_of = |f: &WFace| f.color.unwrap_or(DEFAULT);
     // textured materials come after the colors: (material name, image file)
     let mut texs: Vec<(String, String)> = vec![];
+    let mut tex_files = crate::texmap::FileNames::default();
     let p = std::path::Path::new(path);
     let tex_dir = format!("{}_textures", p.file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or_else(|| "model".into()));
     for fs in objs.values() {
@@ -51,7 +52,7 @@ pub fn write_dae(m: &Model, path: &str) -> Result<usize> {
             if let Some((name, t)) = crate::texmap::of_face(m, f) {
                 if !texs.iter().any(|(n, _)| n == name) {
                     if let Ok((ext, data)) = crate::texmap::bytes(t) {
-                        let file = crate::texmap::file_name(name, ext);
+                        let file = tex_files.name(name, ext);
                         let dir = p.with_file_name(&tex_dir);
                         std::fs::create_dir_all(&dir)?;
                         std::fs::write(dir.join(&file), data)?;
@@ -102,12 +103,12 @@ pub fn write_dae(m: &Model, path: &str) -> Result<usize> {
         for f in faces {
             let ti = tex_index(f);
             let mi = ti.unwrap_or_else(|| colors.iter().position(|c| *c == color_of(f)).unwrap_or(0));
-            let map = crate::texmap::of_face(m, f).map(|(_, t)| crate::texmap::Mapping::of(t, f.normal));
+            let map = crate::texmap::of_face(m, f).map(|(_, t)| crate::texmap::FaceMap::of(t, f));
             for t in geom::triangulate(&f.outer, &f.holes, f.normal) {
                 let base = pos.len() / 3;
                 for p in t {
                     pos.extend([p.x, p.y, p.z]);
-                    uvs.extend(map.map(|mp| mp.uv(p)).unwrap_or([0.0, 0.0]));
+                    uvs.extend(map.as_ref().map(|mp| mp.uv(p)).unwrap_or([0.0, 0.0]));
                 }
                 by_mat.entry(mi).or_default().extend([base, base + 1, base + 2]);
                 tris += 1;

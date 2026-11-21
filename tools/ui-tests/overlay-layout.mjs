@@ -46,7 +46,7 @@ for (const [layout, name] of Object.entries(LAYOUTS)) {
   for (const [w, h] of SIZES) {
     for (const subd of [false, true]) {
       const tag = `${name} ${w}x${h}${subd ? ' in SubD mode' : ''}`;
-      const ctx = await b.newContext({ viewport: { width: w, height: h } });
+      const ctx = await b.newContext({ locale: 'en-US', viewport: { width: w, height: h } });
       await ctx.addInitScript((l) => {
         try {
           localStorage.setItem('sketchcraft.layout', l);

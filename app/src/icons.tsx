@@ -148,6 +148,18 @@ export const Icons = {
       <path d="M3 19l6-3M21 13v-0" />
     </Svg>
   ),
+  room: () => (
+    <Svg>
+      <path d="M4 5h16v14H4zM4 12h7M15 12h5" />
+      <path d="M11 9v6" />
+    </Svg>
+  ),
+  wallpull: () => (
+    <Svg>
+      <path d="M3 19V7l5-2v12M8 17l8-2V5L8 5" />
+      <path d="M16 12h5m0 0-2-2m2 2-2 2" />
+    </Svg>
+  ),
   stairs: () => (
     <Svg>
       <path d="M3 20h4v-4h4v-4h4V8h4V4" />
@@ -178,6 +190,21 @@ export const Icons = {
     <Svg>
       <path d="M14.5 4.5 19.5 9.5 11 18l-5-5z" />
       <path d="M6 13l-1.5 5.5L10 17" />
+    </Svg>
+  ),
+  vpaint: () => (
+    <Svg>
+      <path d="M12 3 20 18H4z" />
+      <circle cx="12" cy="3" r="1.6" fill="currentColor" />
+      <circle cx="20" cy="18" r="1.6" fill="currentColor" />
+      <circle cx="4" cy="18" r="1.6" fill="currentColor" />
+    </Svg>
+  ),
+  tpaint: () => (
+    <Svg>
+      <rect x="4" y="4" width="16" height="16" rx="2" />
+      <path d="M4 12h16M12 4v16" />
+      <path d="M14 14.5 18 10.5l1.5 1.5-4 4-2.2.6z" />
     </Svg>
   ),
   erase: () => (

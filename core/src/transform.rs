@@ -6,7 +6,7 @@
 //! split into flat triangles joined by soft edges.
 
 use crate::geom;
-use crate::model::{pairs, Face, Id, Model};
+use crate::model::{pairs, Face, Id, Model, WELD};
 use anyhow::{bail, Result};
 use glam::{DMat4, DQuat, DVec3};
 use std::collections::{BTreeSet, HashMap};
@@ -24,6 +24,9 @@ impl Model {
         }
         ids.sort();
         ids.dedup();
+        let (inst, geo): (Vec<Id>, Vec<Id>) = ids.iter().partition(|id| self.instances.contains_key(id));
+        let vs = if geo.is_empty() { BTreeSet::new() } else { self.vertices_of(&geo)? };
+        let opening_folds = self.plan_opening_folds(&vs, t)?;
         // subdivision cages follow their groups (and find their mirror plane again)
         let mut moved_cages = std::collections::BTreeSet::new();
         for g in ids.iter().filter(|g| self.groups.contains_key(g)) {
@@ -43,12 +46,10 @@ impl Model {
                 c.detect_symmetry();
             }
         }
-        let (inst, geo): (Vec<Id>, Vec<Id>) = ids.iter().partition(|id| self.instances.contains_key(id));
         for id in &inst {
             let i = self.instances.get_mut(id).unwrap();
             i.transform = t * i.transform;
         }
-        let vs = if geo.is_empty() { BTreeSet::new() } else { self.vertices_of(&geo)? };
         for v in &vs {
             let p = self.vertices[v].p;
             self.vertices.get_mut(v).unwrap().p = t.transform_point3(p);
@@ -64,6 +65,9 @@ impl Model {
             for f in faces {
                 self.faces.get_mut(&f).unwrap().reverse();
             }
+        }
+        for (face, triangles) in opening_folds {
+            self.replace_folded_face(face, triangles);
         }
         self.fold(&vs);
         Ok(vs.len() + inst.len())
@@ -86,6 +90,37 @@ impl Model {
         self.transform(ids, t)
     }
 
+    // Plan on the original plane before touching a vertex. A projection
+    // of a bent ring can bridge an opening or change its boundary.
+    fn plan_opening_folds(&self, moved: &BTreeSet<Id>, transform: DMat4) -> Result<Vec<(Id, Vec<[Id; 3]>)>> {
+        let point = |id| {
+            let p = self.p(id);
+            if moved.contains(&id) { transform.transform_point3(p) } else { p }
+        };
+        let mut folds = Vec::new();
+        for (&id, face) in &self.faces {
+            if face.holes.is_empty() || !face.loops().flatten().any(|v| moved.contains(v)) {
+                continue;
+            }
+            let outer: Vec<_> = face.outer.iter().map(|&v| point(v)).collect();
+            let normal = geom::newell(&outer);
+            if normal == DVec3::ZERO {
+                bail!("transform would collapse a face with an opening");
+            }
+            if face.loops().flatten().all(|&v| (point(v) - outer[0]).dot(normal).abs() < WELD) {
+                continue;
+            }
+            let triangles = self.fold_openings(face)?;
+            for &[a, b, c] in &triangles {
+                if (point(b) - point(a)).cross(point(c) - point(a)).length_squared() <= WELD.powi(4) {
+                    bail!("transform would collapse part of a face with an opening");
+                }
+            }
+            folds.push((id, triangles));
+        }
+        Ok(folds)
+    }
+
     /// Split faces touching `moved` that are no longer flat into triangles.
     pub(crate) fn fold(&mut self, moved: &BTreeSet<Id>) {
         let bent: Vec<Id> = self
@@ -98,28 +133,49 @@ impl Model {
         for fid in bent {
             let f = self.faces[&fid].clone();
             if !f.holes.is_empty() {
-                continue; // rare; leave it rather than guess
+                continue; // Openings are planned before the transform.
             }
             let pts = self.pts(&f.outer);
             let n = geom::newell(&pts);
             let lookup: HashMap<[i64; 3], Id> = f.outer.iter().map(|&v| (key(self.p(v)), v)).collect();
             let tris = geom::triangulate(&pts, &[], n);
-            self.faces.remove(&fid);
-            let boundary: BTreeSet<(Id, Id)> = pairs(&f.outer).flat_map(|(a, b)| [(a, b), (b, a)]).collect();
-            for t in tris {
-                let ids: Vec<Id> = t.iter().map(|p| lookup[&key(*p)]).collect();
-                let mut tri = ids.clone();
-                // keep each triangle facing the same way as the face it came from
-                let tn = (t[1] - t[0]).cross(t[2] - t[0]);
-                if tn.dot(n) < 0.0 {
-                    tri.reverse();
-                }
-                self.insert_face(Face { outer: tri.clone(), ..f.clone() });
-                for (a, b) in pairs(&tri) {
-                    if !boundary.contains(&(a, b)) {
-                        if let Some(e) = self.find_edge(a, b) {
-                            self.edges.get_mut(&e).unwrap().soft = true;
-                        }
+            self.replace_folded_face(fid, tris.into_iter().map(|t| t.map(|p| lookup[&key(p)])));
+        }
+    }
+
+    /// Triangulate the original flat face and make sure all outline and hole
+    /// edges still constrain the fold. Every triangle reuses the model's IDs.
+    fn fold_openings(&self, face: &Face) -> Result<Vec<[Id; 3]>> {
+        let outer = self.pts(&face.outer);
+        let holes: Vec<_> = face.holes.iter().map(|h| self.pts(h)).collect();
+        let key = |p: DVec3| p.to_array().map(f64::to_bits);
+        let lookup: HashMap<_, _> = face.loops().flatten().map(|&id| (key(self.p(id)), id)).collect();
+        let triangles: Vec<_> = geom::triangulate(&outer, &holes, geom::newell(&outer))
+            .into_iter().map(|t| t.map(|p| lookup[&key(p)])).collect();
+        let boundary: BTreeSet<_> = face.loops().flat_map(|l| pairs(l)).map(|(a, b)| (a.min(b), a.max(b))).collect();
+        let mut counts = HashMap::new();
+        for tri in &triangles {
+            for (a, b) in pairs(tri) {
+                *counts.entry((a.min(b), a.max(b))).or_insert(0usize) += 1;
+            }
+        }
+        if !boundary.iter().all(|e| counts.get(e) == Some(&1))
+            || counts.into_iter().any(|(e, count)| count != if boundary.contains(&e) { 1 } else { 2 })
+        {
+            bail!("cannot fold a face without changing its opening");
+        }
+        Ok(triangles)
+    }
+
+    fn replace_folded_face(&mut self, fid: Id, triangles: impl IntoIterator<Item = [Id; 3]>) {
+        let f = self.faces.remove(&fid).unwrap();
+        let boundary: BTreeSet<_> = f.loops().flat_map(|l| pairs(l)).map(|(a, b)| (a.min(b), a.max(b))).collect();
+        for tri in triangles {
+            self.insert_face(Face { outer: tri.to_vec(), holes: Vec::new(), uv: None, ..f.clone() });
+            for (a, b) in pairs(&tri) {
+                if !boundary.contains(&(a.min(b), a.max(b))) {
+                    if let Some(e) = self.find_edge(a, b) {
+                        self.edges.get_mut(&e).unwrap().soft = true;
                     }
                 }
             }
@@ -135,6 +191,10 @@ impl Model {
 
     /// Copy faces, groups or instances, offset by `by`. Returns the new ids.
     pub fn duplicate(&mut self, ids: &[Id], by: DVec3) -> Result<Vec<Id>> {
+        self.duplicate_with(ids, by, &mut crate::model::Lookup::default())
+    }
+
+    fn duplicate_with(&mut self, ids: &[Id], by: DVec3, look: &mut crate::model::Lookup) -> Result<Vec<Id>> {
         self.check_room(self.copy_cost(ids))?;
         let mut out = Vec::new();
         let mut loose = Vec::new();
@@ -155,27 +215,30 @@ impl Model {
         let mut map: HashMap<Id, Id> = HashMap::new();
         for fid in loose {
             let f = self.faces[&fid].clone();
-            let mut remap = |m: &mut Model, l: &[Id]| -> Vec<Id> {
+            let mut remap = |m: &mut Model, l: &[Id]| -> Result<Vec<Id>> {
                 l.iter()
                     .map(|v| {
-                        *map.entry(*v).or_insert_with(|| {
-                            let p = m.p(*v) + by;
-                            if by.length() < crate::model::WELD {
-                                // a copy in place (to rotate, or paste): its own
-                                // vertices, or moving it would drag the original
-                                let id = m.new_id();
-                                m.vertices.insert(id, crate::model::Vertex { p, group: f.group });
-                                id
-                            } else {
-                                m.vertex_in(p, f.group)
-                            }
-                        })
+                        if let Some(&id) = map.get(v) {
+                            return Ok(id);
+                        }
+                        let p = m.p(*v) + by;
+                        let id = if by.length() < crate::model::WELD {
+                            // a copy in place (to rotate, or paste): its own
+                            // vertices, or moving it would drag the original
+                            let id = m.new_id();
+                            m.vertices.insert(id, crate::model::Vertex { p, group: f.group });
+                            id
+                        } else {
+                            m.vertex_with(p, f.group, look)?
+                        };
+                        map.insert(*v, id);
+                        Ok(id)
                     })
                     .collect()
             };
-            let outer = remap(self, &f.outer);
-            let holes = f.holes.iter().map(|h| remap(self, h)).collect();
-            out.push(self.insert_face(Face { outer, holes, ..f.clone() }));
+            let outer = remap(self, &f.outer)?;
+            let holes = f.holes.iter().map(|h| remap(self, h)).collect::<Result<_>>()?;
+            out.push(self.insert_face_with(Face { outer, holes, ..f.clone() }, look));
         }
         Ok(out)
     }
@@ -189,8 +252,9 @@ impl Model {
         // by what is inside the ids, not how many ids there are
         self.check_room(self.copy_cost(ids).saturating_mul(count))?;
         let mut out = Vec::new();
+        let mut look = crate::model::Lookup::default();
         for k in 1..=count {
-            out.extend(self.duplicate(ids, by * k as f64)?);
+            out.extend(self.duplicate_with(ids, by * k as f64, &mut look)?);
         }
         Ok(out)
     }

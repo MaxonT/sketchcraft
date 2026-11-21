@@ -210,3 +210,41 @@
   margin: 0 4px;
   background: var(--line);
 }
+
+/* ---------- Vertical layout: one sidebar, Properties is its fourth tab ---------- */
+
+/* the tab's content (Document, Style, Paint, Finish, Entity info) takes the sidebar's whole height */
+.panel.left .inspector-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tabs button .tab-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  vertical-align: middle;
+}
+
+.panel.left .inspector-body > * {
+  flex-shrink: 0;
+}
+
+/* four tabs in a narrow sidebar: tighter, and scroll sideways rather than clip at the smallest window */
+.app.panels-right .panel.left .tabs {
+  padding: 8px 6px 0;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  button {
+    padding: 8px 8px 9px;
+    white-space: nowrap;
+    flex: none;
+  }
+}

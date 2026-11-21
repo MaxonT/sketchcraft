@@ -9,6 +9,7 @@
 @use "toolbar";
 @use "markers";
 @use "menus";
+@use "menubar";
 @use "labels";
 @use "dialogs";
 @use "components";
@@ -36,3 +37,7 @@
 @use "restore";
 @use "shortcuts";
 @use "paper";
+@use "projection";
+@use "vertexpaint";
+@use "position";
+@use "uv";

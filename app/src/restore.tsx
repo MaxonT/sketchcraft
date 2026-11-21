@@ -1,3 +1,4 @@
+import { useLocale } from "./locale";
 // File › Restore from backup…: the model's earlier copies, newest first. Restoring is one undo step
 // (and the model it replaces is kept as a backup first); "Save a copy" leaves the model alone and puts the
 // old version in a Restored folder beside it. Work SketchCraft set aside (a plugin run another program cut
@@ -11,6 +12,7 @@ import { Sheet } from "./sheet";
 type Run = (cmd: Record<string, unknown>) => Promise<Reply>;
 
 export function RestoreDialog({ run, onClose, onToast }: { run: Run; onClose: () => void; onToast: (t: string, bad?: boolean) => void }) {
+  const { t } = useLocale();
   const [items, setItems] = useState<Item[] | null>(null);
   const [problem, setProblem] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
@@ -61,26 +63,26 @@ export function RestoreDialog({ run, onClose, onToast }: { run: Run; onClose: ()
         <span className="restore-size muted small" title={it.size > 100 * 1024 * 1024 ? "A big file: restoring it takes a few seconds and a lot of memory." : undefined}>{bytes(it.size)}{it.size > 100 * 1024 * 1024 ? " (big)" : ""}</span>
         <span className="restore-acts">
           <button className="btn small" disabled={busy !== null} onClick={() => act(it, "replace")} title="Replace the model with this version. One undo step.">
-            Restore
+            {t("restore.restore")}
           </button>
           <button className="btn small" disabled={busy !== null} onClick={() => act(it, "copy")} title="Leave the model alone; put this version in a Restored folder beside it.">
-            Save a copy
+            {t("restore.copy")}
           </button>
         </span>
       </li>
     );
   };
   return (
-    <Sheet onClose={onClose} label="Restore from backup" width={720}>
+    <Sheet onClose={onClose} label={t("restore.title")} width={720}>
       <div className="sheet-head">
-        <b>Restore from backup</b>
-        <span className="muted">Earlier copies of this model, newest first.</span>
+        <b>{t("restore.title")}</b>
+        <span className="muted">{t("restore.versions")}</span>
         <button className="btn" style={{ marginLeft: "auto" }} onClick={onClose}>
-          Close
+          {t("restore.close")}
         </button>
       </div>
       {problem && <p className="muted">{problem}</p>}
-      {!problem && items === null && <p className="muted">Looking…</p>}
+      {!problem && items === null && <p className="muted">{t("restore.loading")}</p>}
       {items && backups.length === 0 && aside.length === 0 && <p className="muted">No backups yet. SketchCraft keeps one every few minutes while you work, and one before anything that removes a lot.</p>}
       {backups.length > 0 && <ul className="restore-list">{backups.map(row)}</ul>}
       {aside.length > 0 && (

@@ -15,7 +15,7 @@ fs.rmSync(rbz, { force: true });
 execFileSync('zip', ['-qr', rbz, 'house_kit.rb', 'house_kit'], { cwd: dir });
 
 const b = await launch();
-const p = await (await b.newContext()).newPage();
+const p = await (await b.newContext({ locale: 'en-US' })).newPage();
 await p.goto(PAGE);
 await p.waitForSelector('.viewport canvas');
 // X: as the person using the app (installing plugins, new model); the page's own calls carry the token too

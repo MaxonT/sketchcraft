@@ -1513,6 +1513,10 @@ fn merge_into(m: &mut Model, src: &Model, gid: Id, t: DMat4) {
             material: f.material.clone(),
             group: Some(gid),
             hidden: false,
+            tex: None,
+            uv: None,
+            vcol: None,
+            uv2: None,
         });
     }
 }

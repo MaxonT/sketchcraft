@@ -20,6 +20,14 @@ pub struct WFace {
     pub color: Option<[f32; 3]>,
     /// material name (look it up in the model, or the component that owns it)
     pub material: Option<String>,
+    /// where its picture sits when painted through (root faces only)
+    pub place: Option<crate::model::TexPlace>,
+    /// texture coordinates per corner of `outer` and of each hole, in the same order (None: the material's placement)
+    pub uv: Option<(Vec<[f32; 2]>, Vec<Vec<[f32; 2]>>)>,
+    /// vertex colours per corner (RGBA), same layout as `uv`
+    pub vcol: Option<(Vec<[f32; 4]>, Vec<Vec<[f32; 4]>>)>,
+    /// the lightmap channel (second texture-coordinate set), same layout as `uv`; exported, never drawn
+    pub uv2: Option<(Vec<[f32; 2]>, Vec<Vec<[f32; 2]>>)>,
     /// what a section groups this face's cut under (design §3.4): the innermost tagged owner around the face (its
     /// group or a parent group, else the nearest tagged placement or a group around it, outward), named by its own
     /// id when it is in the root model and by the top-level placement's id when it is inside a component; with no
@@ -162,7 +170,41 @@ impl Model {
                 Some((c, tag)) => (c, Some(tag)),
                 None => (if owner.is_none() { f.group.unwrap_or(id) } else { owner.unwrap_or(id) }, None),
             };
+            // corner coordinates follow the loops, reversed with them when a placement mirrors
+            let uv = f.uv.as_ref().filter(|u| u.fits(f)).map(|u| {
+                let fix = |v: &Vec<[f32; 2]>| {
+                    let mut v = v.clone();
+                    if mirrored {
+                        v.reverse();
+                    }
+                    v
+                };
+                (fix(&u.outer), u.holes.iter().map(fix).collect())
+            });
+            let uv2 = f.uv2.as_ref().filter(|u| u.fits(f)).map(|u| {
+                let fix = |v: &Vec<[f32; 2]>| {
+                    let mut v = v.clone();
+                    if mirrored {
+                        v.reverse();
+                    }
+                    v
+                };
+                (fix(&u.outer), u.holes.iter().map(fix).collect())
+            });
+            let vcol = f.vcol.as_ref().filter(|u| u.fits(f)).map(|u| {
+                let fix = |v: &Vec<[f32; 4]>| {
+                    let mut v = v.clone();
+                    if mirrored {
+                        v.reverse();
+                    }
+                    v
+                };
+                (fix(&u.outer), u.holes.iter().map(fix).collect())
+            });
             out.push(WFace {
+                uv,
+                uv2,
+                vcol,
                 cut,
                 tag,
                 owner: owner.unwrap_or(id),
@@ -173,6 +215,7 @@ impl Model {
                 normal,
                 color: f.material.as_ref().and_then(|m| self.materials.get(m)).map(|m| m.color).or(fill),
                 material: f.material.clone(),
+                place: if owner.is_none() { f.tex.clone() } else { None },
             });
         }
         for (&iid, inst) in &self.instances {
@@ -312,8 +355,9 @@ impl Model {
         let lo = verts.iter().map(|v| self.p(*v)).fold(DVec3::splat(f64::MAX), |a, p| a.min(p));
         let mut def = Model::default();
         let mut map: HashMap<Id, Id> = HashMap::new();
+        let mut look = crate::model::Lookup::default();
         for v in &verts {
-            map.insert(*v, def.vertex_in(self.p(*v) - lo, None));
+            map.insert(*v, def.vertex_with(self.p(*v) - lo, None, &mut look)?);
         }
         for f in &faces {
             let face = &self.faces[f];
@@ -324,13 +368,13 @@ impl Model {
                     def.materials.insert(m.clone(), mat.clone());
                 }
             }
-            def.insert_face(Face { outer, holes, material: face.material.clone(), ..Default::default() });
+            def.insert_face_with(Face { outer, holes, material: face.material.clone(), ..Default::default() }, &mut look);
         }
         // carry soft edges over
         for e in self.edges.values() {
             if e.soft {
                 if let (Some(&a), Some(&b)) = (map.get(&e.a), map.get(&e.b)) {
-                    if let Some(id) = def.find_edge(a, b) {
+                    if let Some(id) = def.find_edge_with(a, b, &mut look) {
                         def.edges.get_mut(&id).unwrap().soft = true;
                     }
                 }
@@ -384,7 +428,9 @@ impl Model {
         }
         for e in def.edges.values() {
             let id = self.edge(map[&e.a], map[&e.b]);
-            self.edges.get_mut(&id).unwrap().soft = e.soft;
+            let ne = self.edges.get_mut(&id).unwrap();
+            ne.soft = e.soft;
+            ne.seam = e.seam;
         }
         // anchors that pointed into the component follow its points out into the new group
         self.note_remap(true, || crate::anchors::Remap::Vertices { scope: None, from_path: vec![inst], to_path: Vec::new(), map: map.iter().map(|(a, b)| (*a, *b)).collect() });
@@ -396,6 +442,10 @@ impl Model {
                 material: f.material.clone(),
                 group: Some(gid),
                 hidden: false,
+                tex: None,
+                uv: f.uv.clone(),
+                vcol: f.vcol.clone(),
+                uv2: f.uv2.clone(),
             };
             if mirror {
                 nf.reverse();
@@ -454,6 +504,7 @@ impl Model {
 
     pub fn soften(&mut self, ids: &[Id], soft: bool) -> Result<usize> {
         let mut n = 0;
+        let mut look = crate::model::Lookup::default();
         for id in ids {
             if let Some(e) = self.edges.get_mut(id) {
                 e.soft = soft;
@@ -462,7 +513,7 @@ impl Model {
                 // a face: soften its edges shared with coplanar neighbours
                 for l in f.loops() {
                     for (a, b) in crate::model::pairs(l) {
-                        if let Some(e) = self.find_edge(a, b) {
+                        if let Some(e) = self.find_edge_with(a, b, &mut look) {
                             self.edges.get_mut(&e).unwrap().soft = soft;
                             n += 1;
                         }

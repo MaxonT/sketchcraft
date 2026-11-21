@@ -52,6 +52,7 @@ pub fn write_obj(m: &Model, path: &str) -> Result<usize> {
     // textures: one material per image, the image beside the OBJ
     let tex_dir_name = format!("{}_textures", p.file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or_else(|| "model".into()));
     let mut tex_mats: std::collections::BTreeMap<String, String> = Default::default();
+    let mut tex_files = crate::texmap::FileNames::default();
     let mut vt = 0usize;
     for (name, faces) in objects {
         writeln!(obj, "o {}", obj_token(&name))?;
@@ -62,7 +63,7 @@ pub fn write_obj(m: &Model, path: &str) -> Result<usize> {
                     return Some((id.clone(), t));
                 }
                 let (ext, data) = crate::texmap::bytes(t).ok()?;
-                let file = crate::texmap::file_name(mname, ext);
+                let file = tex_files.name(mname, ext);
                 let dir = p.with_file_name(&tex_dir_name);
                 std::fs::create_dir_all(&dir).ok()?;
                 std::fs::write(dir.join(&file), data).ok()?;
@@ -78,7 +79,7 @@ pub fn write_obj(m: &Model, path: &str) -> Result<usize> {
             }
             writeln!(obj, "vn {:.6} {:.6} {:.6}", n.x, n.y, n.z)?;
             vn += 1;
-            let map = tex.as_ref().map(|(_, t)| crate::texmap::Mapping::of(t, n));
+            let map = tex.as_ref().map(|(_, t)| crate::texmap::FaceMap::of(t, &f));
             for t in geom::triangulate(&f.outer, &f.holes, n) {
                 for p in t {
                     writeln!(obj, "v {:.6} {:.6} {:.6}", p.x, p.y, p.z)?;
@@ -132,6 +133,12 @@ pub fn write_glb(m: &Model, path: &str) -> Result<usize> {
         pos: Vec<[f32; 3]>,
         nor: Vec<[f32; 3]>,
         uv: Vec<[f32; 2]>,
+        /// vertex colours (COLOR_0), one per position; written only when some face of the primitive has them
+        vcol: Vec<[f32; 4]>,
+        any_vcol: bool,
+        /// the lightmap channel (TEXCOORD_1), one per position; written only when some face of the primitive has one
+        uv2: Vec<[f32; 2]>,
+        any_uv2: bool,
     }
     let mut by_key: std::collections::BTreeMap<String, Prim> = Default::default();
     let mut tris = 0;
@@ -143,14 +150,22 @@ pub fn write_glb(m: &Model, path: &str) -> Result<usize> {
             Some((name, _)) => format!("t:{name}|{:.2},{:.2}", pbr.0, pbr.1),
             None => format!("{}|{:.2},{:.2}", color_id(c), pbr.0, pbr.1),
         };
-        let e = by_key.entry(key).or_insert(Prim { color: c, tex, pbr, pos: vec![], nor: vec![], uv: vec![] });
+        let e = by_key.entry(key).or_insert(Prim { color: c, tex, pbr, pos: vec![], nor: vec![], uv: vec![], vcol: vec![], any_vcol: false, uv2: vec![], any_uv2: false });
         let n = f.normal;
         let ny = [n.x as f32, n.z as f32, -n.y as f32];
-        let map = tex.map(|(_, t)| crate::texmap::Mapping::of(t, n));
+        let map = tex.map(|(_, t)| crate::texmap::FaceMap::of(t, &f));
+        let vc = crate::vertex_paint::CornerColors::of(&f);
+        e.any_vcol |= vc.any();
+        let lm = crate::texmap::Lightmap::of(&f);
+        e.any_uv2 |= lm.any();
         for t in geom::triangulate(&f.outer, &f.holes, n) {
             for p in t {
+                // glTF images start at the top
+                let [lu, lv] = lm.at(p);
+                e.uv2.push([lu, 1.0 - lv]);
                 e.pos.push([p.x as f32, p.z as f32, -p.y as f32]);
                 e.nor.push(ny);
+                e.vcol.push(vc.at(p));
                 if let Some(mp) = &map {
                     // glTF images start at the top
                     let [u, v] = mp.uv(p);
@@ -190,6 +205,32 @@ pub fn write_glb(m: &Model, path: &str) -> Result<usize> {
         }
         let mut attrs = json!({"POSITION": accessors.len() - 2, "NORMAL": accessors.len() - 1});
         let mut mat = json!({"pbrMetallicRoughness": {"baseColorFactor": [c[0], c[1], c[2], 1.0], "metallicFactor": pr.pbr.1, "roughnessFactor": pr.pbr.0}, "doubleSided": false});
+        if pr.any_vcol {
+            // vertex colours: glTF multiplies COLOR_0 with the material's base colour (and its picture)
+            let off = bin.len();
+            for v in &pr.vcol {
+                for x in v {
+                    bin.extend_from_slice(&x.to_le_bytes());
+                }
+            }
+            views.push(json!({"buffer": 0, "byteOffset": off, "byteLength": pr.vcol.len() * 16, "target": 34962}));
+            accessors.push(json!({"bufferView": views.len() - 1, "componentType": 5126, "count": pr.vcol.len(), "type": "VEC4"}));
+            attrs["COLOR_0"] = json!(accessors.len() - 1);
+            if pr.vcol.iter().any(|c| c[3] < 1.0) {
+                mat["alphaMode"] = json!("BLEND");
+            }
+        }
+        if pr.any_uv2 {
+            let off = bin.len();
+            for v in &pr.uv2 {
+                for x in v {
+                    bin.extend_from_slice(&x.to_le_bytes());
+                }
+            }
+            views.push(json!({"buffer": 0, "byteOffset": off, "byteLength": pr.uv2.len() * 8, "target": 34962}));
+            accessors.push(json!({"bufferView": views.len() - 1, "componentType": 5126, "count": pr.uv2.len(), "type": "VEC2"}));
+            attrs["TEXCOORD_1"] = json!(accessors.len() - 1);
+        }
         if let (Some((name, t)), false) = (pr.tex, pr.uv.is_empty()) {
             let off = bin.len();
             for v in &pr.uv {

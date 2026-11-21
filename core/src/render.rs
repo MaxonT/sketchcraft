@@ -114,6 +114,11 @@ impl Canvas {
     }
 
     fn triangle(&mut self, tri: [DVec3; 3], col: [f32; 3]) {
+        self.triangle_g(tri, [col; 3]);
+    }
+
+    /// A triangle with a colour per corner, blended smoothly across it (vertex colours).
+    fn triangle_g(&mut self, tri: [DVec3; 3], cols: [[f32; 3]; 3]) {
         // clip against the near plane in clip space, then fan
         let clip: Vec<DVec4> = tri.iter().map(|p| self.vp * p.extend(1.0)).collect();
         let poly = clip_near(&clip);
@@ -121,14 +126,39 @@ impl Canvas {
             return;
         }
         let s: Vec<_> = poly.iter().map(|c| self.to_screen(*c)).collect();
+        if cols[0] == cols[1] && cols[1] == cols[2] {
+            for i in 1..s.len() - 1 {
+                self.raster(s[0], s[i], s[i + 1], [cols[0]; 3]);
+            }
+            return;
+        }
+        // the clipped polygon's corners take their colour from where they sit in the original triangle
+        let (e1, e2) = (tri[1] - tri[0], tri[2] - tri[0]);
+        let inv = self.vp.inverse();
+        let cs: Vec<[f32; 3]> = poly
+            .iter()
+            .map(|c| {
+                let w = inv * *c;
+                let q = w.truncate() / w.w - tri[0];
+                let (d11, d12, d22, d1, d2) = (e1.dot(e1), e1.dot(e2), e2.dot(e2), q.dot(e1), q.dot(e2));
+                let den = d11 * d22 - d12 * d12;
+                let (u, v) = if den.abs() < 1e-18 { (0.0, 0.0) } else { ((d22 * d1 - d12 * d2) / den, (d11 * d2 - d12 * d1) / den) };
+                let (u, v) = (u.clamp(0.0, 1.0) as f32, v.clamp(0.0, 1.0) as f32);
+                let mut o = [0.0; 3];
+                for k in 0..3 {
+                    o[k] = cols[0][k] + (cols[1][k] - cols[0][k]) * u + (cols[2][k] - cols[0][k]) * v;
+                }
+                o
+            })
+            .collect();
         for i in 1..s.len() - 1 {
-            self.raster(s[0], s[i], s[i + 1], col);
+            self.raster(s[0], s[i], s[i + 1], [cs[0], cs[i], cs[i + 1]]);
         }
     }
 
     /// A textured triangle: the image sampled per pixel (perspective-correct),
     /// lit by `k` (the face's shading factor).
-    fn triangle_tex(&mut self, tri: [DVec3; 3], map: &crate::texmap::Mapping, img: &image::RgbImage, k: f32) {
+    fn triangle_tex(&mut self, tri: [DVec3; 3], orig: [DVec3; 3], map: &crate::texmap::FaceMap, img: &image::RgbImage, k: f32) {
         let clip: Vec<DVec4> = tri.iter().map(|p| self.vp * p.extend(1.0)).collect();
         let poly = clip_near(&clip);
         if poly.len() < 3 {
@@ -174,7 +204,7 @@ impl Canvas {
                     }
                     let q = w0 * a.1 + w1 * b.1 + w2 * c.1;
                     let world = (a.2 * w0 + b.2 * w1 + c.2 * w2) / q;
-                    let t = crate::texmap::sample(img, map.uv(world));
+                    let t = crate::texmap::sample(img, map.uv_in(orig, world));
                     self.depth[idx] = z;
                     self.color[idx] = [t[0] * k, t[1] * k, t[2] * k];
                 }
@@ -182,7 +212,7 @@ impl Canvas {
         }
     }
 
-    fn raster(&mut self, a: (f64, f64, f64), b: (f64, f64, f64), c: (f64, f64, f64), col: [f32; 3]) {
+    fn raster(&mut self, a: (f64, f64, f64), b: (f64, f64, f64), c: (f64, f64, f64), cols: [[f32; 3]; 3]) {
         let area = (b.0 - a.0) * (c.1 - a.1) - (b.1 - a.1) * (c.0 - a.0);
         if area.abs() < 1e-12 {
             return;
@@ -207,7 +237,8 @@ impl Canvas {
                 let i = y * self.w + x;
                 if z > self.depth[i] {
                     self.depth[i] = z;
-                    self.color[i] = col;
+                    let (w0, w1, w2) = (w0 as f32, w1 as f32, w2 as f32);
+                    self.color[i] = [0, 1, 2].map(|k| cols[0][k] * w0 + cols[1][k] * w1 + cols[2][k] * w2);
                 }
             }
         }
@@ -522,20 +553,31 @@ pub fn render(model: &Model, opts: &RenderOpts) -> RgbImage {
         };
         let textured = images.as_ref().and_then(|imgs| {
             let (name, t) = crate::texmap::of_face(model, &f)?;
-            Some((crate::texmap::Mapping::of(t, n), imgs.get(name)?))
+            Some((crate::texmap::FaceMap::of(t, &f), imgs.get(name)?))
         });
         if let Some((map, img)) = textured {
             let k = shade([1.0, 1.0, 1.0], if front { n } else { -n })[0].min(1.0);
             for tri in geom::triangulate(&f.outer, &f.holes, n) {
                 match clip {
-                    None => cv.triangle_tex(tri, &map, img, k),
+                    None => cv.triangle_tex(tri, tri, &map, img, k),
                     Some((o, d)) => {
                         let poly = clip_plane(&tri, o, d);
                         for j in 1..poly.len().saturating_sub(1) {
-                            cv.triangle_tex([poly[0], poly[j], poly[j + 1]], &map, img, k);
+                            cv.triangle_tex([poly[0], poly[j], poly[j + 1]], tri, &map, img, k);
                         }
                     }
                 }
+            }
+            continue;
+        }
+        // vertex colours tint the face's shaded colour, smoothly across it (untextured faces)
+        let vc = crate::vertex_paint::CornerColors::of(&f);
+        if vc.any() && !opts.blueprint && clip.is_none() {
+            for tri in geom::triangulate(&f.outer, &f.holes, n) {
+                cv.triangle_g(tri, tri.map(|p| {
+                    let t = vc.tint(p);
+                    [col[0] * t[0], col[1] * t[1], col[2] * t[2]]
+                }));
             }
             continue;
         }

@@ -25,7 +25,10 @@ Checked items are in `main`.
 
 ## Looks and presentation
 
-- [x] Materials and image textures (tile size, projected); **physically based finishes** (Matte, Satin, Gloss, Metal, Brushed metal, Glass, Glow) in renders, glTF and a physically based view style
+- [x] **Paint Bucket modifiers** (Ctrl/Option connected, Shift replace all, Ctrl+Shift whole object, sample) and **paint-through**: a texture runs on across connected faces
+- [x] **Vertex painting**: a brush that tints the corners of faces (size, strength, soft or hard edge, Alt erases), shown in the viewport and renders and exported as glTF `COLOR_0` and FBX colours
+- [x] **Texture painting**: a brush that paints a model's texture picture directly, in the 3D view (across UV seams) and on the flat picture in the UV editor, with size, hardness, opacity, erase, colour pick, fill, a one-click unwrap when the faces have no usable UVs, and File > Export texture; the picture is saved in the model and exported like any texture
+- [x] Materials and image textures (tile size, projected; **projection mapping**: planar, box, cylinder and sphere onto a selection, kept as the faces' own texture coordinates; **Position Texture**: pins to move, scale, turn and skew the picture on a face, with flips and 90-degree turns; **UV editor**: seams, LSCM unwrap into packed islands, a 2D view to select, move, turn, scale, pin and repack them, and a second **lightmap UV set** exported to glTF and FBX); **physically based finishes** (Matte, Satin, Gloss, Metal, Brushed metal, Glass, Glow) in renders, glTF and a physically based view style
 - [x] **Styles**: shaded / textured / monochrome / hidden line / wireframe, profiles,
       sketchy edges, extensions, ambient occlusion, paper / blueprint / night; presets
 - [x] Scenes (saved views) that remember style, tags, hidden things and the section cut; **named section planes** with **section fills**, X-ray, back edges, shadows, parallel projection
@@ -36,7 +39,7 @@ Checked items are in `main`.
 ## Files
 
 - [x] Import: SketchUp `.skp` (6–8 and 2013+), **DXF** (layers as tags, blocks, units, text as labels, dimensions, splines, ellipses, hatches), **DWG** (via LibreDWG / ODA converter; tested on AutoCAD 2004 and 2018 files), OBJ (+ .mtl), binary FBX, **IFC** (Revit / ArchiCAD exports; through IfcOpenShell: elements typed for the Classifier, grouped and tagged by storey, openings cut)
-- [x] Export: glTF, OBJ, Collada (all with textures), STL, 3D DXF, **DWG** (via converter), PDF, section cuts (SVG / DXF), IFC4 (BIM)
+- [x] Export: glTF, **FBX** (binary or ASCII; UVs, materials, textures, nested groups), OBJ, Collada (all with textures), STL, 3D DXF, **DWG** (via converter), PDF, section cuts (SVG / DXF), IFC4 (BIM)
 - [x] **Raise walls** from an imported floor plan (wall bands found across T-junctions, window lines and drafting slips; window openings with sill and head)
 - [x] **Point clouds** (Scan Essentials core): PLY, LAS, XYZ / PTS / TXT; colored, thinned to a budget, survey coordinates moved home; drawing tools snap to scan points
 - [x] **Classifier** (IFC types) and **Generate Report** (CSV); IFC export validated with IfcOpenShell (`tools/ifc/check_ifc.py`)

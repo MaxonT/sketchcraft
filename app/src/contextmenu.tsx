@@ -1,3 +1,4 @@
+import { useLocale } from "./locale";
 // The right-click menu: what it offers for the selection, and the menu itself.
 import { useLayoutEffect, useRef, useState } from "react";
 import { ask } from "./ask";
@@ -8,13 +9,14 @@ import { type Run } from "./panelkit";
 import { useEscapeToClose } from "./sheet";
 
 export interface MenuItem {
+  labelId?: string;
   label: string;
   key?: string;
   danger?: boolean;
   run: () => void;
 }
 
-export function contextItems(scene: Scene, sel: Sel, run: Run, setSel: (s: Sel) => void, fitSel: () => void, section?: { origin: number[]; normal: number[] } | null, onCage?: (id: number) => void, onToast?: (t: string) => void, subd?: { subdivide: () => void; subdBox: () => void }): MenuItem[] {
+export function contextItems(scene: Scene, sel: Sel, run: Run, setSel: (s: Sel) => void, fitSel: () => void, section?: { origin: number[]; normal: number[] } | null, onCage?: (id: number) => void, onToast?: (t: string) => void, subd?: { subdivide: () => void; subdBox: () => void; projectTexture?: () => void; positionTexture?: () => void }): MenuItem[] {
   const ids = selIds(sel);
   const items: MenuItem[] = [];
   if (isEmpty(sel)) {
@@ -28,10 +30,15 @@ export function contextItems(scene: Scene, sel: Sel, run: Run, setSel: (s: Sel) 
   const one = ids.length === 1;
   if (one && sel.groups.length && scene.cages?.[String(ids[0])]) items.push({ label: "Shape in SubD mode", key: "Tab", run: () => onCage?.(ids[0]) });
   if (one && (sel.groups.length || sel.instances.length) && !sel.faces.length && !scene.cages?.[String(ids[0])]) items.push({ label: "Subdivide…", run: () => subd?.subdivide() });
+  // Texture › Position: a single textured face (a face with no picture has nothing to position)
+  if (subd?.positionTexture && sel.faces.length === 1 && !sel.groups.length && !sel.instances.length) {
+    const f = scene.faces.find((x) => x.id === sel.faces[0]);
+    if (f?.material && scene.materials.find((m) => m.name === f.material)?.texture) items.push({ label: "Texture › Position", labelId: "context.positionTexture", run: () => subd.positionTexture?.() });
+  }
   if (one && (sel.groups.length || sel.instances.length)) items.push({ label: `Edit ${sel.groups.length ? "group" : "component"}`, run: () => (run({ cmd: "edit", id: ids[0] }), setSel(EMPTY)) });
   // groups and components selected go inside the new group as they are (nesting)
   if (sel.faces.length || sel.groups.length || sel.instances.length) {
-    items.push({ label: sel.faces.length ? "Make group" : "Group these (nest them)", run: () => run({ cmd: "group", ids: [...sel.faces, ...sel.groups, ...sel.instances] }).then((r) => r.ok && setSel({ ...EMPTY, groups: [r.group as number] })) });
+    items.push({ label: "Make group", labelId: "context.group", run: () => run({ cmd: "group", ids: [...sel.faces, ...sel.groups, ...sel.instances] }).then((r) => r.ok && setSel({ ...EMPTY, groups: [r.group as number] })) });
   }
   if (one && sel.groups.length) {
     const g = scene.groups.find((x) => x.id === ids[0]);
@@ -44,7 +51,7 @@ export function contextItems(scene: Scene, sel: Sel, run: Run, setSel: (s: Sel) 
       label: "Raise walls…",
       run: async () => {
         const units = scene.units || "m";
-        const raw = await ask("Wall height", formatLength(2.7, units), "The thin bands between wall lines go up this high (wall layers first, if the drawing has them).");
+        const raw = await ask("Wall height", formatLength(2.7, units), "The thin bands between wall lines go up this high (wall layers first, if the drawing has them).", "dialog.wallHeight");
         if (raw == null) return;
         const height = parseLength(raw, units);
         if (!(height > 0)) return onToast?.("That isn't a height");
@@ -62,6 +69,8 @@ export function contextItems(scene: Scene, sel: Sel, run: Run, setSel: (s: Sel) 
     const def = scene.instances.find((i) => i.id === ids[0])?.component;
     if (def != null && scene.instances.filter((i) => i.component === def).length > 1) items.push({ label: "Make unique", run: () => run({ cmd: "make_unique", id: ids[0] }) });
   }
+  // a picture laid on the selection by planar, box, cylinder or sphere projection
+  if (subd?.projectTexture && (sel.faces.length || sel.groups.length || sel.instances.length)) items.push({ label: "Project texture…", labelId: "context.projectTexture", run: () => subd.projectTexture?.() });
   if (sel.faces.length === 1 && !sel.groups.length && !sel.instances.length) items.push({ label: "Orient faces (match this one)", run: () => run({ cmd: "orient_faces", face: sel.faces[0] }) });
   // Select ›: what's connected, what shares the paint, what shares the tag
   const pickInto = (r: Reply) => r.ok && setSel({ ...EMPTY, faces: (r.faces as number[]) ?? [], edges: (r.edges as number[]) ?? [], groups: (r.groups as number[]) ?? [], instances: (r.instances as number[]) ?? [] });
@@ -91,10 +100,10 @@ export function contextItems(scene: Scene, sel: Sel, run: Run, setSel: (s: Sel) 
       });
   if (sel.faces.length || sel.groups.length) {
     items.push({
-      label: "Make component…",
+      label: "Make component…", labelId: "context.component",
       key: "G",
       run: async () => {
-        const name = await ask("Component name", "Component");
+        const name = await ask("Component name", "Component", undefined, "dialog.componentName");
         if (name) run({ cmd: "make_component", ids: [...sel.faces, ...sel.groups], name }).then(() => setSel(EMPTY));
       },
     });
@@ -160,16 +169,17 @@ export function contextItems(scene: Scene, sel: Sel, run: Run, setSel: (s: Sel) 
     tool("Trim (first cuts second, kept)", "trim", true);
     tool("Split", "split", true);
   }
-  if (sel.instances.length) items.push({ label: "Explode", run: () => Promise.all(sel.instances.map((id) => run({ cmd: "explode", id }))).then(() => setSel(EMPTY)) });
-  if (sel.faces.length || sel.groups.length) items.push({ label: "Reverse faces", run: () => run({ cmd: "reverse", ids: [...sel.faces, ...sel.groups] }) });
+  if (sel.instances.length) items.push({ label: "Explode", labelId: "context.explode", run: () => Promise.all(sel.instances.map((id) => run({ cmd: "explode", id }))).then(() => setSel(EMPTY)) });
+  if (sel.faces.length || sel.groups.length) items.push({ label: "Reverse faces", labelId: "context.reverse", run: () => run({ cmd: "reverse", ids: [...sel.faces, ...sel.groups] }) });
   if (sel.edges.length) items.push({ label: "Soften edges", run: () => run({ cmd: "soften", ids: sel.edges }) });
   items.push({ label: "Zoom to selection", key: "⇧Z", run: fitSel });
-  items.push({ label: "Hide", run: () => run({ cmd: "hide", ids }).then(() => setSel(EMPTY)) });
-  items.push({ label: "Delete", key: "⌫", danger: true, run: () => run({ cmd: "delete", ids }).then(() => setSel(EMPTY)) });
+  items.push({ label: "Hide", labelId: "context.hide", run: () => run({ cmd: "hide", ids }).then(() => setSel(EMPTY)) });
+  items.push({ label: "Delete", labelId: "context.delete", key: "⌫", danger: true, run: () => run({ cmd: "delete", ids }).then(() => setSel(EMPTY)) });
   return items;
 }
 
 export function ContextMenu({ x, y, items, close }: { x: number; y: number; items: MenuItem[]; close: () => void }) {
+  const { t } = useLocale();
   useEscapeToClose(close);
   // keep the whole menu on screen: open upward or leftward near an edge
   const box = useRef<HTMLDivElement>(null);
@@ -199,7 +209,7 @@ export function ContextMenu({ x, y, items, close }: { x: number; y: number; item
               it.run();
             }}
           >
-            <span>{it.label}</span>
+            <span>{it.labelId ? t(it.labelId) : it.label}</span>
             {it.key && <kbd>{it.key}</kbd>}
           </button>
         ))}

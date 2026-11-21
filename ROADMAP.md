@@ -21,6 +21,7 @@ guess today.
 | **0.4.1** | Big models | Every CPU core, lighter imports, smooth orbiting on huge sites |
 | **0.4.2** | Switchers & your own AI | Coming from SketchUp made easy, your old extensions, and AI without credits |
 | **0.4.3** | Rendering | Clean, fast renders on the GPU with HDRI lighting, no paid plugin |
+| **Later** | Phone and tablet | A touch-first SketchCraft for Android and iOS, last on the list and not planned out yet |
 
 ## 0.3.7: Safety & polish
 
@@ -50,13 +51,16 @@ complaint about LayOut is that it's slow and loses your dimensions. So:
 ## 0.3.9: Texturing
 
 1. **Blocky Beaver** and a **texturing test set** (dice, can, globe, crate, soccer ball): every feature below is built and tested on them
-2. **glTF / GLB export** with UVs and vertex colours, plus **FBX** and a **lightmap UV channel**
-3. **UV unwrap** with a UV view
+2. **Paint-through** across connected faces
+3. **Projection mapping**: planar, box, cylinder, sphere
 4. **Position Texture**: move, rotate, scale and skew a texture on a face
-5. **Paint-through** across connected faces
-6. **Projection mapping**: planar, box, cylinder, sphere
-7. **Textures in SketchUp 2017–2020 imports**
-8. **Vertex painting**
+5. **UV editor**: seams, unwrap, packing, a 2D UV view, and a **lightmap UV channel**
+6. **Texture painting**: paint straight onto a model's texture, in 3D and in the UV editor
+7. **Vertex painting**
+8. **glTF / GLB export** with UVs, vertex colours and lightmap UVs, plus **FBX export**
+
+Also in 0.3.9: **Wall pull**, **Room mode** (draw rooms, combine and subtract them), a **menu bar**, a
+**fixtures and furniture** pack, the **Properties** tab, and **Italian** (thanks, Kad26).
 
 ## 0.3.10: Makers
 
@@ -64,6 +68,7 @@ complaint about LayOut is that it's slow and loses your dimensions. So:
 2. **3D printing check** and **3MF export**
 3. **Woodworker pack**: cutting diagrams, labels, cost, CNC parts, joinery helpers
 4. **Small tools**: Bezier curves, make faces, flatten to a height
+5. **Textures in SketchUp 2017–2020 imports** (moved from 0.3.9)
 
 ## 0.4.0: No extension tax
 
@@ -95,6 +100,15 @@ complaint about LayOut is that it's slow and loses your dimensions. So:
 1. **AI denoiser**: clean renders in a fraction of the time
 2. **GPU path tracing**
 3. **HDRI lighting** and **roughness, metalness and normal maps**
+
+## Later: Phone and tablet
+
+Last on the list, and not planned out yet. The idea is a touch-first SketchCraft
+for Android and iOS, built on tools that already exist on desktop, like Room
+mode and wall dragging. It would use the same engine and the same
+`.sketchcraft` files, work offline, and need no account. The full modeler stays
+on desktop. It would be released as a free APK on GitHub releases and F-Droid
+first.
 
 ## Always
 

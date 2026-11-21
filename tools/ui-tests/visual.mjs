@@ -46,7 +46,7 @@ const b = await launch();
 const problems = [];
 
 // ---- comparing pictures (decoded and compared inside the browser: no image library needed) ----------------------------
-const cmpPage = await (await b.newContext()).newPage();
+const cmpPage = await (await b.newContext({ locale: 'en-US' })).newPage();
 await cmpPage.goto('about:blank');
 const compare = (a, c) =>
   cmpPage.evaluate(
@@ -103,7 +103,7 @@ const FIXED_CSS = `
 `;
 /** a new browser page with these settings saved, a small fixed model, and the camera where it starts */
 const open = async ({ layout, skin }) => {
-  const ctx = await b.newContext({ viewport: VIEWPORT, deviceScaleFactor: 1, reducedMotion: 'reduce' });
+  const ctx = await b.newContext({ locale: 'en-US', viewport: VIEWPORT, deviceScaleFactor: 1, reducedMotion: 'reduce' });
   await ctx.addInitScript(
     ([layout, skin]) => {
       try {
@@ -150,17 +150,23 @@ const SKINS = [['classic', 'light'], ['midnight', 'dark'], ['contrast', 'high-co
 const shots = [];
 for (const [layout] of LAYOUTS) for (const [skin, label] of SKINS) shots.push({ name: `main-${layout}-${label}`, layout, skin, run: async () => {} });
 const dialogs = [
-  ['file-menu', async (p) => p.locator('.file-btn').click()],
+  ['file-menu', async (p) => p.getByRole('menuitem', { name: 'File', exact: true }).click()],
+  ['view-menu', async (p) => p.getByRole('menuitem', { name: 'View', exact: true }).click()],
+  ['about', async (p) => {
+    await p.getByRole('menuitem', { name: 'Help', exact: true }).click();
+    await p.getByRole('menuitem', { name: 'About SketchCraft' }).click();
+    await p.getByRole('dialog', { name: 'About SketchCraft' }).waitFor();
+  }],
   ['themes', async (p) => p.locator('.skin-btn').click()],
   ['learn', async (p) => p.locator('.learn-btn').click()],
   ['plugins', async (p) => {
-    await p.locator('.file-btn').click();
-    await p.getByRole('button', { name: /^Plugins/ }).click();
-    await p.getByRole('button', { name: /Manage plugins/ }).click();
+    await p.getByRole('menuitem', { name: 'File', exact: true }).click();
+    await p.getByRole('menuitem', { name: /^Plugins/ }).click();
+    await p.getByRole('menuitem', { name: /Manage plugins/ }).click();
   }],
   ['restore', async (p) => {
-    await p.locator('.file-btn').click();
-    await p.getByRole('button', { name: /Restore from backup/ }).click();
+    await p.getByRole('menuitem', { name: 'File', exact: true }).click();
+    await p.getByRole('menuitem', { name: /Restore from backup/ }).click();
     await p.waitForSelector('[role=dialog][aria-label="Restore from backup"]');
   }],
   ['command-palette', async (p) => {
@@ -246,14 +252,20 @@ const addItems = async (p, s, plan, bottom) => {
 const editorDraw = async (p, s, pts, ys, bottom) => {
   for (let i = 0; i < 80 && (await p.locator('.paper-overlay [data-item]').count()) < 5; i++) await wait(150);
   await p.locator('.paper-tools').getByRole('button', { name: 'Dimension', exact: true }).click();
+  await p.locator('.paper-tools .paper-tool.on[aria-label="Dimension"]').waitFor({ timeout: 5000 }).catch(() => {});
+  await wait(200);
   const e = await p.locator('.paper-overlay .paper-edge').boundingBox();
   const k = e.width / s.paper.w_mm;
   const at = (q) => [e.x + q[0] * k, e.y + q[1] * k];
   const top = pts.filter((q) => q.mm[1] === ys[ys.length - 1]).sort((a, b) => a.mm[0] - b.mm[0]);
   if (top.length >= 2) {
     await p.mouse.click(...at(top[0].mm));
+    // each click is waited for: a click that lands before the page has the tool or the first point is lost
+    await p.getByText(/Click the next point/).waitFor({ timeout: 5000 }).catch(() => {});
     await wait(150);
     await p.mouse.click(...at(top[top.length - 1].mm));
+    // wait until the second point has registered (the hint moves on to chaining) instead of hoping 150 ms is enough
+    await p.getByText(/Click more points to chain/).waitFor({ timeout: 5000 }).catch(() => {});
     await wait(150);
     // the mouse on a third corner: its snap marker, and the chain previewed to it
     await p.mouse.move(...at([bottom[bottom.length - 1].mm[0] + 0.4, bottom[bottom.length - 1].mm[1] - 0.3]), { steps: 3 });
@@ -263,6 +275,29 @@ const editorDraw = async (p, s, pts, ys, bottom) => {
 shots.push({ name: 'layout-editor-light', layout: 'classic', skin: 'classic', run: editorShot });
 shots.push({ name: 'layout-editor-dark', layout: 'classic', skin: 'midnight', run: editorShot });
 shots.push({ name: 'layout-page-light', layout: 'floating', skin: 'classic', run: layoutShot(false) });
+// tables and text blocks (#7): a door schedule and a general-notes block on the page, the schedule picked (its
+// inspector) and a cell being typed in
+const tablesShot = async (p) => {
+  let sid, tid;
+  await layoutShot(false, async (p, s) => {
+    sid = s;
+    const csv = 'Mark,Size,Type,Fire rating\nD1,900 x 2100,Single,\nD2,1800 x 2100,Double,"FD30, self-closing"\nD3,800 x 2100,Single,FD30\n';
+    tid = (await pageExec(p, { cmd: 'sheet_table_paste', sheet: s, at_mm: [215, 185], text: csv })).item;
+    await pageExec(p, { cmd: 'sheet_table', id: tid, title: 'DOOR SCHEDULE', header_cols: 1 });
+    await pageExec(p, { cmd: 'sheet_text', sheet: s, at_mm: [20, 195], width_mm: 120, height_mm: 2.5, text: 'GENERAL NOTES\nAll dimensions are in millimetres unless noted otherwise. Do not scale from this drawing; check all dimensions on site before work starts.' });
+  })(p);
+  for (let i = 0; i < 80 && (await p.locator('.paper-overlay [data-item]').count()) < 2; i++) await wait(150);
+  const t = (await pageExec(p, { cmd: 'sheets_info', sheet: sid })).sheets[0].items.find((i) => i.id === tid);
+  const e = await p.locator('.paper-overlay .paper-edge').boundingBox();
+  const k = e.width / 420;
+  const at = (q) => [e.x + q[0] * k, e.y + q[1] * k];
+  const { xs, ys } = t.layout;
+  await p.mouse.dblclick(...at([(xs[3] + xs[4]) / 2, (ys[1] + ys[2]) / 2]));
+  await p.waitForSelector('.paper-cellbox');
+  await p.keyboard.type('FD60');
+};
+shots.push({ name: 'layout-tables-light', layout: 'classic', skin: 'classic', run: tablesShot });
+shots.push({ name: 'layout-tables-dark', layout: 'classic', skin: 'midnight', run: tablesShot });
 shots.push({
   name: 'layout-empty-light',
   layout: 'classic',

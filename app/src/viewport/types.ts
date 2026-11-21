@@ -2,18 +2,23 @@
 import type * as THREE from "three";
 import type { FaceInfo, Reply, Scene, Vec3 } from "../engine";
 import type { Sel, SelMode } from "../selection";
+import type { VPaintSettings } from "../vertexpaint";
+import type { PaintTri, Painter, TPaintSettings } from "../texturepaint";
 
 export type Tool =
   | "select" | "axes" | "line" | "freehand" | "arc" | "arccenter" | "arc3" | "pie" | "rect" | "rrect" | "circle" | "polygon"
   | "push" | "offset" | "followme" | "move" | "rotate" | "scale"
-  | "tape" | "dimension" | "text" | "paint" | "erase" | "orbit" | "pan" | "zoom" | "section" | "place"
+  | "tape" | "dimension" | "text" | "paint" | "vpaint" | "tpaint" | "erase" | "orbit" | "pan" | "zoom" | "section" | "place"
   | "position" | "lookaround" | "walk" | "zoomwindow" | "protractor"
-  | "wall" | "stairs" | "roof" | "column"
+  | "wall" | "wallpull" | "room" | "stairs" | "roof" | "column"
   | "smoove" | "stamp" | "drape" | "flipedge"
   | "plugin";
 
 /** Settings for the building-block tools (lengths in meters). */
 export interface BuildSettings {
+  /** Room mode: what a click on a wall adds, and whether the walls are shown low (a view setting only) */
+  roomOpening: "door" | "window";
+  wallsDown: boolean;
   wallThickness: number;
   wallHeight: number;
   stairWidth: number;
@@ -34,7 +39,7 @@ export interface BuildSettings {
 }
 
 export type FaceStyle = "textured" | "shaded" | "monochrome" | "hiddenline" | "wireframe" | "physical";
-export type Backdrop = "default" | "paper" | "blueprint" | "night";
+export type Backdrop = "sky" | "default" | "paper" | "blueprint" | "night";
 
 export interface Styles {
   xray: boolean;
@@ -57,6 +62,10 @@ export interface Styles {
   /** ambient occlusion: soft shading where surfaces meet */
   ao?: boolean;
   background?: Backdrop;
+  /** vertex colours shown (default on) */
+  vertexColors?: boolean;
+  /** a checker over every face that has its own UVs, to see how a picture stretches (the UV editor's Checker) */
+  checker?: boolean;
   /** hidden edges shown dashed (SketchUp's Back Edges, K) */
   backEdges: boolean;
   /** draw tag and edge line weights and styles (default on) */
@@ -102,6 +111,12 @@ export interface ViewportApi {
   planCut: (height: number) => void;
   /** slide the cut along its direction (m; + moves it deeper into what's kept) */
   moveSection: (by: number) => void;
+  /** a world point on the screen (client pixels); null when it is behind the camera */
+  toClient: (p: Vec3) => [number, number] | null;
+  /** the ray through a client pixel */
+  rayAt: (clientX: number, clientY: number) => { origin: Vec3; dir: Vec3 };
+  /** call `cb` whenever the camera moves; returns the way to stop */
+  watchCamera: (cb: () => void) => () => void;
 }
 
 export interface Props {
@@ -118,6 +133,12 @@ export interface Props {
   styles: Styles;
   placeAsset: string | null;
   build: BuildSettings;
+  /** Vertex Paint's brush: size, strength and falloff */
+  vpaint?: VPaintSettings;
+  setVPaint?: (v: VPaintSettings) => void;
+  /** Texture Paint's brush: size, hardness and opacity */
+  tpaint?: TPaintSettings;
+  setTPaint?: (v: TPaintSettings) => void;
   run: (cmd: Record<string, unknown>) => Promise<Reply>;
   onMeasure: (label: string, value: string) => void;
   onContext: (x: number, y: number) => void;
@@ -150,6 +171,45 @@ export interface PluginPoint {
   alt: boolean;
 }
 
+/** What `wall_info` tells the app about a wall: its faces, which way a positive pull goes, and every moving point's travel per metre. */
+export interface WallPlan {
+  face: number;
+  normal: [number, number, number];
+  thickness: number;
+  faces: number[];
+  strips: [number, number, number][][];
+  moves: { v: number; at: [number, number, number]; per_m: [number, number, number] }[];
+}
+
+/** What `room_preview` tells the app about a dragged room (or why it can't be there). */
+export interface RoomPreview {
+  ok: boolean;
+  error?: string;
+  rect?: [number, number, number, number];
+  inside?: [number, number, number, number];
+  width?: number;
+  depth?: number;
+  area?: number;
+  thickness?: number;
+  shared?: { room: number; name: string | null; side: string }[];
+  snapped?: boolean;
+  /** what really happens: a new room, or a combine / subtract on `target` */
+  mode?: "new" | "combine" | "subtract";
+  target?: { room: number; name: string } | null;
+  /** the inside outline and the wall centre-line outline (counter-clockwise), and a point inside to label */
+  outline?: [number, number][];
+  centre_outline?: [number, number][];
+  label?: [number, number];
+}
+
+/** A room as `rooms` lists it. */
+export interface RoomRow {
+  id: number;
+  name: string;
+  area: number;
+  center: [number, number, number];
+}
+
 export type Op =
   | { t: "line"; p0: THREE.Vector3; start: THREE.Vector3; cur: THREE.Vector3 }
   | { t: "rect"; p0: THREE.Vector3; n: THREE.Vector3; u: THREE.Vector3; v: THREE.Vector3; a: number; b: number }
@@ -167,6 +227,14 @@ export type Op =
   | { t: "axes"; o: THREE.Vector3; x: THREE.Vector3 | null; cur: THREE.Vector3 }
   | { t: "push"; face: FaceInfo; origin: THREE.Vector3; n: THREE.Vector3; d: number; dragged: boolean }
   | { t: "offset"; face: FaceInfo; start: THREE.Vector3; d: number }
+  /** Wall pull: the wall the picked face belongs to, and what the engine says moves with it */
+  /** Room mode: dragging a room out between two ground corners (a, b); what the engine says about it (null: not asked yet) */
+  | { t: "room"; a: THREE.Vector3; b: THREE.Vector3; preview: RoomPreview | null; asked: string; pending: boolean; alt: boolean }
+  | { t: "wallpull"; face: number; plan: WallPlan; origin: THREE.Vector3; n: THREE.Vector3; d: number; dragged: boolean }
+  /** Vertex Paint: the entities the brush went over, the stroke's points so far, and whether Alt (erase) was held */
+  /** Texture Paint: the material's picture being painted, the stroke's points so far, and the preview copy of the pixels */
+  | { t: "tpaint"; mat: string; pts: [number, number, number][]; radius: number; erase: boolean; run: TPaintRun }
+  | { t: "vpaint"; targets: number[]; pts: [number, number, number][]; radius: number; erase: boolean }
   | { t: "move"; base: THREE.Vector3; ids: number[]; delta: THREE.Vector3; copy: boolean; vertex?: { far: THREE.Vector3[] } }
   | { t: "rotate"; center: THREE.Vector3; n: THREE.Vector3; ref: THREE.Vector3 | null; angle: number; ids: number[]; copy?: boolean }
   | { t: "scale"; center: THREE.Vector3; start: THREE.Vector3; factor: number; ids: number[] }
@@ -194,3 +262,16 @@ export type Last =
   /** a Tape Measure reading (typing its real length then resizes the model) */
   | { t: "tape"; d: number }
   | null;
+
+/** What a Texture Paint stroke holds while it is dragged (the pixels are decoded a moment after the press). */
+export interface TPaintRun {
+  painter: Painter | null;
+  tris: PaintTri[];
+  canvas: HTMLCanvasElement | null;
+  tex: THREE.CanvasTexture | null;
+  /** the materials of the meshes that wear the preview, and what they wore before */
+  swapped: { m: THREE.MeshLambertMaterial; map: THREE.Texture | null }[];
+  /** settles once the picture is decoded and the preview is up (false: it could not be) */
+  ready: Promise<boolean>;
+  frame: number;
+}

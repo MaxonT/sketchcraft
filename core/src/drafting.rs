@@ -281,8 +281,47 @@ pub const WEIGHT_RANGE: (f64, f64) = (0.05, 2.0);
 /// Paper text (`Text` items): the default letter height and the range a command may set, paper mm.
 pub const TEXT_HEIGHT: f64 = 3.5;
 pub const TEXT_HEIGHT_RANGE: (f64, f64) = (1.0, 50.0);
-/// The most characters one paper text holds (a note, not a document: text blocks are #7).
-pub const MAX_TEXT_CHARS: usize = 4000;
+/// The most characters one paper text or text block holds (a page of general notes, not a document).
+pub const MAX_TEXT_CHARS: usize = 20_000;
+/// A text block's wrap width and a table column's width: the range a command may set, paper mm.
+pub const BLOCK_WIDTH_RANGE: (f64, f64) = (5.0, 2000.0);
+/// A table's cell text: the default letter height, paper mm (its range is `TEXT_HEIGHT_RANGE`).
+pub const TABLE_TEXT: f64 = 2.5;
+/// The most cells one table holds (rows times columns), and the most characters in one cell.
+pub const MAX_TABLE_CELLS: usize = 20_000;
+pub const MAX_CELL_CHARS: usize = 2_000;
+/// The most rows and columns a table may have.
+pub const MAX_TABLE_ROWS: usize = 5_000;
+pub const MAX_TABLE_COLS: usize = 100;
+
+/// How text sits across its box (a text block's width, a table cell).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Align {
+    #[default]
+    Left,
+    Center,
+    Right,
+}
+
+/// Which rules a table draws: every cell boxed (`grid`, the default), the outline and a rule under each row
+/// (`rules`), the outline only (`outer`), or nothing (`none`). The header's rule is always heavy when drawn.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Border {
+    #[default]
+    Grid,
+    Rules,
+    Outer,
+    None,
+}
+
+fn is_default<T: Default + PartialEq>(x: &T) -> bool {
+    *x == T::default()
+}
+fn is_zero_u32(n: &u32) -> bool {
+    *n == 0
+}
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
@@ -553,9 +592,14 @@ pub struct Text {
     #[serde(skip_serializing_if = "is_zero")]
     pub z: i32,
     pub at_mm: [f64; 2],
+    /// a text block: `[width, height]` in paper mm; the paragraphs wrap to the width (the height is 0: as tall as
+    /// the text). None: plain text, one paragraph per line, never wrapped
     #[serde(skip_serializing_if = "Option::is_none")]
     pub box_mm: Option<[f64; 2]>,
     pub paragraphs: Vec<String>,
+    /// how each line sits across the block's width (plain text: about `at_mm`)
+    #[serde(skip_serializing_if = "is_default")]
+    pub align: Align,
     /// the letters' height in paper mm (none: `TEXT_HEIGHT`)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub height_mm: Option<f64>,
@@ -623,15 +667,36 @@ pub struct Table {
     pub sheet: Id,
     #[serde(skip_serializing_if = "is_zero")]
     pub z: i32,
+    /// the table's top left corner (its title, when it has one, sits above it)
     pub at_mm: [f64; 2],
+    /// each column's width; a column past the end of the list is as wide as its widest text
     pub cols_mm: Vec<f64>,
-    /// rows of cell text (the first row is the header)
+    /// rows of cell text (the first `header_rows` are the header); a newline in a cell starts a new line in it, and
+    /// a cell's text wraps to its column
     pub rows: Vec<Vec<String>>,
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub cell_styles: BTreeMap<String, String>,
-    /// what feeds it ("doors", "windows"...): empty for a typed one
+    /// what feeds it: "sheets" fills it from the document's sheets (a drawing index, kept up to date); none for a
+    /// typed one
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
+    /// how many rows at the top are the header (bold, a heavy rule under them; none: 1)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub header_rows: Option<u32>,
+    /// how many columns at the left head their rows (bold)
+    #[serde(skip_serializing_if = "is_zero_u32")]
+    pub header_cols: u32,
+    /// a caption above the table ("DOOR SCHEDULE")
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub title: String,
+    /// the cell text's letter height in paper mm (none: `TABLE_TEXT`)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text_mm: Option<f64>,
+    #[serde(skip_serializing_if = "is_default")]
+    pub border: Border,
+    /// each column's alignment (a column past the end: left)
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub align: Vec<Align>,
     #[serde(skip_serializing_if = "String::is_empty")]
     pub made_by: String,
     #[serde(flatten)]
@@ -736,7 +801,7 @@ impl ItemKind {
             ItemKind::Text(t) => p2(&t.at_mm) && t.box_mm.as_ref().is_none_or(p2) && t.leader.as_ref().is_none_or(p2) && t.height_mm.is_none_or(sane),
             ItemKind::Line(s) | ItemKind::Polyline(s) | ItemKind::Arc(s) | ItemKind::Rect(s) => s.pts_mm.iter().all(p2) && sane(s.pen.w_mm) && s.pen.dash_mm.iter().all(|&x| sane(x)),
             ItemKind::Hatch(h) => h.ring_mm.iter().all(p2) && h.holes.iter().flatten().all(p2) && sane(h.hatch.weight_mm) && sane(h.hatch.scale) && sane(h.hatch.angle),
-            ItemKind::Table(t) => p2(&t.at_mm) && t.cols_mm.iter().all(|&x| sane(x)),
+            ItemKind::Table(t) => p2(&t.at_mm) && t.cols_mm.iter().all(|&x| sane(x)) && t.text_mm.is_none_or(sane),
             ItemKind::TitleBlockRef(t) => p2(&t.at_mm),
         }
     }
@@ -750,7 +815,7 @@ impl ItemKind {
             ItemKind::Text(t) => t.paragraphs.iter().map(String::len).sum::<usize>() + t.style.as_ref().map_or(0, String::len) + t.made_by.len() + extra(&t.extra),
             ItemKind::Line(s) | ItemKind::Polyline(s) | ItemKind::Arc(s) | ItemKind::Rect(s) => s.pen.color.len() + s.made_by.len() + extra(&s.extra),
             ItemKind::Hatch(h) => h.hatch.pattern.len() + h.made_by.len() + extra(&h.extra),
-            ItemKind::Table(t) => t.rows.iter().flatten().map(String::len).sum::<usize>() + t.cell_styles.iter().map(|(k, v)| k.len() + v.len()).sum::<usize>() + t.source.as_ref().map_or(0, String::len) + t.made_by.len() + extra(&t.extra),
+            ItemKind::Table(t) => t.rows.iter().flatten().map(String::len).sum::<usize>() + t.cell_styles.iter().map(|(k, v)| k.len() + v.len()).sum::<usize>() + t.source.as_ref().map_or(0, String::len) + t.title.len() + t.made_by.len() + extra(&t.extra),
             ItemKind::TitleBlockRef(t) => extra(&t.extra),
         }
     }
@@ -867,4 +932,173 @@ impl Drafting {
             && self.line_types.values().all(|l| matches!(l, Keep::Known(l) if l.dash_mm.iter().all(|&x| w(x))) || matches!(l, Keep::Raw(_)))
             && self.text_styles.values().all(|t| matches!(t, Keep::Known(t) if w(t.height_mm)) || matches!(t, Keep::Raw(_)))
     }
+}
+
+// ---- limits on what a file brings in -------------------------------------------------------------------------
+
+/// The size range of a sheet's paper, in mm on each side (`sheet_add`'s custom sizes, and every named size).
+pub const PAPER_RANGE: (f64, f64) = (20.0, 5000.0);
+/// The scale range a hatch takes (paper or model mm per pattern mm), as `tag_style` checks it.
+pub const HATCH_SCALE_RANGE: (f64, f64) = (0.01, 1000.0);
+/// The most hatch patterns a model keeps.
+pub const MAX_MODEL_PATTERNS: usize = 200;
+/// The longest table title.
+pub const MAX_TABLE_TITLE: usize = 200;
+
+/// A finite number brought into `lo..=hi` (a number that is not finite is left for `sane` to refuse).
+fn into_range(x: f64, (lo, hi): (f64, f64)) -> f64 {
+    if x.is_finite() { x.clamp(lo, hi) } else { x }
+}
+
+/// Cell text a file holds, made what `sheet_table` keeps: at most `MAX_CELL_CHARS`, tabs as spaces, carriage returns
+/// as line breaks, no other control characters.
+fn cell_from_file(s: &str) -> String {
+    let s = s.replace("\r\n", "\n").replace('\r', "\n").replace('\t', "    ");
+    s.chars().filter(|c| !c.is_control() || *c == '\n').take(MAX_CELL_CHARS).collect()
+}
+
+/// A line of text a file holds, without control characters (tabs as spaces).
+fn line_from_file(s: &str) -> String {
+    s.replace('\t', "    ").chars().filter(|c| !c.is_control()).collect()
+}
+
+impl Table {
+    /// Bring a table from a file within what the commands make: rows, columns and cells, cell text, column widths,
+    /// header counts, title and letter height. True if anything changed.
+    pub fn clamp_to_limits(&mut self) -> bool {
+        let before = self.clone();
+        self.rows.truncate(MAX_TABLE_ROWS);
+        for r in self.rows.iter_mut() {
+            r.truncate(MAX_TABLE_COLS);
+        }
+        let cols = self.rows.iter().map(Vec::len).max().unwrap_or(0);
+        if cols > 0 && self.rows.len() * cols > MAX_TABLE_CELLS {
+            self.rows.truncate(MAX_TABLE_CELLS / cols);
+        }
+        for c in self.rows.iter_mut().flatten() {
+            if c.chars().count() > MAX_CELL_CHARS || c.chars().any(|x| x.is_control() && x != '\n') {
+                *c = cell_from_file(c);
+            }
+        }
+        self.cols_mm.truncate(MAX_TABLE_COLS);
+        for w in self.cols_mm.iter_mut().filter(|w| **w != 0.0) {
+            *w = into_range(*w, BLOCK_WIDTH_RANGE);
+        }
+        self.align.truncate(MAX_TABLE_COLS);
+        if let Some(h) = self.header_rows.as_mut() {
+            *h = (*h).min(MAX_TABLE_ROWS as u32);
+        }
+        self.header_cols = self.header_cols.min(MAX_TABLE_COLS as u32);
+        if self.title.chars().count() > MAX_TABLE_TITLE || self.title.chars().any(char::is_control) {
+            self.title = line_from_file(&self.title).chars().take(MAX_TABLE_TITLE).collect();
+        }
+        if let Some(h) = self.text_mm.as_mut() {
+            *h = into_range(*h, TEXT_HEIGHT_RANGE);
+        }
+        *self != before
+    }
+}
+
+impl Text {
+    /// Bring a paper text from a file within what `sheet_text` makes: at most `MAX_TEXT_CHARS`, no control
+    /// characters, a letter height and block width in range. True if anything changed.
+    pub fn clamp_to_limits(&mut self) -> bool {
+        let before = self.clone();
+        if self.paragraphs.iter().any(|p| p.chars().any(char::is_control)) {
+            for p in self.paragraphs.iter_mut() {
+                *p = line_from_file(p);
+            }
+        }
+        let mut left = MAX_TEXT_CHARS;
+        let mut keep = 0;
+        for p in self.paragraphs.iter_mut() {
+            let n = p.chars().count();
+            keep += 1;
+            if n > left {
+                *p = p.chars().take(left).collect();
+                break;
+            }
+            left -= n;
+        }
+        self.paragraphs.truncate(keep);
+        if let Some(h) = self.height_mm.as_mut() {
+            *h = into_range(*h, TEXT_HEIGHT_RANGE);
+        }
+        if let Some(b) = self.box_mm.as_mut() {
+            if b[0] != 0.0 {
+                b[0] = into_range(b[0], BLOCK_WIDTH_RANGE);
+            }
+        }
+        *self != before
+    }
+}
+
+impl HatchUse {
+    /// The hatch's scale in the range `tag_style` takes. True if it changed.
+    pub fn clamp_to_limits(&mut self) -> bool {
+        let s = into_range(self.scale, HATCH_SCALE_RANGE);
+        let changed = s != self.scale;
+        self.scale = s;
+        changed
+    }
+}
+
+/// Bring the sheets, sheet items and hatch patterns a model file holds within what the commands make, so a file can't
+/// ask the drawing code for more than the program would ever make itself: paper sizes, tables, paper texts, hatch
+/// scales and the patterns kept. What is already within the limits is not touched. Returns what was changed, in
+/// words, for a notice.
+pub fn clamp_to_limits(sheets: &mut BTreeMap<Id, Sheet>, items: &mut BTreeMap<Id, std::sync::Arc<SheetItem>>, drafting: &mut Drafting) -> Vec<String> {
+    let mut out = vec![];
+    for (id, s) in sheets.iter_mut() {
+        let p = &mut s.paper;
+        let (w, h) = (into_range(p.w_mm, PAPER_RANGE), into_range(p.h_mm, PAPER_RANGE));
+        if (w, h) != (p.w_mm, p.h_mm) {
+            (p.w_mm, p.h_mm) = (w, h);
+            out.push(format!("sheet {id}: paper size"));
+        }
+    }
+    for (id, item) in items.iter_mut() {
+        let fixed = match &**item {
+            SheetItem::Known(ItemKind::Table(t)) => {
+                let mut t = t.clone();
+                t.clamp_to_limits().then_some((ItemKind::Table(t), "table"))
+            }
+            SheetItem::Known(ItemKind::Text(t)) => {
+                let mut t = t.clone();
+                t.clamp_to_limits().then_some((ItemKind::Text(t), "text"))
+            }
+            SheetItem::Known(ItemKind::Hatch(h)) => {
+                let mut h = h.clone();
+                h.hatch.clamp_to_limits().then_some((ItemKind::Hatch(h), "hatch"))
+            }
+            _ => None,
+        };
+        if let Some((k, what)) = fixed {
+            *item = std::sync::Arc::new(SheetItem::Known(k));
+            out.push(format!("{what} {id}"));
+        }
+    }
+    for (tag, style) in drafting.tag_styles.iter_mut() {
+        if let Keep::Known(t) = style {
+            let mut changed = false;
+            for h in t.cut.hatch.iter_mut().chain(t.surface_hatch.iter_mut()) {
+                changed |= h.clamp_to_limits();
+            }
+            if changed {
+                out.push(format!("the hatch of tag {:?}", line_from_file(tag).chars().take(40).collect::<String>()));
+            }
+        }
+    }
+    // patterns: a name `hatch_pattern` takes, text no longer than it reads, and no more than the model keeps
+    let mut kept = 0;
+    drafting.patterns.retain(|name, text| {
+        let ok = kept < MAX_MODEL_PATTERNS && crate::draft::pat::valid_name(name) && text.len() <= crate::draft::pat::MAX_TEXT;
+        if ok {
+            kept += 1;
+        } else {
+            out.push(format!("hatch pattern {:?}", line_from_file(name).chars().take(40).collect::<String>()));
+        }
+        ok
+    });
+    out
 }

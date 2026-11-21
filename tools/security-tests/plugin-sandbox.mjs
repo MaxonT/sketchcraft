@@ -26,7 +26,7 @@ const SINK = `http://127.0.0.1:${sink.address().port}`;
 const marker = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'sc-sandbox-')), 'marker.txt');
 
 const b = await launch();
-const p = await (await b.newContext()).newPage();
+const p = await (await b.newContext({ locale: 'en-US' })).newPage();
 const problems = [];
 p.on('pageerror', (e) => problems.push(String(e)));
 await p.goto(PAGE);

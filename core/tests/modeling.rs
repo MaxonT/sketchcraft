@@ -281,6 +281,119 @@ fn rotate_scale_duplicate_array() {
 }
 
 #[test]
+fn moving_a_corner_folds_a_face_without_covering_its_opening() {
+    let mut e = Engine::new();
+    let panel = run(&mut e, json!({"cmd":"rect", "from":[0,0,0], "to":[6,6,0]}))["face"].as_u64().unwrap() as u32;
+    let inset = run(&mut e, json!({"cmd":"rect", "from":[2,2,0], "to":[4,4,0]}))["face"].as_u64().unwrap() as u32;
+    run(&mut e, json!({"cmd":"delete", "ids":[inset]}));
+    run(&mut e, json!({"cmd":"paint", "ids":[panel], "color":[0.2,0.4,0.6]}));
+    let original = e.model.faces[&panel].clone();
+    assert_eq!(original.holes.len(), 1);
+    let old_model = serde_json::to_value(&e.model).unwrap();
+    let corner = original.outer.iter().find(|&&v| e.model.p(v) == DVec3::new(6., 6., 0.)).unwrap();
+    run(&mut e, json!({"cmd":"move", "ids":[corner], "by":[0,0,2]}));
+    assert_eq!(e.model.p(*corner).z, 2.);
+    for (&id, face) in &e.model.faces {
+        assert_eq!(face.outer.len(), 3);
+        assert_eq!(face.material, original.material);
+        assert!(e.model.is_flat(id));
+    }
+    let hole = &original.holes[0];
+    for (a, b) in hole.iter().copied().zip(hole.iter().copied().cycle().skip(1)) {
+        assert_eq!(e.model.faces.values().filter(|face| face.uses_edge(a, b)).count(), 1);
+    }
+    // Lifting vertices vertically leaves the XY projection unchanged.
+    let area: f64 = e.model.faces.values().map(|face| {
+        let [a, b, c] = [e.model.p(face.outer[0]), e.model.p(face.outer[1]), e.model.p(face.outer[2])];
+        (b - a).cross(c - a).z.abs() * 0.5
+    }).sum();
+    assert!((area - (36. - 4.)).abs() < 1e-9);
+    assert!(e.model.edges.values().any(|edge| edge.soft));
+    run(&mut e, json!({"cmd":"undo"}));
+    let mut restored = serde_json::to_value(&e.model).unwrap();
+    // Undo keeps the allocator at its high-water mark.
+    assert!(restored["next_id"].as_u64().unwrap() >= old_model["next_id"].as_u64().unwrap());
+    restored["next_id"] = old_model["next_id"].clone();
+    assert_eq!(restored, old_model);
+}
+
+#[test]
+fn collapsing_an_opening_refuses_the_transform_without_changing_the_model() {
+    let mut e = Engine::new();
+    let panel = run(&mut e, json!({"cmd":"rect", "from":[0,0,0], "to":[6,6,0]}))["face"].as_u64().unwrap() as u32;
+    let inset = run(&mut e, json!({"cmd":"rect", "from":[2,2,0], "to":[4,4,0]}))["face"].as_u64().unwrap() as u32;
+    run(&mut e, json!({"cmd":"delete", "ids":[inset]}));
+    let other = run(&mut e, json!({"cmd":"rect", "from":[10,0,0], "to":[11,1,0]}))["face"].clone();
+    let instance = run(&mut e, json!({"cmd":"make_component", "ids":[other], "name":"Unchanged part"}))["instance"].as_u64().unwrap() as u32;
+    let face = &e.model.faces[&panel];
+    let hole_vertex = *face.holes[0].iter().find(|&&v| e.model.p(v) == DVec3::new(2., 2., 0.)).unwrap();
+    let outer_vertex = *face.outer.iter().find(|&&v| e.model.p(v) == DVec3::new(6., 6., 0.)).unwrap();
+    let ids = [hole_vertex, outer_vertex, instance];
+    let before = serde_json::to_value(&e.model).unwrap();
+
+    // This quarter turn maps the hole vertex onto its neighbor (2,4,0),
+    // while lifting the outer corner to (6,4,4), so the fold must fail.
+    // Call the model directly as well: engine rollback must not hide a
+    // partial mutation of geometry, placements or the ID allocator.
+    let error = e.model.rotate(&ids, DVec3::new(0., 3., 1.), DVec3::X, 90.).unwrap_err();
+    assert!(error.to_string().contains("collapse part of a face with an opening"), "{error}");
+    assert_eq!(serde_json::to_value(&e.model).unwrap(), before);
+
+    let steps = e.undo_depth();
+    let refused = e.exec_json(&json!({
+        "cmd":"rotate", "ids":ids, "center":[0,3,1], "axis":[1,0,0], "angle":90
+    }).to_string());
+    assert_eq!(refused["ok"], false, "{refused}");
+    assert!(refused["error"].as_str().unwrap().contains("collapse part of a face with an opening"), "{refused}");
+    assert_eq!(serde_json::to_value(&e.model).unwrap(), before);
+    assert_eq!(e.undo_depth(), steps);
+}
+
+#[test]
+fn moving_a_hole_vertex_folds_the_face_and_preserves_the_opening() {
+    let mut e = Engine::new();
+    let panel = run(&mut e, json!({"cmd":"rect", "from":[0,0,0], "to":[6,6,0]}))["face"].as_u64().unwrap() as u32;
+    let inset = run(&mut e, json!({"cmd":"rect", "from":[2,2,0], "to":[4,4,0]}))["face"].as_u64().unwrap() as u32;
+    run(&mut e, json!({"cmd":"delete", "ids":[inset]}));
+    run(&mut e, json!({"cmd":"paint", "ids":[panel], "color":[0.2,0.4,0.6]}));
+    let original = e.model.faces[&panel].clone();
+    let before = serde_json::to_value(&e.model).unwrap();
+    let vertices = e.model.vertices.clone();
+    let hole = &original.holes[0];
+    let lifted = *hole.iter().find(|&&v| e.model.p(v) == DVec3::new(2., 2., 0.)).unwrap();
+    run(&mut e, json!({"cmd":"move", "ids":[lifted], "by":[0,0,1]}));
+
+    assert_eq!(e.model.vertices.len(), vertices.len());
+    for (id, vertex) in vertices {
+        let expected = vertex.p + if id == lifted { DVec3::Z } else { DVec3::ZERO };
+        assert_eq!(e.model.p(id), expected);
+    }
+    assert!(e.model.faces.len() > 1);
+    for (&id, face) in &e.model.faces {
+        assert_eq!(face.outer.len(), 3);
+        assert_eq!(face.material, original.material);
+        assert!(e.model.is_flat(id));
+    }
+    for ring in original.loops() {
+        for (a, b) in ring.iter().copied().zip(ring.iter().copied().cycle().skip(1)) {
+            assert_eq!(e.model.faces.values().filter(|face| face.uses_edge(a, b)).count(), 1);
+        }
+    }
+    // The hole bends but retains its original projected footprint.
+    let area: f64 = e.model.faces.values().map(|face| {
+        let [a, b, c] = [e.model.p(face.outer[0]), e.model.p(face.outer[1]), e.model.p(face.outer[2])];
+        (b - a).cross(c - a).z.abs() * 0.5
+    }).sum();
+    assert!((area - 32.).abs() < 1e-9);
+    assert!(e.model.edges.values().any(|edge| edge.soft));
+    run(&mut e, json!({"cmd":"undo"}));
+    let mut restored = serde_json::to_value(&e.model).unwrap();
+    assert!(restored["next_id"].as_u64().unwrap() >= before["next_id"].as_u64().unwrap());
+    restored["next_id"] = before["next_id"].clone();
+    assert_eq!(restored, before);
+}
+
+#[test]
 fn pulling_one_corner_up_folds_the_face() {
     let mut e = Engine::new();
     let f = run(&mut e, json!({"cmd":"rect","from":[0,0,0],"to":[4,4,0]}))["face"].clone();
@@ -441,6 +554,63 @@ fn scale_figures_stand_on_the_ground_at_their_size() {
     }
     // the app finds them by name too
     assert_eq!(sketchcraft::assets::find("Dog walker").unwrap().key, "dog_walker");
+}
+
+#[test]
+fn fixtures_build_as_one_group_at_their_size_with_the_back_on_the_wall() {
+    // (key, group name, width x, depth y, height z, height off the floor), metres
+    let fixtures = [
+        ("toilet", "Toilet", 0.38, 0.7, 0.78, 0.0),
+        ("vanity_60", "Vanity 0.6 m", 0.6, 0.5, 0.95, 0.0),
+        ("vanity_120", "Vanity 1.2 m", 1.2, 0.5, 0.95, 0.0),
+        ("bathtub", "Bathtub", 1.5, 0.7, 0.6, 0.0),
+        ("shower", "Shower stall", 0.9, 0.9, 2.0, 0.0),
+        ("towel_bar", "Towel bar", 0.6, 0.08, 0.06, 0.97),
+        ("base_cabinet", "Base cabinet", 0.6, 0.6, 0.9, 0.0),
+        ("sink_base", "Sink base", 0.8, 0.6, 1.1, 0.0),
+        ("wall_cabinet", "Wall cabinet", 0.6, 0.32, 0.72, 1.4),
+        ("pantry", "Pantry cabinet", 0.6, 0.6, 2.1, 0.0),
+        ("fridge", "Fridge", 0.76, 0.7, 1.78, 0.0),
+        ("range", "Range", 0.76, 0.65, 0.92, 0.0),
+        ("dishwasher", "Dishwasher", 0.6, 0.6, 0.84, 0.0),
+        ("island", "Kitchen island", 1.8, 0.9, 0.92, 0.0),
+        ("queen_bed", "Queen bed", 1.62, 2.13, 1.1, 0.0),
+        ("king_bed", "King bed", 2.03, 2.13, 1.1, 0.0),
+        ("twin_bed", "Twin bed", 1.09, 2.0, 0.95, 0.0),
+        ("nightstand", "Nightstand", 0.5, 0.4, 0.55, 0.0),
+        ("dresser", "Dresser", 1.2, 0.5, 0.85, 0.0),
+        ("sofa", "Sofa, 3-seat", 2.1, 0.92, 0.85, 0.0),
+        ("armchair", "Armchair", 0.9, 0.88, 0.85, 0.0),
+        ("coffee_table", "Coffee table", 1.1, 0.6, 0.45, 0.0),
+        ("tv_stand", "TV stand", 1.5, 0.4, 0.5, 0.0),
+        ("dining_set", "Dining table with 4 chairs", 1.5, 1.62, 0.9, 0.0),
+        ("washer", "Washer", 0.69, 0.74, 0.98, 0.0),
+        ("dryer", "Dryer", 0.69, 0.74, 0.98, 0.0),
+    ];
+    for (key, name, w, d, h, z0) in fixtures {
+        let a = sketchcraft::assets::find(key).unwrap_or_else(|| panic!("no asset {key}"));
+        assert_eq!(a.name, name, "{key}");
+        assert!(!a.face_me, "{key}");
+        let m = sketchcraft::assets::build(a).unwrap_or_else(|e| panic!("{key}: {e}"));
+        let tops: Vec<_> = m.groups.values().filter(|g| g.parent.is_none()).collect();
+        assert_eq!(tops.len(), 1, "{key}: one top-level group");
+        assert_eq!(tops[0].name, name, "{key}");
+        assert!(m.groups.values().filter(|g| g.parent.is_some()).count() >= 2, "{key}: built from sub-groups");
+        assert!(m.faces.values().all(|f| f.group.is_some()), "{key}: nothing loose outside its groups");
+        let (lo, hi) = m.bounds().unwrap();
+        let near = |a: f64, b: f64| (a - b).abs() <= 0.01;
+        assert!(near(hi.x - lo.x, w) && near(lo.x, -w / 2.0), "{key}: {w} m wide, centred on x=0: {lo} {hi}");
+        assert!(near(hi.y, 0.0) && near(lo.y, -d), "{key}: back edge on y=0, {d} m deep toward -Y: {lo} {hi}");
+        assert!(near(lo.z, z0) && near(hi.z, z0 + h), "{key}: {h} m tall from {z0} m: {lo} {hi}");
+    }
+    // each shows up in the asset list with its size and places like any other asset
+    let mut e = Engine::new();
+    let list = run(&mut e, json!({"cmd":"assets"}))["assets"].as_array().unwrap().clone();
+    for key in ["toilet", "queen_bed", "dining_set", "dryer"] {
+        let a = list.iter().find(|a| a["key"] == key).unwrap_or_else(|| panic!("{key} listed"));
+        assert!(a["about"].as_str().unwrap().contains(" m"), "{key} says its size");
+        run(&mut e, json!({"cmd":"insert","asset":key,"at":[1.0, 2.0, 0.0],"rotate":90}));
+    }
 }
 
 #[test]
@@ -1167,7 +1337,7 @@ fn component_library() {
     let g = box_group(&mut e, [0.0, 0.0, 0.0], [0.5, 0.5, 0.45], "Stool");
     let c = run(&mut e, json!({"cmd":"make_component","ids":[g],"name":"Stool"}))["component"].as_u64().unwrap();
     let saved = run(&mut e, json!({"cmd":"save_to_library","component":c,"collection":"Furniture","dir":d}))["path"].as_str().unwrap().to_string();
-    assert!(saved.ends_with("Furniture/Stool.sketchcraft"), "{saved}");
+    assert!(std::path::Path::new(&saved).ends_with("Furniture/Stool.sketchcraft"), "{saved}");
     // an OBJ dropped in with its .mtl
     let src = dir.join("src");
     std::fs::create_dir_all(&src).unwrap();

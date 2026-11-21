@@ -18,7 +18,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const NOTICE = "Saved by a newer SketchCraft — update to edit. You can look, but changes won't be saved here.";
 
 const b = await launch();
-const p = await (await b.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
+const p = await (await b.newContext({ locale: 'en-US', viewport: { width: 1280, height: 800 } })).newPage();
 const problems = [];
 p.on('pageerror', (e) => problems.push(String(e)));
 await p.goto(PAGE);
