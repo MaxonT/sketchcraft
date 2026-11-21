@@ -9,6 +9,7 @@
 //   parts:     [{name?:"regex", size:[a,b,c], tol}]   each entry must match a part (sizes compared sorted, big to small)
 //   has_face:  [{normal:[..], normal_abs?, area?, z?:[lo,hi], tol?, min?, group?:"regex"}]
 //   painted:   [{color:"red", where:{group?:"regex", normal?:[..], z?:[lo,hi]}, all?:true, min?:n, none?:true}]
+//   material:  [{name:"brick", where:{group?,normal?,z?..}, all?:true, min?:n, none?:true}]   faces wearing that named material
 //   tags:      ["name"]
 //   reply:     [{key:"volume", approx:28.8, tol?}]   a number some command replied with
 //   plan:      {floors:[{rooms:[[name, m2], ..], openings:{door:n, window:n, opening:n, open:n}}], tol?}   checked against
@@ -114,6 +115,14 @@ export function grade(check, state, replies, replyScope = []) {
       else if (pc.all && hit.length !== sel.length) errs.push(`${hit.length}/${sel.length} faces ${pc.color} ${JSON.stringify(pc.where)} (materials ${[...new Set(sel.map((f) => f.material))]})`);
       else if (hit.length < (pc.min ?? 1)) errs.push(`${hit.length} faces ${pc.color}, want >= ${pc.min ?? 1} ${JSON.stringify(pc.where)}`);
     }
+  }
+  for (const mc of check.material || []) {
+    const sel = faces.filter((f) => faceMatches(f, mc.where || {}, gname));
+    const hit = sel.filter((f) => f.material === mc.name);
+    if (mc.none) { if (hit.length) errs.push(`${hit.length} faces wear ${mc.name}, want none ${JSON.stringify(mc.where || {})}`); }
+    else if (!sel.length) errs.push(`no faces for material ${mc.name} ${JSON.stringify(mc.where || {})}`);
+    else if (mc.all && hit.length !== sel.length) errs.push(`${hit.length}/${sel.length} faces wear ${mc.name} ${JSON.stringify(mc.where || {})} (have ${[...new Set(sel.map((f) => f.material))]})`);
+    else if (hit.length < (mc.min ?? 1)) errs.push(`${hit.length} faces wear ${mc.name}, want >= ${mc.min ?? 1}`);
   }
   for (const pa of check.part_at || []) {
     // bounds of one group from its face centers (exact for boxes): min/max per axis

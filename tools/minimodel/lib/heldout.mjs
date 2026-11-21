@@ -14,6 +14,9 @@
 // share vocabulary with the eval ("a ... by ... box ... tall"), because that is how people say it. The
 // report counts how many are at or above 0.6 (the spike's near-duplicate threshold), and `--strict` drops them
 // so a second model can measure generalisation to unseen phrasing.
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { loadCases } from "./run_case.mjs";
 
 const NUMWORDS = "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty hundred half quarter twice double triple".split(" ");
@@ -31,7 +34,7 @@ const nums = (x, out = []) => { if (typeof x === "number") out.push(+x.toFixed(3
 /** what an answer IS, ignoring names: starting-model kind + command names + sorted numbers */
 export const goldSig = (fixtureKind, cmds) => `${fixtureKind || "-"}|${cmds.map((c) => c.cmd).join(",")}|${nums(cmds).sort((a, b) => a - b).join(",")}`;
 
-export function makeHeldout(cases = loadCases()) {
+export function makeHeldout(cases = [...loadCases(), ...(existsSync(join(dirname(fileURLToPath(import.meta.url)), "../eval/new_cases.jsonl")) ? loadCases("new") : [])]) {
   const exact = new Map(cases.map((c) => [norm(c.request), c.id]));
   const masked = new Map(cases.map((c) => [mask(c.request), c.id]));
   const sh = cases.map((c) => shingles(c.request));
