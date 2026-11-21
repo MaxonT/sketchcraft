@@ -22,7 +22,7 @@ export const COMMANDS = [
   ["array", { ids: "ids", by: "v3", count: "i" }, "`count` MORE copies spaced `by` apart (total = count+1)"],
   ["copy", { group: "id", by: "v3", as: "s?" }, "copy a group, offset by `by`"],
   ["delete", { ids: "ids" }, ""],
-  ["paint", { ids: "ids", color: "v3" }, "color as [r,g,b] each 0..1; painting a group paints all its faces"],
+  ["paint", { ids: "ids", color: "v3?", material: "s?", scope: "scope?", through: "b?" }, "color as [r,g,b] each 0..1, or material: a named picture material in the model; painting a group paints all its faces; scope face|connected|all|object spreads it, through:true lays one picture across touching faces"],
   ["begin_group", { name: "s?", as: "s?" }, "start a group: everything drawn until end_group belongs to it"],
   ["end_group", {}, ""],
   ["group", { ids: "ids", name: "s?", as: "s?" }, ""],
@@ -46,6 +46,27 @@ export const COMMANDS = [
   ["pick", { at: "v3", as: "s?" }, "the face under a point (remember it with as)"],
   ["room_info", { name: "s" }, "READ-ONLY: a room by name (loose, \"master\" finds the primary bedroom): its floor area in m2 and ft2, perimeter, size, level"],
   ["floorplan_build", { floors: "floors", units: "units?", wall_height: "n?", wall_thickness: "n?", name: "s?" }, "a whole house from a room plan, ONE command: floors[{rooms[{name, rect:[x,y,width,depth]}], openings[{kind door|window|opening|open, between:[room, room|\"outside\"], side?, width?}], stairs?[{room}]}]; rects on wall centerlines, front row at y=0, left to right from x=0; touching rooms share a wall; units ft|m"],
+  ["room_rect", { from: "v3", to: "v3", thickness: "n?", height: "n?", name: "s?", mode: "rmode?", as: "s?" }, "Room mode: a room (4 walls + floor, a group) dragged between two corners ON THE WALL CENTERLINES; a side on a neighbour's wall shares it; mode combine joins the room the box overlaps, subtract cuts the box out of it"],
+  ["room_preview", { from: "v3", to: "v3", thickness: "n?", mode: "rmode?" }, "READ-ONLY: what room_rect would do (inside size, area, shared walls, or why refused)"],
+  ["rooms", {}, "READ-ONLY: the rooms: name, inside rectangle, area m2"],
+  ["wall_pull", { face: "id", by: "n" }, "pull the whole wall a face belongs to by metres along that face's outward normal (- the other way); thickness kept, doors and windows ride along, joined walls follow"],
+  ["wall_info", { face: "id" }, "READ-ONLY: what pulling that wall would move"],
+  ["texture_project", { faces: "ids?", entity: "id?", mode: "pmode", material: "s?", origin: "v3?", axis: "v3?", scale: "n?", rotation: "n?", fit: "b?" }, "projection mapping: lay a material's picture on faces (or a group) as planar|box|cylinder|sphere, or clear"],
+  ["texture_uv", { faces: "ids" }, "READ-ONLY: the texture coordinates of faces"],
+  ["texture_position", { face: "id?", faces: "ids?", transform: "tf?", matrix: "m6?", reset: "b?" }, "Position Texture: move (offset [du,dv] m), rotate (degrees), scale or skew the picture on faces; reset goes back"],
+  ["texture_frame", { face: "id" }, "READ-ONLY: a face's picture-space corners and tile size"],
+  ["vertex_paint", { faces: "ids?", entity: "id?", color: "col", points: "pts1?", radius: "n?", strength: "n?", falloff: "falloff?", erase: "b?" }, "vertex colour brush: corners within radius metres of each stroke point blend toward color; no points fills the selection"],
+  ["vertex_paint_clear", { faces: "ids?", entity: "id?" }, "take vertex colours off"],
+  ["vertex_colors", { faces: "ids" }, "READ-ONLY: per-corner vertex colours of faces"],
+  ["texture_paint_new", { faces: "ids?", entity: "id?", size: "n?", base: "col?", name: "s?", unwrap: "b?" }, "make a paintable texture (square, size px) and put it on faces or a group; unwrap:true unwraps them first"],
+  ["texture_paint_stroke", { material: "s", faces: "ids?", entity: "id?", points: "pts1?", radius: "n?", uv_points: "pts2?", uv_radius: "n?", fill: "b?", color: "col?", hardness: "n?", opacity: "n?", erase: "b?" }, "one brush stroke on a paint texture's pixels; fill:true paints every texel"],
+  ["texture_paint_status", { faces: "ids?", entity: "id?" }, "READ-ONLY: can these faces be painted (UVs missing, overlapping, outside 0..1)"],
+  ["uv_seam", { edges: "ids?", faces: "ids?", entity: "id?", on: "b?", auto: "n?" }, "mark (on, default) or clear UV seams on edges, or auto: edges between faces meeting past that many degrees"],
+  ["uv_unwrap", { faces: "ids?", entity: "id?", method: "umethod?", seams: "useams?", angle: "n?", margin: "n?" }, "UV unwrap faces or a group: islands along seams, flattened, packed into 0..1"],
+  ["uv_pack", { faces: "ids?", entity: "id?", margin: "n?", set: "n?" }, "repack existing UV islands"],
+  ["uv_lightmap", { faces: "ids?", entity: "id?", margin: "n?", angle: "n?", clear: "b?" }, "lightmap UV channel (second UV set, no overlaps); clear removes it"],
+  ["uv_transform", { faces: "ids", matrix: "m6", set: "n?" }, "move UVs by [a,b,c,d,e,f] (u' = a u + c v + e, v' = b u + d v + f)"],
+  ["uv_info", { faces: "ids?", entity: "id?", set: "n?" }, "READ-ONLY: UVs, islands, seams of faces"],
 ];
 
 const NAME = "^@?[A-Za-z0-9_]{1,32}$";
@@ -56,7 +77,15 @@ const STAIR = { type: "object", properties: { room: { type: "string", maxLength:
 const FLOORS = { type: "array", minItems: 1, maxItems: 4, items: { type: "object", properties: { level: { type: "integer" }, elevation: N, wall_height: N, rooms: { type: "array", items: ROOM, minItems: 1, maxItems: 40 }, openings: { type: "array", items: OPENING, maxItems: 80 }, stairs: { type: "array", items: STAIR, maxItems: 4 } }, required: ["rooms"], additionalProperties: false } };
 const ID = { anyOf: [{ type: "integer" }, { type: "string", pattern: "^@[A-Za-z0-9_]{1,32}$" }] };
 const V3 = { type: "array", items: { type: "number" }, minItems: 3, maxItems: 3 };
+const N2 = { type: "array", items: N, minItems: 2, maxItems: 2 };
+const TF = { type: "object", properties: { offset: N2, rotation: N, scale: { anyOf: [N, N2] }, skew: { anyOf: [N, N2] }, pivot: N2 }, additionalProperties: false };
 const TYPES = {
+  col: { type: "array", items: N, minItems: 3, maxItems: 4 }, m6: { type: "array", items: N, minItems: 6, maxItems: 6 },
+  pts1: { type: "array", items: { type: "array", items: N, minItems: 3, maxItems: 3 }, minItems: 1, maxItems: 24 },
+  pts2: { type: "array", items: N2, minItems: 1, maxItems: 24 }, tf: TF,
+  pmode: { enum: ["planar", "box", "cylinder", "sphere", "clear"] }, rmode: { enum: ["new", "combine", "subtract"] },
+  scope: { enum: ["face", "connected", "all", "object"] }, falloff: { enum: ["smooth", "linear", "hard"] },
+  umethod: { enum: ["conformal", "angle", "planar_islands"] }, useams: { enum: ["marked", "auto"] },
   v3: V3, n: { type: "number" }, i: { type: "integer", minimum: 1, maximum: 200 }, s: { type: "string", maxLength: 40 }, b: { type: "boolean" },
   id: ID, ids: { type: "array", items: ID, minItems: 1, maxItems: 12 }, pts: { type: "array", items: V3, minItems: 2, maxItems: 24 },
   fac: { anyOf: [{ type: "number" }, V3] }, roofkind: { enum: ROOFS }, asset: { enum: ASSETS },
