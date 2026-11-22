@@ -1,4 +1,4 @@
-// The slice of SketchCraft's command language the small model may speak (~36 of the engine's ~170 commands),
+// The slice of SketchCraft's command language the small model may speak (81 of the engine's ~206 commands),
 // as one table. From it we generate BOTH the compact reference in the prompt and the JSON schema handed to
 // Ollama as `format` (so output can only be a valid command list). `check_spec` verifies every name here is
 // a real variant of the Command enum and is in the agent allowlist (policy.rs), so the table can't drift.
@@ -67,6 +67,30 @@ export const COMMANDS = [
   ["uv_lightmap", { faces: "ids?", entity: "id?", margin: "n?", angle: "n?", clear: "b?" }, "lightmap UV channel (second UV set, no overlaps); clear removes it"],
   ["uv_transform", { faces: "ids", matrix: "m6", set: "n?" }, "move UVs by [a,b,c,d,e,f] (u' = a u + c v + e, v' = b u + d v + f)"],
   ["uv_info", { faces: "ids?", entity: "id?", set: "n?" }, "READ-ONLY: UVs, islands, seams of faces"],
+  // v5: the rest of the Model tab (arcs, Follow Me, text, guides, axes, edge tools, solids) and more material control
+  ["arc", { start: "v3", end: "v3", bulge: "n", normal: "v3?", as: "s?" }, "arc edges from start to end, bowing `bulge` m out to the LEFT of start->end seen from the normal side (- bows right); normal default [0,0,1] (on the ground); a half circle of radius R has bulge R; a pie or half-disc face: arc, then line {points:[end, center, start]}"],
+  ["follow_me", { face: "id", points: "pts?", edges: "ids?", around: "id?" }, "Follow Me: sweep a profile face along a path (points, or edges), or around another face's outline (around); the profile must stand at the path's start"],
+  ["text", { at: "v3", text: "s", leader: "v3?" }, "a text label at a point, with an optional leader line to `leader`"],
+  ["guide", { point: "v3", direction: "v3?" }, "Tape Measure / Protractor: a construction guide line through point along direction (no direction = a guide point)"],
+  ["clear_guides", {}, "delete every construction guide"],
+  ["set_axes", { origin: "v3?", x: "v3?", y: "v3?", reset: "b?" }, "Axes tool: move the drawing axes to origin with red along x and green along y; reset:true puts them back"],
+  ["resize", { factor: "n" }, "Tape Measure resize: scale the WHOLE model by factor = wanted length / measured length"],
+  ["soften", { ids: "ids?", soft: "b?", coplanar: "b?" }, "soften (hide) the edges of faces or edges in ids; soft:false makes them hard again; coplanar:true softens every flat seam in the model"],
+  ["explode", { id: "id" }, "turn a component instance back into plain geometry (a group)"],
+  ["ungroup", { id: "id" }, "dissolve a group; what was inside moves up a level"],
+  ["intersect", { ids: "ids", with: "withk?" }, "Intersect Faces: draw edges where these groups/faces cross the model (with model, default) or each other (with selection)"],
+  ["divide", { edge: "id", count: "i" }, "split an edge into count equal parts"],
+  ["weld", { edges: "ids" }, "join connected edges into one curve"],
+  ["explode_curve", { edges: "ids" }, "split a curve (arc, circle, welded edges) back into separate edges"],
+  ["flip", { ids: "ids", axis: "axis" }, "Flip Along: mirror groups/faces in place across their middle, along x (red), y (green) or z (blue)"],
+  ["reverse", { ids: "ids" }, "reverse faces (turn them inside out); a group reverses all its faces"],
+  ["bevel", { edges: "ids", size: "n", segments: "i?" }, "bevel edges of a solid group by size m; segments 1 = flat chamfer, more = rounded fillet"],
+  ["subdivide", { id: "id", levels: "lvl?", keep_sharp: "b?" }, "smooth a group into a subdivision surface (levels 1-4, default 2); keep_sharp keeps sharp edges creased"],
+  ["solid", { op: "solidop", ids: "ids" }, "solid tools on closed groups: union, intersect, outer_shell, split, subtract (the FIRST cuts the second and is used up), trim (the first cuts the second and stays)"],
+  ["slice", { id: "id", origin: "v3", normal: "v3" }, "cut a solid group in two along the plane through origin facing normal"],
+  ["material", { name: "s", color: "v3?", roughness: "n?", metalness: "n?", glass: "b?", emission: "n?" }, "make or change a named material ([r,g,b] 0..1, roughness/metalness 0..1, glass, emission); then paint with material: name"],
+  ["texture", { name: "s", width: "n?", height: "n?" }, "change a picture material's tile size: width and height in m of one repeat of its picture"],
+  ["texture_pixels", { material: "s", x: "u?", y: "u?", w: "u?", h: "u?" }, "READ-ONLY: a block of a picture material's pixels"],
 ];
 
 const NAME = "^@?[A-Za-z0-9_]{1,32}$";
@@ -90,6 +114,8 @@ const TYPES = {
   id: ID, ids: { type: "array", items: ID, minItems: 1, maxItems: 12 }, pts: { type: "array", items: V3, minItems: 2, maxItems: 24 },
   fac: { anyOf: [{ type: "number" }, V3] }, roofkind: { enum: ROOFS }, asset: { enum: ASSETS },
   floors: FLOORS, units: { enum: ["m", "ft", "in", "cm", "mm"] },
+  axis: { enum: ["x", "y", "z"] }, solidop: { enum: ["union", "subtract", "intersect", "trim", "split", "outer_shell"] },
+  withk: { enum: ["model", "selection"] }, lvl: { type: "integer", minimum: 1, maximum: 4 }, u: { type: "integer", minimum: 0, maximum: 4096 },
 };
 const T = (code) => TYPES[code.replace("?", "")];
 

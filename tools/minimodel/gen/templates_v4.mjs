@@ -73,11 +73,11 @@ function fxTwoRooms(r) {
   return { kind: "tworooms", n1, n2, w1, d1, w2, d2, setup, desc, trusted: true };
 }
 
-const MATS = { brick: [190, 80, 60], wood: [150, 100, 50], stone: [130, 130, 135], tiles: [60, 140, 190], concrete: [160, 160, 155], marble: [235, 235, 240], plaster: [225, 215, 195], metal: [120, 125, 135], grass: [70, 150, 60], carpet: [120, 40, 60], slate: [70, 80, 90], sand: [220, 200, 150] };
-const MATNAMES = Object.keys(MATS);
-const HNAMES = ["house", "house", "shed", "cabin", "hut", "garage", "studio", "barn", "kiosk", "annex", "office", "cottage", "tower", "bunker"];
+export const MATS = { brick: [190, 80, 60], wood: [150, 100, 50], stone: [130, 130, 135], tiles: [60, 140, 190], concrete: [160, 160, 155], marble: [235, 235, 240], plaster: [225, 215, 195], metal: [120, 125, 135], grass: [70, 150, 60], carpet: [120, 40, 60], slate: [70, 80, 90], sand: [220, 200, 150] };
+export const MATNAMES = Object.keys(MATS);
+export const HNAMES = ["house", "house", "shed", "cabin", "hut", "garage", "studio", "barn", "kiosk", "annex", "office", "cottage", "tower", "bunker"];
 /** a box group with named faces and some picture materials in the model */
-function fxBox(r, { extra = [], mats = null, nmat = r.int(2, 4) } = {}) {
+export function fxBox(r, { extra = [], mats = null, nmat = r.int(2, 4) } = {}) {
   const name = r.pick(HNAMES);
   const w = r.step(2.5, 10, 0.5), d = r.step(2, 8, 0.5), h = r.step(2, 5, 0.5);
   const ms = mats || r.shuffle(MATNAMES).slice(0, nmat);
@@ -91,8 +91,8 @@ function fxBox(r, { extra = [], mats = null, nmat = r.int(2, 4) } = {}) {
   const desc = `@${name} is a group named "${name}": a box ${fmt(w)} m (x) by ${fmt(d)} m (y) by ${fmt(h)} m tall, one corner at the origin. @top is its top face, @front its front (south, y = 0) face and @side its east (x = ${fmt(w)}) face. The model has these picture materials: ${mlist}.`;
   return { kind: "texbox", name, w, d, h, ms, setup, desc, trusted: true };
 }
-const withNote = (fx, note, extraSetup = []) => ({ ...fx, kind: fx.kind + "+", setup: [...fx.setup, ...extraSetup], desc: fx.desc + " " + note });
-const colorOf = (r) => { const k = r.pick(["red", "blue", "green", "yellow", "orange", "purple", "pink", "brown", "dark green", "light blue", "dark red"]); return { k, rgb: COLORS[k][0] }; };
+export const withNote = (fx, note, extraSetup = []) => ({ ...fx, kind: fx.kind + "+", setup: [...fx.setup, ...extraSetup], desc: fx.desc + " " + note });
+export const colorOf = (r) => { const k = r.pick(["red", "blue", "green", "yellow", "orange", "purple", "pink", "brown", "dark green", "light blue", "dark red"]); return { k, rgb: COLORS[k][0] }; };
 
 // ================================================================ r1: rooms
 const insideOf = (x0, y0, x1, y1, t = 0.2) => [r4(x0 + t / 2), r4(y0 + t / 2), r4(x1 - t / 2), r4(y1 - t / 2)];
@@ -251,7 +251,7 @@ F("r1", "list", 45, "easy", (r) => {
 });
 
 // ================================================================ t1: picture materials
-const phraseMat = (r, m) => r.pick([m, m, `the ${m} texture`, `the ${m} material`, `${m} texture`]);
+export const phraseMat = (r, m) => r.pick([m, m, `the ${m} texture`, `the ${m} material`, `${m} texture`]);
 F("t1", "paint", 190, "easy", (r) => {
   const fx = fxBox(r);
   const m = r.pick(fx.ms), pm = phraseMat(r, m);
@@ -353,7 +353,7 @@ F("t1", "question", 30, "easy", (r) => {
 });
 
 // ================================================================ t2: vertex paint
-const tint = (rgb, s) => [...rgb.map((c) => r4(1 - s * (1 - c))), 1];
+export const tint = (rgb, s) => [...rgb.map((c) => r4(1 - s * (1 - c))), 1];
 F("t2", "fill", 150, "easy", (r) => {
   const fx = fxBox(r, { nmat: 2 });
   const n = fx.name, { k, rgb } = colorOf(r);
@@ -415,8 +415,8 @@ F("t2", "question", 25, "easy", (r) => {
 });
 
 // ================================================================ t3: UV
-const unwrapped = (fx0, extraSeams = null) => withNote(fx0, `The ${fx0.name} has been UV-unwrapped (it has UVs).`, [{ cmd: "uv_unwrap", entity: `@${fx0.name}` }]);
-const UVOK = (n) => [{ cmd: { cmd: "uv_info", entity: `@${n}` }, expect: [{ path: "without", op: "len", value: 0 }, { path: "faces.*.uv", op: "within01" }] }];
+export const unwrapped = (fx0, extraSeams = null) => withNote(fx0, `The ${fx0.name} has been UV-unwrapped (it has UVs).`, [{ cmd: "uv_unwrap", entity: `@${fx0.name}` }]);
+export const UVOK = (n) => [{ cmd: { cmd: "uv_info", entity: `@${n}` }, expect: [{ path: "without", op: "len", value: 0 }, { path: "faces.*.uv", op: "within01" }] }];
 F("t3", "unwrap", 140, "medium", (r) => {
   const fx = fxBox(r, { nmat: 2 }), n = fx.name;
   const method = r.pick([null, null, "conformal", "angle", "planar_islands"]), auto = r.chance(0.2) ? r.pick([30, 45, 60]) : null, margin = r.chance(0.2) ? r.pick([0.01, 0.02, 0.05]) : null;

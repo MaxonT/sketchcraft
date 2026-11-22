@@ -5,6 +5,7 @@
 //                     [--retrieve K] [--max-sim 0.8] [--subset] [--timeout 120]
 //                     [--ids e001,m010] [--cat a11y] [--tag name] [--no-memory-guard] [--set plans]
 // --set new    the v4 new-features cases (eval/new_cases.jsonl: rooms, texturing, UV, vertex paint, texture painting)
+// --set v5     the v5 Model-tab + UV/texture cases (eval/v5_cases.jsonl: arcs, Follow Me, text, guides, axes, edge and solid tools, materials, UV chains)
 // --set plans  the route 2 floor-plan cases (eval/plan_cases.jsonl: 30 synthetic held-out plans + the owner's townhouse)
 // --shots N    the first N hand-written worked examples (lib/spec.mjs FEW_SHOT)
 // --retrieve K K examples picked by similarity from the OTHER fold of the request set (lib/retrieve.mjs): never the
@@ -59,7 +60,7 @@ const timeoutS = Number(flag("timeout", 120));
 const doRepair = !!flag("repair"), fixSchema = !!flag("fix-schema");
 if (fixSchema) COMMANDS.find(([n]) => n === "insert")[1].as = "s?";
 const variant = [flag("prompt", "long") === "short" && "short", shots && `${shots}shot`, retrieveK && `rag${retrieveK}`, maxSim <= 1 && `max${maxSim}`, subset && "subset", fixSchema && "fixschema", doRepair && "repair"].filter(Boolean).join("-");
-const tag = flag("tag", `${model.replace(/[:/]/g, "_")}-${mode}${variant ? "-" + variant : ""}${flag("set", "core") === "plans" ? "-plans" : flag("set", "core") === "new" ? "-new" : ""}`);
+const tag = flag("tag", `${model.replace(/[:/]/g, "_")}-${mode}${variant ? "-" + variant : ""}${flag("set", "core") === "plans" ? "-plans" : flag("set", "core") === "new" ? "-new" : flag("set", "core") === "v5" ? "-v5" : ""}`);
 const guard = !flag("no-memory-guard");
 let cases = loadCases(flag("set", "core"));
 const pick = makeRetriever(cases);

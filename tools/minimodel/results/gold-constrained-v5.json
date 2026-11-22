@@ -1,0 +1,1825 @@
+{
+ "summary": {
+  "tag": "gold-constrained-v5",
+  "model": "gold",
+  "mode": "constrained",
+  "shots": 0,
+  "retrieve": 0,
+  "maxSim": null,
+  "subset": false,
+  "repair": false,
+  "fixSchema": false,
+  "variant": "",
+  "n": 61,
+  "skipped": false,
+  "pass": 61,
+  "tiers": {
+   "easy": {
+    "n": 16,
+    "pass": 16
+   },
+   "medium": {
+    "n": 28,
+    "pass": 28
+   },
+   "hard": {
+    "n": 17,
+    "pass": 17
+   }
+  },
+  "a11y": {
+   "n": 0,
+   "pass": 0
+  },
+  "parseOk": 61,
+  "schemaValid": 61,
+  "engineAccepted": 61,
+  "medianMs": 0,
+  "p90Ms": null,
+  "medianGenTok": null,
+  "medianTokPerSec": null,
+  "promptTok": null,
+  "loadMs": 0,
+  "peakOllamaRssMb": 6
+ },
+ "rows": [
+  {
+   "id": "v001",
+   "tier": "easy",
+   "cat": "v5",
+   "request": "draw an arc that starts at the origin, ends at (6, 0) and bows 1.5 m toward +y",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "arc",
+     "start": [
+      0,
+      0,
+      0
+     ],
+     "end": [
+      6,
+      0,
+      0
+     ],
+     "bulge": 1.5
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.15625
+  },
+  {
+   "id": "v002",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "an arc from (3, 2) north to (3, 7), pushed out 80 cm on its east side",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "arc",
+     "start": [
+      3,
+      2,
+      0
+     ],
+     "end": [
+      3,
+      7,
+      0
+     ],
+     "bulge": -0.8
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.15625
+  },
+  {
+   "id": "v003",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "semicircle with a 2.5 m radius around (1, 1), round part facing south",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "arc",
+     "start": [
+      -1.5,
+      1,
+      0
+     ],
+     "end": [
+      3.5,
+      1,
+      0
+     ],
+     "bulge": -2.5
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.15625
+  },
+  {
+   "id": "v004",
+   "tier": "hard",
+   "cat": "v5",
+   "request": "make a half-disc shaped face: 3 m radius, center at (0, 4), the round edge to the north",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "arc",
+     "start": [
+      -3,
+      4,
+      0
+     ],
+     "end": [
+      3,
+      4,
+      0
+     ],
+     "bulge": 3
+    },
+    {
+     "cmd": "line",
+     "points": [
+      [
+       3,
+       4,
+       0
+      ],
+      [
+       0,
+       4,
+       0
+      ],
+      [
+       -3,
+       4,
+       0
+      ]
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.15625
+  },
+  {
+   "id": "v005",
+   "tier": "hard",
+   "cat": "v5",
+   "request": "a 90 degree pie piece of radius 4 m whose point is at (2, 2), covering the north-east quadrant",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "arc",
+     "start": [
+      6,
+      2,
+      0
+     ],
+     "end": [
+      2,
+      6,
+      0
+     ],
+     "bulge": -1.1716
+    },
+    {
+     "cmd": "line",
+     "points": [
+      [
+       2,
+       6,
+       0
+      ],
+      [
+       2,
+       2,
+       0
+      ],
+      [
+       6,
+       2,
+       0
+      ]
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.15625
+  },
+  {
+   "id": "v006",
+   "tier": "hard",
+   "cat": "v5",
+   "request": "a standing half-round arch outline 3 m across on the line y = 0, from x = 1, its base 2 m above the ground",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "arc",
+     "start": [
+      1,
+      0,
+      2
+     ],
+     "end": [
+      4,
+      0,
+      2
+     ],
+     "bulge": 1.5,
+     "normal": [
+      0,
+      -1,
+      0
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v007",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "run @profile 6 m up the y axis, then 3 m toward -x, as a garden edging",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "follow_me",
+     "face": "@profile",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       6,
+       0
+      ],
+      [
+       -3,
+       6,
+       0
+      ]
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v008",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "wrap the trim around the roof edge of the pavilion",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "follow_me",
+     "face": "@trim",
+     "around": "@top"
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v009",
+   "tier": "hard",
+   "cat": "v5",
+   "request": "build a 20 cm wide, 30 cm high wall that follows the path from (1, 1) east to (5, 1) then north to (5, 4)",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "polygon",
+     "points": [
+      [
+       1,
+       0.9,
+       0
+      ],
+      [
+       1,
+       1.1,
+       0
+      ],
+      [
+       1,
+       1.1,
+       0.3
+      ],
+      [
+       1,
+       0.9,
+       0.3
+      ]
+     ],
+     "as": "p"
+    },
+    {
+     "cmd": "follow_me",
+     "face": "@p",
+     "points": [
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       5,
+       1,
+       0
+      ],
+      [
+       5,
+       4,
+       0
+      ]
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v010",
+   "tier": "easy",
+   "cat": "v5",
+   "request": "stick a \"Loading bay\" label right in the middle of the depot roof",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "text",
+     "at": [
+      4,
+      2.5,
+      4
+     ],
+     "text": "Loading bay"
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v011",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "a callout \"Fire door\" 2 m south of the depot with its arrow touching the middle of the front wall",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "text",
+     "at": [
+      4,
+      -2,
+      2
+     ],
+     "text": "Fire door",
+     "leader": [
+      4,
+      0,
+      2
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v012",
+   "tier": "easy",
+   "cat": "v5",
+   "request": "drop a construction point at (2, 3, 1.5)",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "guide",
+     "point": [
+      2,
+      3,
+      1.5
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v013",
+   "tier": "easy",
+   "cat": "v5",
+   "request": "a guide running north-south through x = 4",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "guide",
+     "point": [
+      4,
+      0,
+      0
+     ],
+     "direction": [
+      0,
+      1,
+      0
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v014",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "measure 1.8 m in from the depot's back wall and leave a guide line there",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "guide",
+     "point": [
+      0,
+      3.2,
+      0
+     ],
+     "direction": [
+      1,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v015",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "with the protractor, lay a guide through the origin at 40° off the x axis",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "guide",
+     "point": [
+      0,
+      0,
+      0
+     ],
+     "direction": [
+      0.766,
+      0.6428,
+      0
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v016",
+   "tier": "easy",
+   "cat": "v5",
+   "request": "wipe out the construction guides",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "clear_guides"
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v017",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "set the drawing axes at the depot's north-west corner with red running east",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "set_axes",
+     "origin": [
+      0,
+      5,
+      0
+     ],
+     "x": [
+      1,
+      0,
+      0
+     ],
+     "y": [
+      0,
+      1,
+      0
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v018",
+   "tier": "hard",
+   "cat": "v5",
+   "request": "swing the axes 25 degrees counter-clockwise about the point (2, 2)",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "set_axes",
+     "origin": [
+      2,
+      2,
+      0
+     ],
+     "x": [
+      0.9063,
+      0.4226,
+      0
+     ],
+     "y": [
+      -0.4226,
+      0.9063,
+      0
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v019",
+   "tier": "easy",
+   "cat": "v5",
+   "request": "bring the axes back to normal",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "set_axes",
+     "reset": true
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v020",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "the depot came in at 8 m wide but the real building is 12 m wide; resize everything",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "resize",
+     "factor": 1.5
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v021",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "the depot is 4 m tall and it should be 10 feet tall, scale the model to fit",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "resize",
+     "factor": 0.762
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v022",
+   "tier": "easy",
+   "cat": "v5",
+   "request": "soften the four edges around the depot's front face",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "soften",
+     "ids": [
+      "@front"
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v023",
+   "tier": "easy",
+   "cat": "v5",
+   "request": "harden the edges around the top again",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "soften",
+     "ids": [
+      "@top"
+     ],
+     "soft": false
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v024",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "hide the line between the two flat faces, and any other coplanar seam",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "soften",
+     "coplanar": true
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v025",
+   "tier": "easy",
+   "cat": "v5",
+   "request": "chop the depot's south-east corner edge into 6 equal lengths",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "divide",
+     "edge": "@corner",
+     "count": 6
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v026",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "turn the four path edges into one welded curve",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "weld",
+     "edges": [
+      "@s1",
+      "@s2",
+      "@s3",
+      "@s4"
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v027",
+   "tier": "easy",
+   "cat": "v5",
+   "request": "split the arc up so each segment is its own edge",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "explode_curve",
+     "edges": [
+      "@arc"
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v028",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "take 12 cm off the depot's top east edge with a flat chamfer",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "bevel",
+     "edges": [
+      "@top_east"
+     ],
+     "size": 0.12
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v029",
+   "tier": "hard",
+   "cat": "v5",
+   "request": "round over the top front and top back edges of the depot, 20 cm radius in 5 steps",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "bevel",
+     "edges": [
+      "@top_front",
+      "@top_back"
+     ],
+     "size": 0.2,
+     "segments": 5
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v030",
+   "tier": "easy",
+   "cat": "v5",
+   "request": "the depot's roof face points down; turn it the right way",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "reverse",
+     "ids": [
+      "@top"
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v031",
+   "tier": "easy",
+   "cat": "v5",
+   "request": "make the bench at x 3 plain geometry again",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "explode",
+     "id": "@bench2"
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v032",
+   "tier": "easy",
+   "cat": "v5",
+   "request": "dissolve the depot group",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "ungroup",
+     "id": "@depot"
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v033",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "draw intersection lines between the block and the post",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "intersect",
+     "ids": [
+      "@block",
+      "@post"
+     ],
+     "with": "selection"
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v034",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "fuse the block and the post into a single solid",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "solid",
+     "op": "union",
+     "ids": [
+      "@block",
+      "@post"
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v035",
+   "tier": "hard",
+   "cat": "v5",
+   "request": "carve the post out of the block, the post goes away",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "solid",
+     "op": "subtract",
+     "ids": [
+      "@post",
+      "@block"
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v036",
+   "tier": "hard",
+   "cat": "v5",
+   "request": "leave just the volume the block and post share",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "solid",
+     "op": "intersect",
+     "ids": [
+      "@block",
+      "@post"
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v037",
+   "tier": "hard",
+   "cat": "v5",
+   "request": "trim the block with the post but keep the post",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "solid",
+     "op": "trim",
+     "ids": [
+      "@post",
+      "@block"
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v038",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "split the depot into two pieces with a cut 3 m from its west end",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "slice",
+     "id": "@depot",
+     "origin": [
+      3,
+      0,
+      0
+     ],
+     "normal": [
+      1,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v039",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "cut the top 1.5 m off the depot as a separate piece",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "slice",
+     "id": "@depot",
+     "origin": [
+      0,
+      0,
+      2.5
+     ],
+     "normal": [
+      0,
+      0,
+      1
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v040",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "mirror the counter left-right where it stands",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "flip",
+     "ids": [
+      "@counter"
+     ],
+     "axis": "x"
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v041",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "flip the counter front-to-back in place",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "flip",
+     "ids": [
+      "@counter"
+     ],
+     "axis": "y"
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v042",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "turn the depot into a smooth subdivision blob with 1 level",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "subdivide",
+     "id": "@depot",
+     "levels": 1
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v043",
+   "tier": "easy",
+   "cat": "v5",
+   "request": "create a material named brass, color [0.8, 0.65, 0.3], fully metallic with roughness 0.25",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "material",
+     "name": "brass",
+     "color": [
+      0.8,
+      0.65,
+      0.3
+     ],
+     "metalness": 1,
+     "roughness": 0.25
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v044",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "give the depot a frosted glass look: a glass material called frosted, color [0.9, 0.95, 1], on the whole thing",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "material",
+     "name": "frosted",
+     "color": [
+      0.9,
+      0.95,
+      1
+     ],
+     "glass": true
+    },
+    {
+     "cmd": "paint",
+     "ids": [
+      "@depot"
+     ],
+     "material": "frosted"
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v045",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "the depot roof should glow: new material neon, color [0.2, 1, 0.4], emission 2, on the top face",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "material",
+     "name": "neon",
+     "color": [
+      0.2,
+      1,
+      0.4
+     ],
+     "emission": 2
+    },
+    {
+     "cmd": "paint",
+     "ids": [
+      "@top"
+     ],
+     "material": "neon"
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v046",
+   "tier": "easy",
+   "cat": "v5",
+   "request": "make the steel matte: roughness 0.9",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "material",
+     "name": "steel",
+     "color": [
+      0.6,
+      0.6,
+      0.65
+     ],
+     "roughness": 0.9
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v047",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "each wood board picture should cover 1.5 m by 0.3 m",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "texture",
+     "name": "wood",
+     "width": 1.5,
+     "height": 0.3
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v048",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "the wood pattern is too fine, make it five times bigger",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "texture",
+     "name": "wood",
+     "width": 2.5,
+     "height": 2.5
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v049",
+   "tier": "easy",
+   "cat": "v5",
+   "request": "tell me the colors of the 2 by 2 pixels at the top-left of the poster",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "texture_pixels",
+     "material": "poster",
+     "x": 0,
+     "y": 0,
+     "w": 2,
+     "h": 2
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v050",
+   "tier": "hard",
+   "cat": "v5",
+   "request": "put seams on the booth wherever faces meet at more than 35 degrees and then unwrap it on those seams",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "uv_seam",
+     "entity": "@booth",
+     "auto": 35
+    },
+    {
+     "cmd": "uv_unwrap",
+     "entity": "@booth",
+     "seams": "marked"
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v051",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "unwrap the booth, then lay out its lightmap channel leaving 0.06 between islands",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "uv_unwrap",
+     "entity": "@booth"
+    },
+    {
+     "cmd": "uv_lightmap",
+     "entity": "@booth",
+     "margin": 0.06
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v052",
+   "tier": "hard",
+   "cat": "v5",
+   "request": "make the top face's UVs a third of their size",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "uv_transform",
+     "faces": [
+      "@top"
+     ],
+     "matrix": [
+      0.3333,
+      0,
+      0,
+      0.3333,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v053",
+   "tier": "hard",
+   "cat": "v5",
+   "request": "spin the UVs on the east face a quarter turn counter-clockwise",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "uv_transform",
+     "faces": [
+      "@side"
+     ],
+     "matrix": [
+      0,
+      1,
+      -1,
+      0,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v054",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "box-map the slate onto the booth's front and its top, at twice the size",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "texture_project",
+     "faces": [
+      "@front",
+      "@top"
+     ],
+     "mode": "box",
+     "material": "slate",
+     "scale": 2
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v055",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "stretch the tiles on the east wall to 3x wide but keep their height",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "texture_position",
+     "face": "@side",
+     "transform": {
+      "scale": [
+       3,
+       1
+      ]
+     }
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v056",
+   "tier": "hard",
+   "cat": "v5",
+   "request": "give the booth's front a 64 px paint texture named chalk and cover it in light blue",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "texture_paint_new",
+     "faces": [
+      "@front"
+     ],
+     "size": 64,
+     "name": "chalk",
+     "unwrap": true
+    },
+    {
+     "cmd": "texture_paint_stroke",
+     "material": "chalk",
+     "faces": [
+      "@front"
+     ],
+     "fill": true,
+     "color": [
+      0.5,
+      0.75,
+      1
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v057",
+   "tier": "hard",
+   "cat": "v5",
+   "request": "on the poster, brush a red line in texture coordinates from (0.15, 0.5) to (0.85, 0.5), radius 0.06",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "texture_paint_stroke",
+     "material": "poster",
+     "faces": [
+      "@front"
+     ],
+     "uv_points": [
+      [
+       0.15,
+       0.5
+      ],
+      [
+       0.85,
+       0.5
+      ]
+     ],
+     "uv_radius": 0.06,
+     "color": [
+      1,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v058",
+   "tier": "hard",
+   "cat": "v5",
+   "request": "dab green on the middle of the poster: 50 cm brush, hardness 0.1, 30% opacity",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "texture_paint_stroke",
+     "material": "poster",
+     "faces": [
+      "@front"
+     ],
+     "points": [
+      [
+       2,
+       0,
+       1.25
+      ]
+     ],
+     "radius": 0.5,
+     "color": [
+      0,
+      0.6,
+      0
+     ],
+     "hardness": 0.1,
+     "opacity": 0.3
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v059",
+   "tier": "medium",
+   "cat": "v5",
+   "request": "clear every bit of paint off the poster",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "texture_paint_stroke",
+     "material": "poster",
+     "faces": [
+      "@front"
+     ],
+     "fill": true,
+     "erase": true
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v060",
+   "tier": "hard",
+   "cat": "v5",
+   "request": "drop a guide 2 m south of the depot along its front, and write \"Gate\" in the middle of its roof",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "guide",
+     "point": [
+      0,
+      -2,
+      0
+     ],
+     "direction": [
+      1,
+      0,
+      0
+     ]
+    },
+    {
+     "cmd": "text",
+     "at": [
+      4,
+      2.5,
+      4
+     ],
+     "text": "Gate"
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  },
+  {
+   "id": "v061",
+   "tier": "hard",
+   "cat": "v5",
+   "request": "a chrome material (color [0.9, 0.9, 0.9], metalness 1, roughness 0.05) on the depot, and soften the roof edges",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "material",
+     "name": "chrome",
+     "color": [
+      0.9,
+      0.9,
+      0.9
+     ],
+     "metalness": 1,
+     "roughness": 0.05
+    },
+    {
+     "cmd": "paint",
+     "ids": [
+      "@depot"
+     ],
+     "material": "chrome"
+    },
+    {
+     "cmd": "soften",
+     "ids": [
+      "@top"
+     ]
+    }
+   ],
+   "ms": 0,
+   "load": 0,
+   "tokPerSec": null,
+   "rssMb": 6.17188
+  }
+ ]
+}
