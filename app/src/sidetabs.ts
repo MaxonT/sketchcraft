@@ -2,14 +2,15 @@
 // Properties is what the Classic layout shows in its lower-right panel (Document, Style, Paint, Finish, Entity info).
 import { leftTabs, type Layout, type LeftTab, type WorkspaceId } from "./workspace";
 
-export type SideTab = LeftTab | "properties";
+export type SideTab = LeftTab | "properties" | "ai";
 
-const ALL: readonly SideTab[] = ["pages", "outliner", "library", "views", "properties"];
+const ALL: readonly SideTab[] = ["pages", "outliner", "library", "views", "properties", "ai"];
 export const SIDE_TAB_KEY = "sketchcraft.sideTab";
 
-/** The tabs a layout shows: Vertical adds Properties to the left panel's tabs; the others keep them as they were. */
+/** The tabs a layout shows: Vertical adds Properties to the left panel's tabs; the others keep them as they were; all end with SketchCraft AI. */
 export function panelTabs(ws: WorkspaceId, layout: Layout): SideTab[] {
-  return layout === "side" ? [...leftTabs(ws), "properties"] : leftTabs(ws);
+  // SketchCraft AI is the last tab in every workspace and layout
+  return layout === "side" ? [...leftTabs(ws), "properties", "ai"] : [...leftTabs(ws), "ai"];
 }
 
 /** A remembered tab read back from storage: only a known tab name counts. */

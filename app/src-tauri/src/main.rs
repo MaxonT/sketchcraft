@@ -15,6 +15,8 @@ use serde_json::Value;
 use std::sync::Mutex;
 use tauri::Manager;
 
+mod ai;
+
 struct App(Mutex<Live>);
 
 /// The engine, even if an earlier call panicked while holding it (a bug in one
@@ -43,6 +45,28 @@ fn exec(state: tauri::State<App>, cmd: Value, source: Option<String>, plugin: Op
     let caller = if source.as_deref() == Some("plugin") { sketchcraft::policy::Caller::Plugin } else { sketchcraft::policy::Caller::Ui };
     let mut live = engine(&state);
     guarded(|| live.exec_as_from(&caller, &cmd, plugin.as_deref()), |msg| serde_json::json!({"ok": false, "error": format!("SketchCraft hit a bug running that ({msg}). Undo if anything looks wrong.")}))
+}
+
+/// SketchCraft AI box: what the model is told about the model (and the group names it may use as @name).
+#[tauri::command]
+fn ai_state(state: tauri::State<App>) -> String {
+    let mut live = engine(&state);
+    guarded(|| ai::state(&mut live), |_| "empty model".into())
+}
+
+/// SketchCraft AI box: ask the local model server (loopback only). Runs off the UI thread; takes no engine lock.
+#[tauri::command]
+async fn ai_chat(messages: Value, url: Option<String>) -> Result<Value, String> {
+    let u = ai::endpoint(url.as_deref());
+    let text = ai::chat(&u, &messages)?;
+    Ok(serde_json::json!({"text": text, "url": u}))
+}
+
+/// SketchCraft AI box: run the model's answer as an untrusted agent (policy allowlist), one undo step.
+#[tauri::command]
+fn ai_apply(state: tauri::State<App>, commands: Value) -> Value {
+    let mut live = engine(&state);
+    guarded(|| ai::apply(&mut live, &commands), |msg| serde_json::json!({"ok": false, "error": format!("SketchCraft hit a bug running that ({msg}). Undo if anything looks wrong."), "rows": []}))
 }
 
 #[tauri::command]
@@ -178,7 +202,7 @@ fn main() {
             });
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![exec, scene, sync, open_releases, portable, open_guide, open_link])
+        .invoke_handler(tauri::generate_handler![exec, ai_state, ai_chat, ai_apply, scene, sync, open_releases, portable, open_guide, open_link])
         .build(tauri::generate_context!())
         .expect("error while building SketchCraft")
         .run(|_, event| {
