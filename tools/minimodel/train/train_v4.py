@@ -1,6 +1,6 @@
 # SketchCraftAI LoRA v4: the v3 recipe (Qwen2.5-Coder-1.5B-Instruct, prompt/completion SFT, loss on the answer only) on
 # v3 data + the verified v4 pairs for the 0.3.9 features (Room mode, picture materials, projection, vertex paint, UV, texture painting).
-# A deadline callback stops training at 07:15 local if it is still running, so the merge always happens before the hard stop.
+# A deadline callback stops training at 07:00 local on Nov 24 if it is still running, so the merge always happens before the hard stop.
 import json, sys, time, torch, datetime
 from datasets import Dataset
 from peft import LoraConfig
@@ -8,7 +8,7 @@ from trl import SFTTrainer, SFTConfig
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainerCallback
 
 BASE = "Qwen/Qwen2.5-Coder-1.5B-Instruct"
-DEADLINE = datetime.datetime(2026, 11, 21, 7, 15).timestamp()
+DEADLINE = datetime.datetime(2026, 11, 24, 7, 0).timestamp()
 def load(p):
     rows = []
     for line in open(p, encoding="utf-8"):
