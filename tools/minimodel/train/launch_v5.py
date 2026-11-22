@@ -3,7 +3,7 @@
 import os, sys, runpy, traceback, time
 os.chdir(r"C:\Users\rsutt\sketchcraft-ai")
 os.environ["FOR_DISABLE_CONSOLE_CTRL_HANDLER"] = "1"
-if os.path.exists("out5/DONE"):
+if os.path.exists("out5/DONE") or not os.path.exists("out4/DONE"):  # wait for v4 to finish: one training on the GPU at a time
     sys.exit(0)
 lock = "out5.lock"
 os.makedirs("out5", exist_ok=True)
