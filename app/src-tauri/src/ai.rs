@@ -130,6 +130,20 @@ pub fn state(live: &mut Live) -> String {
         let mat = p["material"].as_str().map(|m| format!(", material {m}")).unwrap_or_default();
         out.push(format!("@{k} is a {kind} named \"{name}\": {sz}{mat}."));
     }
+    // loose (ungrouped) geometry has no group name to use: say what it is like the eval fixtures do and name its top face
+    if plist.is_empty() && faces > 0 {
+        let fl = live.exec_as(&caller, &json!({"cmd": "faces"}));
+        let top = fl["faces"].as_array().and_then(|a| {
+            a.iter().filter(|f| f["normal"][2].as_f64().unwrap_or(0.0) > 0.9).max_by(|x, y| x["center"][2].as_f64().partial_cmp(&y["center"][2].as_f64()).unwrap_or(std::cmp::Ordering::Equal))
+        });
+        if let (Some(t), Some(id)) = (top, top.and_then(|t| t["id"].as_u64())) {
+            live.engine.names.insert("top".into(), id as _);
+            let b = &info["bounds"];
+            let d = |i: usize| b["max"][i].as_f64().unwrap_or(0.0) - b["min"][i].as_f64().unwrap_or(0.0);
+            let _ = t;
+            out.push(format!("Loose (ungrouped) geometry, {} faces, {} m (x) by {} m (y) by {} m tall, one corner at ({}, {}, {}). @top is its top face.", faces, n(&json!(d(0))), n(&json!(d(1))), n(&json!(d(2))), n(&b["min"][0]), n(&b["min"][1]), n(&b["min"][2])));
+        }
+    }
     let b = &info["bounds"];
     if b["min"].is_array() && b["max"].is_array() {
         let (lo, hi) = (&b["min"], &b["max"]);

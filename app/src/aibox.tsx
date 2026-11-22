@@ -65,6 +65,9 @@ export function AiPanel({ scene, run, refresh, say, importFile }: { scene: Scene
   const [over, setOver] = useState(false);
   const end = useRef<HTMLDivElement>(null);
   const pick = useRef<HTMLInputElement>(null);
+  const field = useRef<HTMLInputElement>(null);
+  // the box takes focus back when an answer is in, so the next request can be typed straight away
+  useEffect(() => { if (!busy) field.current?.focus(); }, [busy]);
   useEffect(() => end.current?.scrollIntoView?.({ block: "end" }), [log, busy]);
   if (!inTauri) return <div className="aibox-note">SketchCraft AI runs in the desktop app.</div>;
   const push = (t: Turn) => setLog((l) => [...l.slice(-60), t]);
@@ -152,7 +155,7 @@ export function AiPanel({ scene, run, refresh, say, importFile }: { scene: Scene
         <div ref={end} />
       </div>
       <form onSubmit={(e) => (e.preventDefault(), void ask())}>
-        <input data-testid="ai-input" value={text} disabled={busy} aria-label="Ask SketchCraft AI" placeholder="e.g. a 4 by 3 m box 2.5 m high" onChange={(e) => setText(e.target.value)} />
+        <input ref={field} data-testid="ai-input" value={text} disabled={busy} aria-label="Ask SketchCraft AI" placeholder="e.g. a 4 by 3 m box 2.5 m high" onChange={(e) => setText(e.target.value)} />
         <button className="btn small" type="submit" disabled={busy || !text.trim()} data-testid="ai-send">Ask</button>
       </form>
       <div className={`aibox-drop${over ? " over" : ""}`} data-testid="ai-drop" onDragOver={(e) => (e.preventDefault(), setOver(true))} onDragLeave={() => setOver(false)} onDrop={drop}>
