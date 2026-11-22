@@ -25,12 +25,13 @@ class Deadline(TrainerCallback):
             control.should_training_stop = True
 
 train, dev = load("data/v5/train.chat.jsonl"), load("data/v5/dev.chat.jsonl")
+dev = dev.shuffle(seed=1).select(range(min(500, len(dev))))  # a fixed 500-row dev slice: the full 1,627 rows cost about 4 h of evals
 tok = AutoTokenizer.from_pretrained(BASE)
 model = AutoModelForCausalLM.from_pretrained(BASE, dtype=torch.bfloat16, attn_implementation="sdpa")
 cfg = SFTConfig(
     output_dir="out5/run", num_train_epochs=3, per_device_train_batch_size=2, gradient_accumulation_steps=8,
     learning_rate=2e-4, lr_scheduler_type="cosine", warmup_steps=30, bf16=True, logging_steps=20,
-    eval_strategy="steps", eval_steps=300, save_steps=300, save_total_limit=3,
+    eval_strategy="steps", eval_steps=600, save_steps=600, save_total_limit=3,
     load_best_model_at_end=True, metric_for_best_model="eval_loss", max_length=2048,
     completion_only_loss=True, gradient_checkpointing=True, report_to="none", seed=1,
 )
