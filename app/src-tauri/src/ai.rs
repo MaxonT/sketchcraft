@@ -166,7 +166,7 @@ pub fn apply(live: &mut Live, answer: &Value) -> Value {
             rows.push(json!({"cmd": shown, "command": c, "status": "refused", "error": "not allowed for the AI box"}));
         }
     }
-    let mut changed = false;
+    let depth_before = live.engine.undo_depth();
     if !runnable.is_empty() {
         let begin = live.exec_as(&caller, &json!({"cmd": "begin_batch"}));
         if begin["ok"] != true {
@@ -181,7 +181,6 @@ pub fn apply(live: &mut Live, answer: &Value) -> Value {
             let r = live.exec_as(&caller, &c);
             if r["ok"] == true {
                 rows[i]["status"] = json!("ok");
-                changed = true;
                 rows[i]["reply"] = r;
             } else {
                 rows[i]["status"] = json!("error");
@@ -191,6 +190,8 @@ pub fn apply(live: &mut Live, answer: &Value) -> Value {
         }
         live.exec_as(&caller, &json!({"cmd": "end_batch"}));
     }
+    // did the answer change the model (a new undo step)? A question does not.
+    let changed = live.engine.undo_depth() != depth_before;
     json!({"ok": true, "rows": rows, "changed": changed})
 }
 
