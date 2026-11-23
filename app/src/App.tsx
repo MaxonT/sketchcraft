@@ -1056,6 +1056,23 @@ function ModelingApp() {
       </aside>
 
       <main className="stage">
+        {/* phones held upright: show or hide the panels under the view, so the model can have the whole screen (CSS shows these only there) */}
+        <div className="panel-toggles" role="group" aria-label={tr("tab.panel")}>
+          {layout === "side" ? (
+            <button className={menuCtx.showLeft ? "on" : ""} aria-pressed={menuCtx.showLeft} onClick={() => menuCtx.togglePanel("left")}>
+              {tr("tab.panel")}
+            </button>
+          ) : (
+            <>
+              <button className={ws.showLeft ? "on" : ""} aria-pressed={ws.showLeft} onClick={() => menuCtx.togglePanel("left")}>
+                {tr("tab.objects")}
+              </button>
+              <button className={ws.showRight ? "on" : ""} aria-pressed={ws.showRight} onClick={() => menuCtx.togglePanel("right")}>
+                {tr("tab.properties")}
+              </button>
+            </>
+          )}
+        </div>
         <Viewport
           onHideHelp={() => {
             setStyles((s) => ({ ...s, help: false }));

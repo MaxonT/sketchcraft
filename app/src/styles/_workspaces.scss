@@ -330,3 +330,37 @@
     }
   }
 }
+
+/* the Objects / Properties switches at the bottom left of the view (phones held upright only) */
+.panel-toggles {
+  display: none;
+}
+
+@media (max-width: 639px) and (pointer: coarse) {
+  .panel-toggles {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    z-index: 6;
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: calc(var(--radius) + 2px);
+    background: var(--glass);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+
+    button {
+      height: 32px;
+      padding: 0 12px;
+      border-radius: var(--radius);
+      color: var(--muted);
+      font-size: $font-m;
+      font-weight: 560;
+
+      &.on {
+        @include accent-on;
+      }
+    }
+  }
+}

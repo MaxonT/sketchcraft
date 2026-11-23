@@ -105,6 +105,7 @@ export default {
   "menu.entityInfo": "图元信息",
   "tab.panel": "侧边面板",
   "tab.properties": "属性",
+  "tab.objects": "对象",
   "tab.hasSelection": "已选中对象",
   "menu.learn": "学习中心",
   "menu.commands": "搜索命令…",

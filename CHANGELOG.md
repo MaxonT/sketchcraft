@@ -36,6 +36,8 @@ What changed in each SketchCraft release, newest first. The format follows
 - **Phones held upright show the model.** The side panels (248 and 272 px) left a 412 px-wide phone no room for
   the 3D view in portrait. On narrow touch screens the view now takes the top of the screen and the panels share the
   space under it. Computers and landscape are unchanged. (Refs #125)
+- **Objects and Properties switches on the phone.** In portrait, two switches at the bottom left of the view show
+  and hide the panels, so the model can have the whole screen. (Refs #125)
 - **Plugins work on macOS and Linux again.** Before running a plugin, SketchCraft checks that the plugin sandbox can't
   reach the network or load outside code. On WebKit (the macOS app and the Linux builds) that check waited for
   violation reports WebKit never sends from inside a worker, so it decided the sandbox was open and turned plugins off
