@@ -12,7 +12,7 @@ type Row = { cmd: string; command: unknown; status: "ok" | "refused" | "error" |
 type Turn =
   | { kind: "user"; text: string }
   | { kind: "note"; text: string; bad?: boolean }
-  | { kind: "ai"; rows: Row[]; raw?: string; error?: string; ms: number; changed: boolean; undone?: boolean };
+  | { kind: "ai"; rows: Row[]; raw?: string; error?: string; ms: number; changed: boolean; undone?: boolean; notes?: string[] };
 
 const URL_KEY = "sketchcraft.ai.url";
 const readUrl = () => {
@@ -79,7 +79,7 @@ export function AiPanel({ scene, run, refresh, say, importFile }: { scene: Scene
     setText("");
     push({ kind: "user", text: request });
     const t0 = Date.now();
-    let rows: Row[] = [], error: string | undefined, raw: string | undefined, changed = false;
+    let rows: Row[] = [], error: string | undefined, raw: string | undefined, changed = false, notes: string[] = [];
     try {
       const state = await invoke<string>("ai_state");
       const got = await invoke<{ text: string }>("ai_chat", { messages: chatMessages(state, request), url: url.trim() || null });
@@ -87,7 +87,8 @@ export function AiPanel({ scene, run, refresh, say, importFile }: { scene: Scene
       const parsed = parseAnswer(got.text);
       if (!parsed) error = "The model's answer was not a command list.";
       else {
-        const done = await invoke<{ ok: boolean; error?: string; rows: Row[]; changed?: boolean }>("ai_apply", { commands: repair(parsed, knownNames(state)) });
+        const done = await invoke<{ ok: boolean; error?: string; rows: Row[]; changed?: boolean; notes?: string[] }>("ai_apply", { commands: repair(parsed, knownNames(state)) });
+        notes = done.notes ?? [];
         rows = done.rows;
         changed = !!done.changed;
         if (!done.ok) error = done.error;
@@ -96,7 +97,7 @@ export function AiPanel({ scene, run, refresh, say, importFile }: { scene: Scene
       error = String(e);
     }
     setLog((l) => l.map((t) => (t.kind === "ai" ? { ...t, undoable: false } : t)));
-    push({ kind: "ai", rows, raw: error && rows.length === 0 ? raw?.slice(0, 200) : undefined, error, ms: Date.now() - t0, changed });
+    push({ kind: "ai", rows, raw: error && rows.length === 0 ? raw?.slice(0, 200) : undefined, error, ms: Date.now() - t0, changed, notes });
     await refresh();
     setBusy(false);
   };
@@ -146,6 +147,7 @@ export function AiPanel({ scene, run, refresh, say, importFile }: { scene: Scene
                 </div>
               ))}
               {t.error && <div className="aibox-err">{t.error}{t.raw ? ` (${t.raw})` : ""}</div>}
+              {t.notes?.map((note, k) => <div key={k} className="aibox-meta" data-testid="ai-note">{note}</div>)}
               {!t.error && <div className="aibox-meta">{t.undone ? "undone" : t.changed ? "changed the model (one Undo)" : "no change"} · {(t.ms / 1000).toFixed(1)} s</div>}
               {t.changed && !t.undone && i === lastAi && !busy && <button className="btn small" data-testid="ai-undo" onClick={() => void undo(i)}>Undo this answer</button>}
             </div>

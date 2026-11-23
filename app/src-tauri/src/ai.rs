@@ -141,7 +141,7 @@ pub fn state(live: &mut Live) -> String {
             let b = &info["bounds"];
             let d = |i: usize| b["max"][i].as_f64().unwrap_or(0.0) - b["min"][i].as_f64().unwrap_or(0.0);
             let _ = t;
-            out.push(format!("Loose (ungrouped) geometry, {} faces, {} m (x) by {} m (y) by {} m tall, one corner at ({}, {}, {}). @top is its top face.", faces, n(&json!(d(0))), n(&json!(d(1))), n(&json!(d(2))), n(&b["min"][0]), n(&b["min"][1]), n(&b["min"][2])));
+            out.push(format!("Loose (ungrouped) geometry, {} faces, {} m (x) by {} m (y) by {} m tall, one corner at ({}, {}, {}). @loose is all of it; @top is its top face.", faces, n(&json!(d(0))), n(&json!(d(1))), n(&json!(d(2))), n(&b["min"][0]), n(&b["min"][1]), n(&b["min"][2])));
         }
     }
     let b = &info["bounds"];
@@ -168,9 +168,10 @@ pub fn apply(live: &mut Live, answer: &Value) -> Value {
         return json!({"ok": false, "error": format!("the model proposed {} commands (limit {MAX_COMMANDS}); nothing was run", list.len()), "rows": []});
     }
     let caller = agent();
+    let (list, notes) = resolve_names(live, list);
     let mut rows: Vec<Value> = Vec::new();
     let mut runnable: Vec<(usize, Value)> = Vec::new();
-    for c in list {
+    for c in &list {
         let name = c.get("cmd").and_then(Value::as_str).unwrap_or("");
         if c.is_object() && MODEL_ALLOW.contains(&name) && sketchcraft::policy::permits(&caller, name) {
             rows.push(json!({"cmd": name, "command": c, "status": "pending"}));
@@ -206,12 +207,152 @@ pub fn apply(live: &mut Live, answer: &Value) -> Value {
     }
     // did the answer change the model (a new undo step)? A question does not.
     let changed = live.engine.undo_depth() != depth_before;
-    json!({"ok": true, "rows": rows, "changed": changed})
+    json!({"ok": true, "rows": rows, "changed": changed, "notes": notes})
+}
+
+/// The loose (ungrouped) faces of the model, as ids.
+fn loose_faces(live: &mut Live) -> Vec<Value> {
+    let r = live.exec_as(&agent(), &json!({"cmd": "faces"}));
+    r["faces"].as_array().map(|a| a.iter().filter(|f| f["group"].is_null()).filter_map(|f| f["id"].as_u64()).map(|id| json!(id)).collect()).unwrap_or_default()
+}
+
+/// Every `@name` an answer uses, and the ones it makes itself with `"as"`.
+fn names_in(v: &Value, used: &mut Vec<String>, made: &mut Vec<String>) {
+    match v {
+        Value::String(s) if s.starts_with('@') => used.push(s[1..].to_string()),
+        Value::Array(a) => a.iter().for_each(|x| names_in(x, used, made)),
+        Value::Object(o) => {
+            if let Some(Value::String(n)) = o.get("as") {
+                made.push(n.trim_start_matches('@').to_string());
+            }
+            o.values().for_each(|x| names_in(x, used, made));
+        }
+        _ => {}
+    }
+}
+
+/// Before an answer runs: a name the model invented ("@box" for "the box") is read as the one thing in the model, when
+/// there is exactly one (a single group or component, or only loose geometry); and `@loose` in a list of ids becomes
+/// the loose faces. Each change is reported in `notes`, never made silently.
+fn resolve_names(live: &mut Live, list: &[Value]) -> (Vec<Value>, Vec<String>) {
+    let (mut used, mut made) = (Vec::new(), Vec::new());
+    list.iter().for_each(|c| names_in(c, &mut used, &mut made));
+    let mut notes = Vec::new();
+    let known = |live: &Live, n: &str| live.engine.names.contains_key(n);
+    let unknown: Vec<String> = used.iter().filter(|n| *n != "loose" && !made.contains(n) && !known(live, n)).cloned().collect::<std::collections::BTreeSet<_>>().into_iter().collect();
+    let mut rename: Option<(Vec<String>, String)> = None;
+    if !unknown.is_empty() {
+        let parts = live.exec_as(&agent(), &json!({"cmd": "parts"}));
+        let plist = parts["parts"].as_array().cloned().unwrap_or_default();
+        let loose = loose_faces(live);
+        let only = if plist.len() == 1 && loose.is_empty() {
+            plist[0]["name"].as_str().map(ident).filter(|k| known(live, k))
+        } else if plist.is_empty() && !loose.is_empty() {
+            Some("loose".to_string())
+        } else {
+            None
+        };
+        if let Some(target) = only {
+            for n in &unknown {
+                notes.push(format!("read @{n} as @{target}, the only thing in the model"));
+            }
+            rename = Some((unknown, target));
+        }
+    }
+    let needs_loose = used.iter().any(|n| n == "loose") || rename.as_ref().is_some_and(|(_, t)| t == "loose");
+    let loose = if needs_loose { loose_faces(live) } else { Vec::new() };
+    fn walk(v: &Value, rename: &Option<(Vec<String>, String)>, loose: &[Value]) -> Value {
+        let name_of = |s: &str| -> Option<String> {
+            let n = s.strip_prefix('@')?;
+            Some(match rename {
+                Some((from, to)) if from.iter().any(|f| f == n) => to.clone(),
+                _ => n.to_string(),
+            })
+        };
+        match v {
+            Value::String(s) => match name_of(s) {
+                Some(n) => json!(format!("@{n}")),
+                None => v.clone(),
+            },
+            Value::Array(a) => {
+                let mut out = Vec::new();
+                for x in a {
+                    if let Value::String(s) = x {
+                        if name_of(s).as_deref() == Some("loose") && !loose.is_empty() {
+                            out.extend(loose.iter().cloned());
+                            continue;
+                        }
+                    }
+                    out.push(walk(x, rename, loose));
+                }
+                Value::Array(out)
+            }
+            Value::Object(o) => Value::Object(o.iter().map(|(k, x)| (k.clone(), walk(x, rename, loose))).collect()),
+            _ => v.clone(),
+        }
+    }
+    if needs_loose && !loose.is_empty() && used.iter().any(|n| n == "loose") {
+        notes.push(format!("@loose is the {} loose faces", loose.len()));
+    }
+    (list.iter().map(|c| walk(c, &rename, &loose)).collect(), notes)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn scratch(tag: &str) -> Live {
+        let dir = std::env::temp_dir().join(format!("sc-ai-{tag}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        Live::open(dir.join("m.sketchcraft"))
+    }
+
+    fn loose_box(live: &mut Live) {
+        let c = agent();
+        assert_eq!(live.exec_as(&c, &json!({"cmd": "rect", "from": [0, 0, 0], "to": [2, 2, 0], "as": "b"}))["ok"], true);
+        assert_eq!(live.exec_as(&c, &json!({"cmd": "pushpull", "face": "@b", "distance": 2, "toward": [0, 0, 1]}))["ok"], true);
+    }
+
+    #[test]
+    fn loose_geometry_has_a_name_and_an_invented_one_is_read_as_it() {
+        let mut live = scratch("loose");
+        loose_box(&mut live);
+        let st = state(&mut live);
+        assert!(st.contains("@loose is all of it"), "{st}");
+        // what v5 answered for "soften the box's edges" on a loose box
+        let r = apply(&mut live, &json!([{"cmd": "soften", "ids": ["@box"]}]));
+        assert_eq!(r["rows"][0]["status"], "ok", "{r}");
+        let notes = r["notes"].to_string();
+        assert!(notes.contains("read @box as @loose"), "{notes}");
+        // @loose itself works too
+        let r = apply(&mut live, &json!([{"cmd": "soften", "ids": ["@loose"], "soft": false}]));
+        assert_eq!(r["rows"][0]["status"], "ok", "{r}");
+    }
+
+    #[test]
+    fn names_the_answer_makes_itself_are_left_alone() {
+        let mut live = scratch("made");
+        let r = apply(&mut live, &json!([{"cmd": "rect", "from": [0, 0, 0], "to": [1, 1, 0], "as": "base"}, {"cmd": "pushpull", "face": "@base", "distance": 1, "toward": [0, 0, 1]}]));
+        assert_eq!(r["rows"][1]["status"], "ok", "{r}");
+        assert_eq!(r["notes"], json!([]));
+    }
+
+    #[test]
+    fn an_invented_name_with_two_things_in_the_model_still_fails_honestly() {
+        let mut live = scratch("two");
+        let c = agent();
+        for (name, x) in [("A", 0), ("B", 5)] {
+            live.exec_as(&c, &json!({"cmd": "begin_group", "name": name}));
+            live.exec_as(&c, &json!({"cmd": "rect", "from": [x, 0, 0], "to": [x + 1, 1, 0], "as": "f"}));
+            live.exec_as(&c, &json!({"cmd": "pushpull", "face": "@f", "distance": 1, "toward": [0, 0, 1]}));
+            live.exec_as(&c, &json!({"cmd": "end_group"}));
+        }
+        state(&mut live);
+        let r = apply(&mut live, &json!([{"cmd": "soften", "ids": ["@box"]}]));
+        assert_eq!(r["rows"][0]["status"], "error", "{r}");
+        assert_eq!(r["notes"], json!([]));
+    }
 
     #[test]
     fn loopback_only() {
