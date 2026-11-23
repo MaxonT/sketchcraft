@@ -155,6 +155,16 @@ pub enum Command {
         #[serde(default)]
         gap: Option<f64>,
     },
+    /// Show the parts laid out flat (`on`: true) or the model as it is (false). Laid out, the view and `render`
+    /// draw every part where `parts_layout` puts it, leave out what is not a part, and changes are refused until
+    /// it is switched off (New and Open switch it off). Nothing in the model moves; not an undo step, never saved.
+    LayOutParts {
+        on: bool,
+        #[serde(default)]
+        ids: Vec<Id>,
+        #[serde(default)]
+        gap: Option<f64>,
+    },
     /// The plugins: built in, and those in ~/Documents/SketchCraft/Plugins.
     Plugins,
     /// Turn a plugin on or off (remembered in the Plugins folder).

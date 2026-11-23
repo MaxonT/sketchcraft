@@ -131,6 +131,7 @@ impl Command {
                 | Command::Info
                 | Command::Parts { .. }
                 | Command::PartsLayout { .. }
+                | Command::LayOutParts { .. }
                 | Command::Plugins
                 | Command::PluginEnable { .. }
                 | Command::InstallPlugin { .. }
@@ -182,6 +183,16 @@ impl Command {
     }
 }
 
+/// What `lay_out_parts` was asked to show.
+#[derive(Clone, Debug, Default)]
+pub struct LayOutRequest {
+    pub ids: Vec<Id>,
+    pub gap: Option<f64>,
+}
+
+/// Why a change is refused while the parts are laid out.
+pub const LAID_OUT_REFUSAL: &str = "The parts are laid out to look at. Switch back to the model (View > Lay out parts) to change it.";
+
 #[derive(Default)]
 pub struct Engine {
     pub model: Model,
@@ -192,6 +203,9 @@ pub struct Engine {
     pub names: HashMap<String, Id>,
     /// Component definition being edited (`edit`), if any.
     pub ctx: Option<Id>,
+    /// The parts are laid out flat to look at (`lay_out_parts`): which parts and what gap. Only the request is kept;
+    /// the view is worked out from the model each time it is drawn, so it is never out of date. Never saved.
+    pub laid_out: Option<LayOutRequest>,
     /// bumps on every change to the model (progressive renders start over)
     revision: u64,
     /// a photoreal render in progress
@@ -291,6 +305,20 @@ fn v3(a: [f64; 3]) -> DVec3 {
 impl Engine {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// What pictures of the model show: the laid-out view while the parts are laid out, otherwise the model.
+    pub fn shown_model(&self) -> std::borrow::Cow<'_, Model> {
+        match self.laid_out_view() {
+            Some(v) => std::borrow::Cow::Owned(v.model),
+            None => std::borrow::Cow::Borrowed(&self.model),
+        }
+    }
+
+    /// The laid-out view of the model as it is now, when the parts are laid out (see `lay_out_parts`).
+    pub fn laid_out_view(&self) -> Option<crate::parts_layout::LaidOutView> {
+        let r = self.laid_out.as_ref()?;
+        crate::parts_layout::laid_out_view(&self.model, &r.ids, r.gap).ok()
     }
 
     /// Run one JSON command line as the person using the app (no limits on
@@ -747,6 +775,10 @@ impl Engine {
                 return json!({"ok": false, "error": ro.refusal(), "read_only": true});
             }
         }
+        // laid out, the parts are only looked at: changes wait until the model is back (New and Open end the view)
+        if self.laid_out.is_some() && (cmd.mutates() || is_env || matches!(cmd, Command::Undo | Command::Redo | Command::BeginBatch)) && !matches!(cmd, Command::New { .. } | Command::Open { .. }) {
+            return json!({"ok": false, "error": LAID_OUT_REFUSAL, "laid_out": true});
+        }
         let was_read_only = self.read_only.clone();
         let is_new = matches!(cmd, Command::New { .. });
         // opening a file replaces the model and the history with it: Undo must never
@@ -789,6 +821,10 @@ impl Engine {
             self.run(cmd).map(|mut v| {
                 if is_new {
                     self.read_only = None;
+                }
+                // a new or opened model ends the laid-out view (a reload by `Live` puts it back)
+                if is_new || is_open {
+                    self.laid_out = None;
                 }
                 // dimensions on sheets follow what the command did, in the same undo step (see `anchors`)
                 if mutates && !is_new && !is_open {
@@ -1067,7 +1103,7 @@ impl Engine {
             c @ (
                 Command::Guide { .. } | Command::Dimension { .. } | Command::Text { .. } | Command::Units { .. } |
                 Command::ClearGuides { .. } | Command::ShowView { .. } | Command::SaveView { .. } |
-                Command::MatchPhoto { .. } | Command::DeleteView { .. } | Command::Parts { .. } | Command::PartsLayout { .. } |
+                Command::MatchPhoto { .. } | Command::DeleteView { .. } | Command::Parts { .. } | Command::PartsLayout { .. } | Command::LayOutParts { .. } |
                 Command::Info { .. } | Command::ProjectPhoto { .. } | Command::PhotoSolve { .. } |
                 Command::Finish { .. } | Command::Options { .. } | Command::Report { .. }
             ) => self.run_annotate(c),

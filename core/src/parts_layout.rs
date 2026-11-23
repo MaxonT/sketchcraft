@@ -4,10 +4,14 @@
 //! `plugins::measure`'s, the same one `parts` reports.
 
 use crate::model::{Id, Model};
+use std::collections::BTreeSet;
 use crate::plugins::{measure, tidy, tidy3, Measured};
 use anyhow::{bail, Result};
 use glam::{DMat3, DMat4, DVec3};
 use serde_json::{json, Value};
+
+/// The Dynamic Component attributes that place and turn a placement (they win over its transform).
+const PLACE_KEYS: [&str; 6] = ["x", "y", "z", "rotx", "roty", "rotz"];
 
 /// The widest gap that can be asked for, in meters.
 pub const MAX_GAP: f64 = 10.0;
@@ -107,4 +111,103 @@ pub fn reply(m: &Model, ids: &[Id], gap: Option<f64>) -> Result<Value> {
         })
         .collect();
     Ok(json!({"parts": parts, "gap": gap, "bounds": bounds, "units": m.units}))
+}
+
+/// The model as it looks with its parts laid out: a copy with every part turned and moved to its place, and
+/// whatever is not a part (loose geometry, the faces of groups that hold other groups, scale figures, notes,
+/// guides, section planes, point clouds) left out. For drawing only: it is never saved and nothing edits it.
+pub struct LaidOutView {
+    pub model: Model,
+    pub laid: Vec<Laid>,
+    pub gap: f64,
+    /// visible faces outside every group: geometry that is no part, so it is not shown (and the view says so)
+    pub loose_faces: usize,
+}
+
+pub fn laid_out_view(m: &Model, ids: &[Id], gap: Option<f64>) -> Result<LaidOutView> {
+    let (laid, gap) = lay_out(m, ids, gap)?;
+    let mut v = m.clone();
+    let placements: BTreeSet<Id> = laid.iter().filter(|l| l.part.kind == "component").map(|l| l.part.id).collect();
+    // a group part is measured with every group inside it (asked for by id, a group can hold groups): it moves whole
+    let mut shown: BTreeSet<Id> = BTreeSet::new();
+    let mut placements = placements;
+    for l in &laid {
+        if l.part.kind == "group" {
+            let tree = m.subtree(l.part.id);
+            shown.extend(tree.iter().copied());
+            // the corners its faces and edges use: every group has its own, so each moves once
+            let mine = |g: Option<Id>| g.is_some_and(|g| tree.contains(&g));
+            let mut corners: BTreeSet<Id> = v.faces.values().filter(|f| mine(f.group)).flat_map(|f| f.loops().flatten().copied().collect::<Vec<_>>()).collect();
+            corners.extend(v.edges.values().filter(|e| mine(e.group)).flat_map(|e| [e.a, e.b]));
+            for c in corners {
+                if let Some(x) = v.vertices.get_mut(&c) {
+                    x.p = l.transform.transform_point3(x.p);
+                }
+            }
+            // components placed inside it (that are not parts of their own) go with it
+            let inside: Vec<Id> = m.instances.iter().filter(|(id, i)| i.parent.is_some_and(|p| tree.contains(&p)) && !laid.iter().any(|o| o.part.id == **id)).map(|(id, _)| *id).collect();
+            for id in inside {
+                if let Some(i) = v.instances.get_mut(&id) {
+                    i.transform = l.transform * i.transform;
+                    placements.insert(id);
+                }
+            }
+        } else if let Some(i) = v.instances.get_mut(&l.part.id) {
+            let def = m.definitions.get(&i.def);
+            let drawn = def.map(|d| Model::placement_transforms(m, &m.instances[&l.part.id], d)).unwrap_or_default();
+            i.transform = l.transform * i.transform;
+            // a Dynamic Component may take its place and turn from its attributes (x, y, z, rotx, roty, rotz), which
+            // win over its transform: give the copy the laid-out ones, worked out from where it is drawn now
+            let placed_by_attrs = crate::dynamic::attrs_of(i, def).keys().any(|k| PLACE_KEYS.contains(&k.as_str()));
+            if let (true, Some(base)) = (placed_by_attrs, drawn.first()) {
+                let (_, rot, pos) = (l.transform * *base).to_scale_rotation_translation();
+                let (z, y, x) = rot.to_euler(glam::EulerRot::ZYX);
+                i.attrs.retain(|k, _| !PLACE_KEYS.contains(&k.to_ascii_lowercase().as_str()));
+                for (k, val) in [("x", pos.x), ("y", pos.y), ("z", pos.z), ("rotx", x.to_degrees()), ("roty", y.to_degrees()), ("rotz", z.to_degrees())] {
+                    i.attrs.insert(k.to_string(), format!("{val}"));
+                }
+            }
+        }
+    }
+    let loose_faces = m.faces.values().filter(|f| f.group.is_none() && !f.hidden).count();
+    for f in v.faces.values_mut() {
+        if !f.group.is_some_and(|g| shown.contains(&g)) {
+            f.hidden = true;
+        }
+    }
+    for e in v.edges.values_mut() {
+        if !e.group.is_some_and(|g| shown.contains(&g)) {
+            e.hidden = true;
+        }
+    }
+    for (id, i) in v.instances.iter_mut() {
+        if !placements.contains(id) {
+            i.hidden = true;
+        }
+    }
+    // what points at places in the assembled model has no place in the laid-out one
+    v.annotations.clear();
+    v.guides.clear();
+    v.sections.clear();
+    v.active_section = None;
+    v.cages.clear();
+    v.photo_points.clear();
+    v.photo_edges.clear();
+    v.photo_guides.clear();
+    v.clouds.clear();
+    Ok(LaidOutView { model: v, laid, gap, loose_faces })
+}
+
+/// What the app shows about the laid-out view: each part (to name a clicked one), the gap, and what was left out.
+pub fn summary(view: &LaidOutView) -> Value {
+    let bounds = (!view.laid.is_empty()).then(|| {
+        let (lo, hi) = view.laid.iter().fold((DVec3::splat(f64::MAX), DVec3::splat(f64::MIN)), |(lo, hi), l| (lo.min(l.min), hi.max(l.max)));
+        json!({"min": tidy3(lo, 1e-9), "max": tidy3(hi, 1e-9)})
+    });
+    json!({
+        "parts": view.laid.iter().map(|l| json!({"id": l.part.id, "name": l.part.name, "kind": l.part.kind, "material": l.part.material, "size": l.part.size})).collect::<Vec<_>>(),
+        "gap": view.gap,
+        "bounds": bounds,
+        "loose_faces": view.loose_faces,
+    })
 }

@@ -179,6 +179,8 @@ impl Live {
         }
         // a reload keeps the component being edited, if it is still there
         let ctx = self.engine.ctx;
+        // and the parts laid out to look at (worked out again from what was read in)
+        let laid_out = self.engine.laid_out.clone();
         // and the group being edited (it is this program's own state: the file's one belongs to whoever saved it)
         let active = self.engine.model.active_group;
         // the person's own steps are kept as changes (what each step did), so that Undo after another
@@ -195,6 +197,9 @@ impl Live {
         {
             if let Some(d) = ctx.filter(|d| self.engine.model.definitions.contains_key(d)) {
                 self.engine.ctx = Some(d);
+            }
+            if !at_start {
+                self.engine.laid_out = laid_out;
             }
             if let Some(g) = active.filter(|g| !at_start && self.engine.model.groups.contains_key(g)) {
                 self.engine.model.active_group = Some(g);
@@ -444,6 +449,10 @@ impl Live {
         let name = cmd["cmd"].as_str().unwrap_or("");
         // the person's own list of backups and the restore (only the app's own user; never a plugin or an agent)
         if matches!(name, "list_backups" | "restore_backup") {
+            // restoring replaces the model: like every change, it waits until the parts are no longer laid out
+            if name == "restore_backup" && self.engine.laid_out.is_some() {
+                return json!({"ok": false, "error": crate::commands::LAID_OUT_REFUSAL, "laid_out": true});
+            }
             return if matches!(caller, Caller::Ui) { self.restore_command(name, cmd) } else { json!({"ok": false, "error": format!("\"{name}\" isn't available to plugins or agents")}) };
         }
         let origin = Origin::of(caller);
@@ -755,9 +764,15 @@ impl Live {
 
     pub fn scene(&self) -> Value {
         // a model that is damaged in some way nobody thought of must not take the bridge or the app down on every poll
-        let built = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| crate::scene::build(&self.engine.model, self.engine.ctx)));
+        // laid out, the view draws the laid-out copy of the model as it is now, and says which parts it shows
+        let laid = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| self.engine.laid_out_view())).ok().flatten();
+        let built = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| match &laid {
+            Some(v) => crate::scene::build(&v.model, None),
+            None => crate::scene::build(&self.engine.model, self.engine.ctx),
+        }));
         let mut s = built.unwrap_or_else(|_| json!({"faces": [], "edges": [], "error": "SketchCraft couldn't draw this model (it holds something inconsistent). Restore from a backup (File > Restore from backup...) or open another file."}));
         s["doc"] = json!(self.doc);
+        s["laid_out"] = laid.as_ref().map_or(Value::Null, crate::parts_layout::summary);
         s["read_only"] = json!(self.engine.read_only.as_ref().map(|r| r.reasons.clone()));
         // who made the step Undo (and Redo) would take back, so the buttons can say
         s["undo_origin"] = json!(self.engine.undo_origin());

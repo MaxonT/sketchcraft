@@ -75,6 +75,7 @@ export default {
   "menu.notes": "Quote ed etichette",
   "menu.coach": "Guida dello strumento",
   "menu.hideRest": "Nascondi il resto del modello",
+  "menu.layOutParts": "Disponi i pezzi",
   "menu.plan": "Taglio in pianta",
   "menu.clearSection": "Rimuovi il taglio di sezione",
   "menu.leftPanel": "Pannello sinistro",
@@ -494,5 +495,8 @@ export default {
   "proj.clear": "Rimuovi proiezione",
   "proj.clear.tip": "Torna alla posizione originale dell'immagine su queste facce",
   "proj.done": "Texture proiettata. Annulla la ripristina.",
-  "proj.cleared": "Proiezione rimossa."
+  "proj.cleared": "Proiezione rimossa.",
+  "laidOut.bar": "Pezzi disposti in piano: {n}. Le modifiche aspettano il ritorno al modello.",
+  "laidOut.loose": "Facce fuori da ogni gruppo non mostrate: {n}.",
+  "laidOut.back": "Torna al modello",
 };

@@ -74,6 +74,7 @@ export default {
   "menu.notes": "Dimensions and labels",
   "menu.coach": "Tool coach",
   "menu.hideRest": "Hide rest of model",
+  "menu.layOutParts": "Lay out parts",
   "menu.plan": "Floor plan cut",
   "menu.clearSection": "Remove section cut",
   "menu.leftPanel": "Left panel",
@@ -493,5 +494,8 @@ export default {
   "proj.clear": "Remove projection",
   "proj.clear.tip": "Go back to the picture's own placement on these faces",
   "proj.done": "Texture projected. Undo takes it back.",
-  "proj.cleared": "Projection removed."
+  "proj.cleared": "Projection removed.",
+  "laidOut.bar": "Parts laid out flat: {n}. Changes wait until you are back in the model.",
+  "laidOut.loose": "Faces in no group are not shown: {n}.",
+  "laidOut.back": "Back to the model",
 };

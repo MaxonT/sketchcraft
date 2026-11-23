@@ -201,6 +201,7 @@ export const MENU_COMMANDS: CommandDef[] = [
   c("view.vertexcolors", "Vertex colours", "View"),
   c("view.parallel", "Parallel projection", "View"),
   c("view.hiderest", "Hide rest of model", "View"),
+  c("view.laidout", "Lay out parts", "View"),
   c("ws.model", "Model workspace", "Window"),
   c("ws.arch", "Arch workspace", "Window"),
   c("ws.design", "Design workspace", "Window"),

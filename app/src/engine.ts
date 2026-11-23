@@ -153,7 +153,18 @@ export interface SectionInfo {
   normal: Vec3;
 }
 
+/** the parts laid out flat (`lay_out_parts`): what the view shows instead of the model */
+export interface LaidOut {
+  parts: { id: number; name: string; kind: "group" | "component"; material: string | null; size: [number, number, number] }[];
+  gap: number;
+  bounds: { min: [number, number, number]; max: [number, number, number] } | null;
+  /** visible faces in no group: no part, so not shown */
+  loose_faces: number;
+}
+
 export interface Scene {
+  /** the parts are laid out flat to look at; null or absent: the model as it is */
+  laid_out?: LaidOut | null;
   /** who made the step Undo would take back / Redo would do again: "you", "plugin “X”", "an agent" */
   undo_origin?: string | null;
   redo_origin?: string | null;
