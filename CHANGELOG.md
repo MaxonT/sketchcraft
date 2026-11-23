@@ -7,6 +7,12 @@ What changed in each SketchCraft release, newest first. The format follows
 ## [Unreleased]
 
 ### Added
+- **Name things in Properties.** Select a group or component and type its name in **Properties › Name**; select loose
+  faces and naming them groups them under that name.
+- **SketchCraft AI (labs, hidden).** The local AI box is in the app but switched off while the model is trained and
+  tested: the AI tab and top-bar button appear only with `localStorage.setItem("sketchcraft.labs.ai", "1")`. It runs a
+  model on this machine (loopback only), as an agent limited to modeling commands, one undo step per answer, and keeps a
+  debug log of every turn in `AI debug/` beside the model.
 - **The cut list knows lumber.** A board whose cross-section is real dimensional lumber shows as **2×4**, **1×6**,
   **4×4** and so on (a 2×4 is 1½" × 3½"; either way round), in the list and in what to buy, and every board line has
   its **board feet**: by the nominal size for dimensional lumber, as lumber yards price it (an 8 ft 2×4 is 5.33), by the
@@ -33,6 +39,8 @@ What changed in each SketchCraft release, newest first. The format follows
   native speakers are welcome.
 
 ### Fixed
+- **Soften takes a group.** `soften` with a group softens the edges of every face inside it (nested groups too); it
+  used to refuse a group as "not an edge or face".
 - **SketchUp files open on Android.** File › Open and File › Import on the phone greyed out `.skp` files (Android
   has no file type for them) and, when one was picked anyway, handed the app a `content://` link it tried to read as an
   OBJ. The phone now picks through the app's own file chooser, which reads the file whatever its type, so `.skp`,
@@ -213,6 +221,10 @@ What changed in each SketchCraft release, newest first. The format follows
 ## [0.3.8] - 2026-11-18
 
 ### Added
+- **Build a whole house from a room list.** `floorplan_build` (for AI agents and plugins) takes floors of rooms, doors,
+  windows, open-plan sides and stairs, in meters or feet, and builds the walls (shared walls once), cuts the openings,
+  names each room and stacks the floors, as one undo step. `room_info` answers "how big is the master?" with the
+  room's area in square feet and square meters.
 - **Big drawing sets use far less memory and redraw faster.** The 52-page A1 permit set (about 200,000 faces) missed two
   of its budgets the first time it was measured: it peaked at 1.94 GB of memory (budget 1.5 GB) and its slowest drawing
   took 1.06 s to redraw after a wall moved (budget 1 s). Drawings kept for the pages now hold their plain lines packed

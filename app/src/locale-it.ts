@@ -107,6 +107,7 @@ export default {
   "tab.panel": "Pannello laterale",
   "tab.properties": "Proprietà",
   "tab.objects": "Oggetti",
+  "tab.ai": "AI",
   "tab.hasSelection": "Qualcosa è selezionato",
   "menu.learn": "Centro didattico",
   "menu.commands": "Cerca comandi…",
