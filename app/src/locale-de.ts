@@ -107,6 +107,7 @@ export default {
   "tab.panel": "Seitenfenster",
   "tab.properties": "Eigenschaften",
   "tab.objects": "Objekte",
+  "tab.ai": "KI",
   "tab.hasSelection": "Etwas ist ausgewählt",
   "menu.learn": "Lernzentrum",
   "menu.commands": "Befehle suchen…",
