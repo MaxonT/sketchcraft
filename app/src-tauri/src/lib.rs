@@ -10,6 +10,8 @@
 //! writes it, so you and an AI agent can work on the same model at once.
 
 use sketchcraft::live::Live;
+
+mod photocraft;
 use serde_json::Value;
 use std::sync::Mutex;
 use tauri::Manager;
@@ -135,6 +137,67 @@ fn release_files_ok(release: &tauri_plugin_updater::RemoteRelease) -> bool {
     }
 }
 
+
+/// Where the PhotoCraft files live: a `Textures` folder beside the model.
+fn textures_dir(state: &tauri::State<App>) -> std::path::PathBuf {
+    let doc = engine(state).doc.clone();
+    doc.parent().map(|d| d.join("Textures")).unwrap_or_else(|| std::path::PathBuf::from("Textures"))
+}
+
+fn hash_of(bytes: &[u8]) -> String {
+    use std::hash::{Hash, Hasher};
+    let mut h = std::collections::hash_map::DefaultHasher::new();
+    bytes.hash(&mut h);
+    format!("{:016x}", h.finish())
+}
+
+/// The picture SketchCraft last wrote to, or read from, a material's `.ora` (to tell whether it still matches).
+fn last_hash_path(ora: &std::path::Path) -> std::path::PathBuf {
+    ora.with_extension("ora.sketchcraft")
+}
+
+/// Open a material's picture in PhotoCraft: `texture` is its data: URL, `guide` the UV layout drawn at the same size.
+/// The `.ora` from last time is reopened while the material still has the picture that came back from it (so its
+/// PhotoCraft layers are kept); otherwise it's written fresh, the old one kept as `.ora.bak`.
+#[tauri::command]
+fn photocraft_open(state: tauri::State<App>, material: String, texture: String, guide: Option<String>) -> Result<Value, String> {
+    let ora = photocraft::ora_path(&textures_dir(&state), &material);
+    let tex = photocraft::decode_data_url(&texture)?;
+    let current = hash_of(&tex);
+    let reuse = ora.is_file() && std::fs::read_to_string(last_hash_path(&ora)).map(|h| h.trim() == current).unwrap_or(false);
+    if !reuse {
+        if ora.is_file() {
+            let _ = std::fs::rename(&ora, ora.with_extension("ora.bak"));
+        }
+        let guide = guide.map(|g| photocraft::decode_data_url(&g)).transpose()?;
+        photocraft::write_ora(&ora, &tex, guide.as_deref())?;
+        std::fs::write(last_hash_path(&ora), &current).map_err(|e| e.to_string())?;
+    }
+    #[cfg(desktop)]
+    photocraft::launch(&ora)?;
+    #[cfg(mobile)]
+    return Err("PhotoCraft runs on computers".into());
+    #[allow(unreachable_code)]
+    Ok(serde_json::json!({"path": ora.display().to_string(), "modified": photocraft::modified(&ora), "reused": reuse}))
+}
+
+/// Has the material's `.ora` been saved since `since` (ms)? Then its picture, flattened without the UV guide, as a
+/// PNG data: URL. `psd`: PhotoCraft saved a PSD beside it instead (the document holds something OpenRaster can't).
+#[tauri::command]
+fn photocraft_poll(state: tauri::State<App>, material: String, since: u64) -> Result<Value, String> {
+    use base64::Engine as _;
+    let ora = photocraft::ora_path(&textures_dir(&state), &material);
+    let m = photocraft::modified(&ora);
+    let psd = photocraft::modified(&ora.with_extension("psd"));
+    if m <= since {
+        return Ok(serde_json::json!({"modified": m, "psd": psd > since && psd > m}));
+    }
+    let png = photocraft::read_ora(&ora)?;
+    std::fs::write(last_hash_path(&ora), hash_of(&png)).map_err(|e| e.to_string())?;
+    let data = format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(&png));
+    Ok(serde_json::json!({"modified": m, "data": data}))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -199,7 +262,7 @@ pub fn run() {
             });
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![exec, scene, sync, open_releases, portable, open_guide, open_link])
+        .invoke_handler(tauri::generate_handler![exec, scene, sync, open_releases, portable, open_guide, open_link, photocraft_open, photocraft_poll])
         .build(tauri::generate_context!())
         .expect("error while building SketchCraft")
         .run(|_, event| {
