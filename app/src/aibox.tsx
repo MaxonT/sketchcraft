@@ -80,14 +80,17 @@ export function AiPanel({ scene, run, refresh, say, importFile }: { scene: Scene
     push({ kind: "user", text: request });
     const t0 = Date.now();
     let rows: Row[] = [], error: string | undefined, raw: string | undefined, changed = false, notes: string[] = [];
+    let state = "", sent: unknown = null, endpoint = "";
     try {
-      const state = await invoke<string>("ai_state");
-      const got = await invoke<{ text: string }>("ai_chat", { messages: chatMessages(state, request), url: url.trim() || null });
+      state = await invoke<string>("ai_state");
+      const got = await invoke<{ text: string; url: string }>("ai_chat", { messages: chatMessages(state, request), url: url.trim() || null });
       raw = got.text;
+      endpoint = got.url;
       const parsed = parseAnswer(got.text);
       if (!parsed) error = "The model's answer was not a command list.";
       else {
-        const done = await invoke<{ ok: boolean; error?: string; rows: Row[]; changed?: boolean; notes?: string[] }>("ai_apply", { commands: repair(parsed, knownNames(state)) });
+        sent = repair(parsed, knownNames(state));
+        const done = await invoke<{ ok: boolean; error?: string; rows: Row[]; changed?: boolean; notes?: string[] }>("ai_apply", { commands: sent });
         notes = done.notes ?? [];
         rows = done.rows;
         changed = !!done.changed;
@@ -96,8 +99,12 @@ export function AiPanel({ scene, run, refresh, say, importFile }: { scene: Scene
     } catch (e) {
       error = String(e);
     }
+    // the debugger: every turn, whole, one JSON line (src-tauri ai_log; "AI debug" folder beside the model)
+    const ms = Date.now() - t0;
+    const failed = !!error || rows.some((r) => r.status === "error" || r.status === "refused");
+    void invoke("ai_log", { entry: { at: new Date().toISOString(), request, state, endpoint, raw: raw ?? null, sent, rows, notes, changed, error: error ?? null, failed, ms } }).catch(() => {});
     setLog((l) => l.map((t) => (t.kind === "ai" ? { ...t, undoable: false } : t)));
-    push({ kind: "ai", rows, raw: error && rows.length === 0 ? raw?.slice(0, 200) : undefined, error, ms: Date.now() - t0, changed, notes });
+    push({ kind: "ai", rows, raw: error && rows.length === 0 ? raw?.slice(0, 200) : undefined, error, ms, changed, notes });
     await refresh();
     setBusy(false);
   };
