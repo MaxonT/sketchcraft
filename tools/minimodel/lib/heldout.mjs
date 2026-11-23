@@ -34,7 +34,8 @@ const nums = (x, out = []) => { if (typeof x === "number") out.push(+x.toFixed(3
 /** what an answer IS, ignoring names: starting-model kind + command names + sorted numbers */
 export const goldSig = (fixtureKind, cmds) => `${fixtureKind || "-"}|${cmds.map((c) => c.cmd).join(",")}|${nums(cmds).sort((a, b) => a - b).join(",")}`;
 
-export function makeHeldout(cases = [...loadCases(), ...(existsSync(join(dirname(fileURLToPath(import.meta.url)), "../eval/new_cases.jsonl")) ? loadCases("new") : [])]) {
+const evalFile = (f) => existsSync(join(dirname(fileURLToPath(import.meta.url)), "../eval", f));
+export function makeHeldout(cases = [...loadCases(), ...(evalFile("new_cases.jsonl") ? loadCases("new") : []), ...(evalFile("v5_cases.jsonl") ? loadCases("v5") : [])]) {
   const exact = new Map(cases.map((c) => [norm(c.request), c.id]));
   const masked = new Map(cases.map((c) => [mask(c.request), c.id]));
   const sh = cases.map((c) => shingles(c.request));

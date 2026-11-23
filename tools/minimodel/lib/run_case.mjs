@@ -9,11 +9,11 @@ import { probeErrs, probePre } from "./probe.mjs";
 const here = dirname(fileURLToPath(import.meta.url));
 const evalDir = join(here, "../eval");
 // set "plans": the route 2 plan cases (eval/plan_cases.jsonl, written by gen_plans.mjs --eval, with the owner's townhouse)
-export const loadCases = (set = "core") => readFileSync(join(evalDir, ({ plans: "plan_cases.jsonl", new: "new_cases.jsonl" })[set] || "cases.jsonl"), "utf8").trim().split("\n").map((l) => JSON.parse(l));
+export const loadCases = (set = "core") => readFileSync(join(evalDir, ({ plans: "plan_cases.jsonl", new: "new_cases.jsonl", v5: "v5_cases.jsonl" })[set] || "cases.jsonl"), "utf8").trim().split("\n").map((l) => JSON.parse(l));
 export const loadFixture = (name) => readFileSync(join(evalDir, "fixtures", `${name}.jsonl`), "utf8").split("\n").filter((l) => l.trim() && !l.startsWith("#")).map((l) => JSON.parse(l));
 export const fixtureDesc = (name) => JSON.parse(readFileSync(join(evalDir, "fixtures.json"), "utf8"))[name];
 
-export const INSPECT = new Set(["info", "parts", "faces", "volume", "pick", "components", "levels", "report", "room_info", "rooms", "room_preview", "wall_info", "texture_uv", "texture_frame", "vertex_colors", "texture_paint_status", "uv_info"]);
+export const INSPECT = new Set(["info", "parts", "faces", "volume", "pick", "components", "levels", "report", "room_info", "rooms", "room_preview", "wall_info", "texture_uv", "texture_frame", "vertex_colors", "texture_paint_status", "uv_info", "texture_pixels"]);
 export const sig = (s) => JSON.stringify([s.info.faces, s.info.bounds, (s.info.groups || []).length, (s.info.instances || []).length, s.faces.map((f) => f.material).join("|")]);
 
 /** @returns {{pass:boolean, errs:string[], stage:string, engineMs:number}} */

@@ -10,6 +10,8 @@ Nothing here ships in the app. It needs Node 20+, a built `sketchcraft` binary a
 | Path | What |
 | --- | --- |
 | `eval/new_cases.jsonl`, `eval/build_new_cases.mjs` | the v4 new-features set (52 cases: Room mode, picture materials, projection, Position Texture, vertex paint, UV, lightmap UV, texture painting); `--set new`; its own category so core and plan numbers stay comparable |
+| `eval/v5_cases.jsonl`, `eval/build_v5_cases.mjs` | the v5 Model-tab + UV/texture set (61 cases: arcs and pies, Follow Me, text, guides, axes, resize, soften, divide, weld, explode curve, bevel, reverse, explode, ungroup, intersect, solid tools, slice, flip, subdivide, materials, tile size, texture pixels, UV and texture-painting chains); `--set v5` |
+| `gen/templates_v5.mjs`, `mix.mjs` | v5 training templates; `mix.mjs` joins chat files and re-applies today's held-out rules to older data |
 | `lib/probe.mjs` | result probes: a check may run read-only commands (`rooms`, `uv_info`, `vertex_colors`, `texture_frame`, `texture_pixels`) after the answer and test their replies |
 | `eval/cases.jsonl` | 201 requests: easy / medium / hard, 45 of them also tagged `"cat":"a11y"` (see below) |
 | `eval/fixtures/*.jsonl` | starting models (a house group, a room, two cubes...). A case with `"fixture"` runs it first; its `# ...` header line is what the model is told about the model state |
@@ -125,3 +127,34 @@ node tools/minimodel/run_eval.mjs --model MODEL --mode free --prompt short --set
 
 The v4 training mix is all of the v3 mix plus the new pairs (same short prompt). `train/train_v4.py` and `train/launch_v4.py` are
 the pc-11 scripts (v3 recipe; a deadline callback stops at 07:15 so the merge always happens).
+
+## Training data (v5: the whole Model tab, deeper UV and texturing)
+
+v4 knew 58 commands. v5 adds the 23 Model-tab and material commands that are in the agent allowlist and were not taught (81 in
+`lib/spec.mjs`): `arc` (Arc, 2-point, 3-point and Pie: a pie is an arc then a `line` back through the centre), `follow_me`,
+`text`, `guide` and `clear_guides` (Tape Measure, Protractor), `set_axes` (Axes), `resize` (Tape Measure resize), `soften`
+(Eraser with Ctrl), `divide`, `weld`, `explode_curve`, `bevel`, `reverse`, `explode`, `ungroup`, `intersect`, `solid`, `slice`,
+`flip`, `subdivide`, `material`, `texture` (a picture material's tile size, never image data) and `texture_pixels`. Every other
+Model-tab tool was already covered (Line and Freehand by `line`, Rectangle, Rotated Rectangle, Circle and Polygon by `rect`,
+`polygon`, `circle`; Push/Pull, Offset, Move, Rotate, Scale, Dimension, Paint Bucket, Vertex Paint, Texture Paint, Eraser by
+`delete`). Left out on purpose: `text_3d` (it takes font outlines the app traces, the model cannot write them), `uv_set` (its map
+is keyed by numeric face ids, and the model only knows `@names`), `push_pull` (an alias of `pushpull`).
+
+`gen/templates_v5.mjs` families: m1 arcs, m2 Follow Me, m3 text / guides / axes / resize, m4 edge tools, m5 groups and solids,
+m6 materials, u1 UV and texture-painting chains (seams then unwrap, unwrap then pack or lightmap, UV scale / rotate / mirror,
+projection on several faces, Position Texture on the side and top, paint texture + fill, UV-space strokes, soft strokes,
+erase), x2 combos. State the face lists cannot show (guides, texts, axes, soft edges, curves, material settings) is checked by
+`doc` probes that read the saved document, and the one-undo rule now also compares that document state.
+
+```sh
+node tools/minimodel/eval/build_v5_cases.mjs --validate                                       # 61/61 gold, no-op 0 (of the non-questions)
+node tools/minimodel/gen_data.mjs --templates v5 --n 10000 --seed 501 --jobs 8 --out DIR/v5/new --sample tools/minimodel/data/sample_v5.jsonl
+node tools/minimodel/to_chat.mjs DIR/v5/new/train.jsonl DIR/v5/new/train.chat.jsonl          # and dev
+node tools/minimodel/mix.mjs --out DIR/v5/data/train.chat.jsonl DIR/v4/data/train.chat.jsonl DIR/v5/new/train.chat.jsonl
+node tools/minimodel/mix.mjs --out DIR/v5/data/dev.chat.jsonl DIR/v4/data/dev.chat.jsonl DIR/v5/new/dev.chat.jsonl
+node tools/minimodel/run_eval.mjs --model MODEL --mode free --prompt short --set v5          # score it
+```
+
+The v5 mix is the v4 mix (v3 + v4 pairs) re-checked by `mix.mjs` against the v5 eval set, plus the v5 pairs; same short prompt.
+`train/train_v5.py` and `train/launch_v5.py` are the pc-11 scripts (v4 recipe, `out5/`, resumes from checkpoints; the deadline
+is a safety net on Nov 27). `data/sample_v5.jsonl` has two pairs per template.

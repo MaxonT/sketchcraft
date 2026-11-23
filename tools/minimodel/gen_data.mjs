@@ -26,7 +26,8 @@ import { makeHeldout, norm } from "./lib/heldout.mjs";
 import { TEMPLATES, dictate, makeRng } from "./gen/templates.mjs";
 import { V3 } from "./gen/templates_v3.mjs";
 import { V4 } from "./gen/templates_v4.mjs";
-import { probeErrs, probePre } from "./lib/probe.mjs";
+import { V5 } from "./gen/templates_v5.mjs";
+import { docSig, probeErrs, probePre } from "./lib/probe.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -59,6 +60,8 @@ const TYPECHECK = {
   scope: (v) => ["face", "connected", "all", "object"].includes(v), falloff: (v) => ["smooth", "linear", "hard"].includes(v),
   umethod: (v) => ["conformal", "angle", "planar_islands"].includes(v), useams: (v) => ["marked", "auto"].includes(v),
   asset: (v) => ["door", "window", "garage_door", "tree", "palm", "car", "streetlight", "bench", "hydrant"].includes(v),
+  axis: (v) => ["x", "y", "z"].includes(v), solidop: (v) => ["union", "subtract", "intersect", "trim", "split", "outer_shell"].includes(v),
+  withk: (v) => ["model", "selection"].includes(v), lvl: (v) => Number.isInteger(v) && v >= 1 && v <= 4, u: (v) => Number.isInteger(v) && v >= 0 && v <= 4096,
 };
 function schemaErr(cmds) {
   if (!Array.isArray(cmds) || cmds.length < 1 || cmds.length > 40) return "command count";
@@ -106,6 +109,7 @@ async function verify(ex) {
       if (!f.ok) return `setup: ${f.error}`;
     }
     const before = await s.inspect();
+    const docBefore = docSig(s);
     // as the app will run it: the whole answer is ONE undo step (begin_batch/end_batch). An answer that is itself an
     // undo is run as it is.
     const pre = await probePre(s, ex.check);
@@ -123,7 +127,7 @@ async function verify(ex) {
     }
     if (ex.check.readonly) {
       if (!ex.commands.every((c) => INSPECT.has(c.cmd))) errs.push("question used a changing command");
-      if (sig(before) !== sig(after)) errs.push("question changed the model");
+      if (sig(before) !== sig(after) || docSig(s) !== docBefore) errs.push("question changed the model");
     }
     errs.push(...(await probeErrs(s, ex.check, pre)));
     if (errs.length) return `check: ${errs[0]}`;
@@ -131,6 +135,7 @@ async function verify(ex) {
       // one Undo must take the whole answer back
       const u = await s.run([{ cmd: "undo" }]);
       if (!u.ok || sig(await s.inspect()) !== sig(before)) return "one-undo: a single undo did not restore the model";
+      if (docSig(s) !== docBefore) return "one-undo: a single undo did not restore the document (guides, texts, axes, edges or materials)";
     }
     return null;
   } finally { s.close(); }
@@ -141,15 +146,16 @@ const out = flag("out", "/private/tmp/claude-501/minimodel-data");
 mkdirSync(out, { recursive: true });
 const r = makeRng(seed);
 const evalStates = new Set(Object.values(JSON.parse(readFileSync(join(here, "eval/fixtures.json"), "utf8"))));
-try { for (const l of readFileSync(join(here, "eval/new_cases.jsonl"), "utf8").trim().split("\n")) evalStates.add(JSON.parse(l).state); } catch {}
+for (const f of ["eval/new_cases.jsonl", "eval/v5_cases.jsonl"]) try { for (const l of readFileSync(join(here, f), "utf8").trim().split("\n")) evalStates.add(JSON.parse(l).state); } catch {}
 
 // bucket mix: ~28% accessibility-style, ~3% out of scope, the rest core split 40/40/20 easy/medium/hard
 const byBucket = { a11y: TEMPLATES.filter((t) => t.cat === "a11y"), scope: TEMPLATES.filter((t) => t.cat === "scope"), easy: [], medium: [], hard: [] };
 for (const t of TEMPLATES.filter((t) => t.cat === "core")) byBucket[t.tier].push(t);
 // --templates v3: only the targeted v3 templates (gen/templates_v3.mjs), picked by their weights
-const v4 = flag("templates") === "v4";
+const v5 = flag("templates") === "v5";
+const v4 = flag("templates") === "v4" || v5;
 const v3 = flag("templates") === "v3" || v4;
-const TPL = v4 ? V4 : V3;
+const TPL = v5 ? V5 : flag("templates") === "v4" ? V4 : V3;
 const v3Total = TPL.reduce((a, t) => a + t.weight, 0);
 function pickV3() { let u = r.f() * v3Total; for (const t of TPL) { u -= t.weight; if (u <= 0) return t; } return TPL.at(-1); }
 function pickTemplate() {
@@ -187,7 +193,7 @@ async function one() {
   if (strict && h.sim >= 0.6) { bump(stats.heldout, "strict sim>=0.6"); famBump(t, "heldout strict"); return; }
   const v = await verify(ex);
   if (v) { bump(stats.drop, v.split(":")[0]); famBump(t, "verify " + v.split(":")[0]); failures.push(`${t.name}: ${v} | ${ex.request}`); bump(stats.byTemplate, t.name + " FAIL"); return; }
-  const row = { id: `${v4 ? "v4g" : v3 ? "v3g" : "g"}${String(kept.length + 1).padStart(5, "0")}`, family: t.family || null, template: t.name, tier: t.tier, cat: t.cat, fixture_kind: ex.fx?.kind || null, state: ex.fx?.desc || "empty model", setup: ex.fx?.setup || [], request: ex.request, commands: ex.commands, check: ex.check, sim: h.sim, sim_eval: h.simId };
+  const row = { id: `${v5 ? "v5g" : v4 ? "v4g" : v3 ? "v3g" : "g"}${String(kept.length + 1).padStart(5, "0")}`, family: t.family || null, template: t.name, tier: t.tier, cat: t.cat, fixture_kind: ex.fx?.kind || null, state: ex.fx?.desc || "empty model", setup: ex.fx?.setup || [], request: ex.request, commands: ex.commands, check: ex.check, sim: h.sim, sim_eval: h.simId };
   kept.push(row);
   stats.kept++; famBump(t, "kept"); bump(stats.byTemplate, t.name); bump(stats.tiers, t.tier); bump(stats.cats, t.cat);
   if (h.sim >= 0.6) stats.simHi++;

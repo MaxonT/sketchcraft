@@ -25,6 +25,7 @@ export class Session {
     this.scratch = mkdtempSync(join(process.env.MINIMODEL_SCRATCH || tmpdir(), "mm-sess-"));
     mkdirSync(join(this.scratch, "work"), { recursive: true });
     const doc = join(this.scratch, "work", "model.sketchcraft");
+    this.docPath = doc; // the engine saves the document here after every call: lib/probe.mjs `doc` probes read it
     this.proc = spawn(bin, ["mcp", "--doc", doc], {
       env: { ...process.env, HOME: this.scratch, SKETCHCRAFT_DOC: doc },
       stdio: ["pipe", "pipe", "ignore"],
