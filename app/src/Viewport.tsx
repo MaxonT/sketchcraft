@@ -31,6 +31,7 @@ import { combine, EMPTY, selIds, selMode, toggle, type Sel } from "./selection";
 import { formatLength, parseLengths } from "./units";
 import { autoTagColor, ACCENT, BACKGROUNDS, skyDome } from "./viewport/colors";
 import { FrameWatch } from "./viewport/framewatch";
+import { FIT_RADIUS_FLOOR, MAX_PERSPECTIVE_NEAR, fitDistance, fitRadius, perspectiveNear } from "./viewport/fit";
 import { styledEdges, averagedNormals, smoothNormals } from "./viewport/edges";
 import { adoptPainted, checkerTexture, forgetPainted, profileMaterial, textureFor } from "./viewport/materials";
 import { DEFAULT_TPAINT, decodePixels, Painter, sampleRgba, stroke3DCommand, trisOf, uvAt } from "./texturepaint";
@@ -203,7 +204,7 @@ export default function Viewport(props: Props) {
     const frames = frameWatch.current!;
     renderer.domElement.addEventListener("webglcontextrestored", () => frames.invalidate());
 
-    const persp = new THREE.PerspectiveCamera(40, 1, 0.05, 20000);
+    const persp = new THREE.PerspectiveCamera(40, 1, MAX_PERSPECTIVE_NEAR, 20000);
     persp.up.set(0, 0, 1);
     persp.position.set(30, -40, 28);
     const ortho = new THREE.OrthographicCamera(-10, 10, 10, -10, -10000, 10000);
@@ -213,6 +214,7 @@ export default function Viewport(props: Props) {
     controls.dampingFactor = 0.14;
     controls.screenSpacePanning = true;
     controls.zoomToCursor = true;
+    controls.minDistance = FIT_RADIUS_FLOOR;
     controls.enableZoom = false; // our own wheel handler: trackpads orbit, pinch zooms
 
     // Trackpad: two-finger swipe orbits, Shift+swipe pans, pinch zooms toward the cursor.
@@ -254,13 +256,14 @@ export default function Viewport(props: Props) {
           T.ortho.zoom = THREE.MathUtils.clamp(T.ortho.zoom / f, 0.02, 200);
           T.ortho.updateProjectionMatrix();
         } else {
-          const minR = 0.3;
+          const minR = FIT_RADIUS_FLOOR;
           if (f < 1 && cam.position.distanceTo(target) * f < minR) return;
           cam.position.sub(focus).multiplyScalar(f).add(focus);
           target.sub(focus).multiplyScalar(f).add(focus);
         }
       }
       if (cam === T.ortho) T.persp.position.copy(cam.position);
+      syncPerspectiveNear(T.camera.position.distanceTo(T.controls.target));
     };
     renderer.domElement.addEventListener("wheel", wheel, { passive: false });
     // moving the camera leaves a matched photo's view (as in SketchUp)
@@ -309,6 +312,8 @@ export default function Viewport(props: Props) {
     world.add(model, overlay, preview, cage, cloudGroup.current);
 
     t.current = { renderer, persp, ortho, camera: persp, controls, world, sun, model, overlay, preview, cage, ground, sky, catcher, pickMesh: null, editMesh: null, groundZ: 0 };
+    const syncControlsNear = () => syncPerspectiveNear(t.current!.camera.position.distanceTo(controls.target));
+    controls.addEventListener("change", syncControlsNear);
 
     const resize = () => {
       const { clientWidth: w, clientHeight: h } = el;
@@ -372,6 +377,7 @@ export default function Viewport(props: Props) {
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      controls.removeEventListener("change", syncControlsNear);
       controls.dispose();
       renderer.dispose();
       el.removeChild(renderer.domElement);
@@ -391,7 +397,7 @@ export default function Viewport(props: Props) {
       T.ortho.zoom = 1;
     }
     const dist = T.ortho.position.distanceTo(T.controls.target);
-    const h = Math.max(dist, 1) * Math.tan(THREE.MathUtils.degToRad(T.persp.fov / 2));
+    const h = Math.max(dist, FIT_RADIUS_FLOOR) * Math.tan(THREE.MathUtils.degToRad(T.persp.fov / 2));
     T.ortho.left = -h * aspect;
     T.ortho.right = h * aspect;
     T.ortho.top = h;
@@ -1597,8 +1603,9 @@ export default function Viewport(props: Props) {
     } else {
       const target = T.controls.target;
       const off = T.camera.position.clone().sub(target).multiplyScalar(f);
-      if (off.length() < 0.3) return;
+      if (off.length() < FIT_RADIUS_FLOOR) return;
       T.camera.position.copy(target).add(off);
+      syncPerspectiveNear();
     }
     T.controls.update();
   }
@@ -1682,10 +1689,12 @@ export default function Viewport(props: Props) {
     const T = t.current;
     if (!T) return;
     const c = b.getCenter(new THREE.Vector3());
-    const rad = Math.max(b.getSize(new THREE.Vector3()).length() / 2, 1.5);
+    const rad = fitRadius(b.getSize(new THREE.Vector3()));
+    const dist = fitDistance(rad, T.persp.fov);
     const dir = T.camera.position.clone().sub(T.controls.target).normalize();
     T.controls.target.copy(c);
-    T.persp.position.copy(c.clone().addScaledVector(dir, (rad / Math.sin(THREE.MathUtils.degToRad(T.persp.fov / 2))) * 1.05));
+    T.persp.position.copy(c.clone().addScaledVector(dir, dist));
+    syncPerspectiveNear(dist);
     if (T.camera === T.ortho) syncOrtho(true);
   }
 
@@ -1742,6 +1751,15 @@ export default function Viewport(props: Props) {
     T.persp.updateProjectionMatrix();
   }
 
+  function syncPerspectiveNear(distance?: number) {
+    const T = t.current;
+    if (!T) return;
+    const near = perspectiveNear(distance ?? T.persp.position.distanceTo(T.controls.target));
+    if (Math.abs(T.persp.near - near) < 1e-9) return;
+    T.persp.near = near;
+    T.persp.updateProjectionMatrix();
+  }
+
   function goTo(c: Cam & { photo?: string }) {
     const T = t.current!;
     showBackdrop(c.photo ?? null);
@@ -1754,6 +1772,7 @@ export default function Viewport(props: Props) {
       const ease = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
       T.camera.position.lerpVectors(from.e, to.e, ease);
       T.controls.target.lerpVectors(from.t, to.t, ease);
+      syncPerspectiveNear(T.camera.position.distanceTo(T.controls.target));
       if (T.camera === T.ortho) {
         T.persp.position.copy(T.camera.position);
         T.ortho.lookAt(T.controls.target);
@@ -1798,6 +1817,7 @@ export default function Viewport(props: Props) {
     setFov(c.fov || 40);
     T.camera.position.set(...c.eye);
     T.controls.target.set(...c.target);
+    syncPerspectiveNear(T.camera.position.distanceTo(T.controls.target));
     if (T.camera === T.ortho) {
       T.persp.position.copy(T.camera.position);
       syncOrtho(false);
