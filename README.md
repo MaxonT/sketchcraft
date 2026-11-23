@@ -19,7 +19,7 @@ It's free and open source, and runs on Mac, Windows and Linux.
 | --- | --- |
 | **Mac** (Apple silicon or Intel) | `SketchCraft_…_universal.dmg`, then drag SketchCraft to Applications |
 | **Windows 10 or 11** | `SketchCraft_…_x64-setup.exe`, or the **portable ZIP** if you'd rather not install |
-| **Linux** | `.AppImage` (any distro), `.deb` or `.rpm` |
+| **Linux** (x64 or arm64) | `.AppImage` (any distro), `.deb` or `.rpm`: `amd64` / `x86_64` for most PCs, `aarch64` / `arm64` for ARM machines like a Raspberry Pi 5 |
 
 The first time you open it, your computer may ask whether you trust it,
 because SketchCraft isn't signed by Apple or Microsoft yet:
