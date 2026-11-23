@@ -105,6 +105,7 @@ export default {
   "menu.entityInfo": "Informações da entidade",
   "tab.panel": "Painel lateral",
   "tab.properties": "Propriedades",
+  "tab.objects": "Objetos",
   "tab.hasSelection": "Há algo selecionado",
   "menu.learn": "Central de aprendizado",
   "menu.commands": "Pesquisar comandos…",
