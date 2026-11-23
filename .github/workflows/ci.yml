@@ -204,6 +204,16 @@ jobs:
             ls -la "$f"
           done
           file target/release/sketchcraft-app | tee /dev/stderr | grep -q 'ARM aarch64'
+          mkdir -p arm64-installers
+          find target -path '*/release/bundle/*' -type f \( -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' \) -exec cp {} arm64-installers/ \;
+      # For trying a build on a real ARM machine (`gh run download <run> -n linux-arm64-installers`). Unsigned
+      # test builds: releases are made by release.yml, never from here.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: linux-arm64-installers
+          path: arm64-installers/*
+          if-no-files-found: error
+          retention-days: 7
 
   # (The scale-figure generator's `--check` is not run here: its sine and cosine come out a last digit
   # different on Linux than on a Mac for four of the figures, so the check is only stable on the machine
