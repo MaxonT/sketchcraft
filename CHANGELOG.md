@@ -7,6 +7,10 @@ What changed in each SketchCraft release, newest first. The format follows
 ## [Unreleased]
 
 ### Added
+- **The cut list knows lumber.** A board whose cross-section is real dimensional lumber shows as **2×4**, **1×6**,
+  **4×4** and so on (a 2×4 is 1½" × 3½"; either way round), in the list and in what to buy, and every board line has
+  its **board feet**: by the nominal size for dimensional lumber, as lumber yards price it (an 8 ft 2×4 is 5.33), by the
+  actual size for anything else, with a total. Sheet goods are left out of both. (Makers, #24)
 - **Edit texture in PhotoCraft.** Select faces and choose **Tools › Edit texture in PhotoCraft…**: their picture opens
   in PhotoCraft with the UV layout on top as a guide layer. Paint, add layers, use filters; each time you save there
   (⌘S / Ctrl+S), the picture comes back onto the model, one Undo per save. Faces with only a colour first get a picture
