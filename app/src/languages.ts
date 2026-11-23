@@ -5,14 +5,18 @@ import italian from "./locale-it";
 import chinese from "./locale-zh";
 import french from "./locale-fr";
 import spanish from "./locale-es";
+import german from "./locale-de";
+import portuguese from "./locale-pt";
 
 type Catalog = Readonly<Record<string, string | null>>;
 
 export const LANGUAGE_TABLE = {
+  de: { name: "Deutsch", tag: "de", catalog: german as Catalog },
   en: { name: "English", tag: "en", catalog: english as Catalog },
   es: { name: "Español", tag: "es", catalog: spanish as Catalog },
   fr: { name: "Français", tag: "fr", catalog: french as Catalog },
   it: { name: "Italiano", tag: "it", catalog: italian as Catalog },
+  pt: { name: "Português", tag: "pt-BR", catalog: portuguese as Catalog },
   zh: { name: "简体中文", tag: "zh-Hans", catalog: chinese as Catalog },
 } as const;
 
