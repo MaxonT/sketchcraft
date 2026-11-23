@@ -28,6 +28,11 @@ What changed in each SketchCraft release, newest first. The format follows
   French and Spanish were asked for in #158, and corrections from French and Spanish speakers are welcome.
 
 ### Fixed
+- **SketchUp files open on Android.** File › Open and File › Import on the phone greyed out `.skp` files (Android
+  has no file type for them) and, when one was picked anyway, handed the app a `content://` link it tried to read as an
+  OBJ. The phone now picks through the app's own file chooser, which reads the file whatever its type, so `.skp`,
+  `.fbx`, `.dxf` and `.obj` files import. Opening `.sketchcraft` files and importing scans or IFC on the phone still
+  need a path and say so. (Refs #125)
 - **Plugins work on macOS and Linux again.** Before running a plugin, SketchCraft checks that the plugin sandbox can't
   reach the network or load outside code. On WebKit (the macOS app and the Linux builds) that check waited for
   violation reports WebKit never sends from inside a worker, so it decided the sandbox was open and turned plugins off

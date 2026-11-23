@@ -3,7 +3,7 @@
 import { stopWatching } from "./photocraft";
 import type { RefObject } from "react";
 import type { Reply, Scene } from "./engine";
-import { exec } from "./engine";
+import { exec, onMobileApp } from "./engine";
 import { isModelPath, pickOpen, pickSave } from "./files";
 import type { Sel } from "./selection";
 import { EMPTY } from "./selection";
@@ -35,6 +35,21 @@ export function skippedText(list: string[]): string {
 function importedSkips(r: Reply): string {
   return Array.isArray(r.skipped_pictures) && r.skipped_pictures.length ? ` ${skippedText(r.skipped_pictures as string[])}` : "";
 }
+
+/** Android: the native picker greys out .skp (Android has no MIME type for it) and returns content:// URIs the
+ *  engine can't read from disk, so the phone picks through the web view instead, which gives the bytes and the real name. */
+function pickFileMobile(): Promise<File | null> {
+  return new Promise((resolve) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.onchange = () => resolve(input.files?.[0] ?? null);
+    input.oncancel = () => resolve(null);
+    input.click();
+  });
+}
+
+/** what the phone can import from bytes (Open of a .sketchcraft and the scan/IFC imports still need a path) */
+const MOBILE_IMPORT = /\.(skp|fbx|dxf|obj)$/i;
 
 /** The model's name without its folder or extension (what a saved file is called after). */
 const modelBase = (file: string | null) => (file?.split("/").pop() ?? "model").replace(/\.sketchcraft$/, "");
@@ -151,6 +166,16 @@ export function useFileActions({ run, say, refresh, api, scene, figure, currentF
       say("New model. ⌘Z brings the last one back.");
     },
     open: async () => {
+      if (onMobileApp) {
+        const f = await pickFileMobile();
+        if (!f) return;
+        if (!MOBILE_IMPORT.test(f.name)) return say(`${f.name}: on the phone SketchCraft can open .skp, .fbx, .dxf and .obj files for now`, true);
+        await run({ cmd: "new" });
+        await importFile(f);
+        setCurrentFile(null);
+        setSel(EMPTY);
+        return;
+      }
       const path = await pickOpen();
       if (!path) return;
       stopWatching();
@@ -181,6 +206,12 @@ export function useFileActions({ run, say, refresh, api, scene, figure, currentF
       }
     },
     import: async () => {
+      if (onMobileApp) {
+        const f = await pickFileMobile();
+        if (!f) return;
+        if (!MOBILE_IMPORT.test(f.name)) return say(`${f.name}: on the phone SketchCraft can import .skp, .fbx, .dxf and .obj files for now`, true);
+        return importFile(f);
+      }
       const path = await pickOpen();
       if (path) await importPath(path);
     },
