@@ -267,7 +267,7 @@ pub enum Command {
     Ungroup { id: Id },
     /// Lock or unlock groups (locked: can't be moved, edited or deleted).
     Lock { ids: Vec<Id>, #[serde(default = "yes")] locked: bool },
-    /// Soft edges aren't drawn. `ids` edges or faces; `coplanar:true` softens every flat seam.
+    /// Soft edges aren't drawn. `ids` edges, faces or groups (every face inside); `coplanar:true` softens every flat seam.
     Soften {
         #[serde(default)]
         ids: Vec<Id>,

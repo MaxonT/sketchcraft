@@ -92,3 +92,9 @@ export function repair(cmds: Cmd[], known: Set<string> = new Set()): Cmd[] {
 
 /** names the state line offers as @name: `@house is a group ...` */
 export const knownNames = (state: string): Set<string> => new Set([...state.matchAll(/@(\w+) is a/g)].map((m) => m[1]));
+
+/** A group's name as SketchCraft AI uses it (without the @): lowercase, spaces and dashes as `_`, letters, digits and
+ *  `_` only, like the training data. The same rule as src-tauri/src/ai.rs `ident`. */
+export function aiName(name: string): string {
+  return name.trim().toLowerCase().replace(/[ -]/g, "_").replace(/[^a-z0-9_]/g, "").slice(0, 32);
+}

@@ -25,3 +25,13 @@ describe("SketchCraft AI prompt and answer reading", () => {
     expect(out.map((c) => c.cmd)).toEqual(["rect", "pushpull"]);
   });
 });
+
+import { aiName } from "../src/ai";
+describe("aiName", () => {
+  it("names things the way the model writes them", () => {
+    expect(aiName("Box")).toBe("box");
+    expect(aiName("Big Box")).toBe("big_box");
+    expect(aiName("  Wine-cooler 2 ")).toBe("wine_cooler_2");
+    expect(aiName("Küche!")).toBe("kche");
+  });
+});

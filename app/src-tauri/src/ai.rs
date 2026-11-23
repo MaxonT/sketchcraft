@@ -90,8 +90,10 @@ fn agent() -> Caller {
     Caller::Mcp(Workspace::at(dir))
 }
 
+/// A group's name as the model uses it, `@` + this: lowercase, spaces and dashes as `_`, letters, digits and `_` only
+/// ("Box" -> box, "Big Box" -> big_box), the way the training data names things. app/src/ai.ts `aiName` is the same.
 fn ident(name: &str) -> String {
-    name.chars().filter(|c| c.is_ascii_alphanumeric() || *c == '_').take(32).collect()
+    name.trim().to_lowercase().chars().map(|c| if c == ' ' || c == '-' { '_' } else { c }).filter(|c| c.is_ascii_alphanumeric() || *c == '_').take(32).collect()
 }
 
 fn n(x: &Value) -> String {
@@ -328,6 +330,26 @@ mod tests {
         // @loose itself works too
         let r = apply(&mut live, &json!([{"cmd": "soften", "ids": ["@loose"], "soft": false}]));
         assert_eq!(r["rows"][0]["status"], "ok", "{r}");
+    }
+
+    #[test]
+    fn names_read_the_way_the_model_writes_them() {
+        assert_eq!(ident("Box"), "box");
+        assert_eq!(ident("Big Box"), "big_box");
+        assert_eq!(ident("  Wine-cooler 2 "), "wine_cooler_2");
+        assert_eq!(ident("Küche!"), "kche");
+    }
+
+    #[test]
+    fn a_group_named_box_is_at_box() {
+        let mut live = scratch("named");
+        loose_box(&mut live);
+        let faces = loose_faces(&mut live);
+        assert_eq!(live.exec_as(&agent(), &json!({"cmd": "group", "ids": faces, "name": "Box"}))["ok"], true);
+        assert!(state(&mut live).contains("@box is a group named \"Box\""));
+        let r = apply(&mut live, &json!([{"cmd": "soften", "ids": ["@box"]}]));
+        assert_eq!(r["rows"][0]["status"], "ok", "{r}");
+        assert_eq!(r["notes"], json!([]));
     }
 
     #[test]

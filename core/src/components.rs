@@ -519,8 +519,12 @@ impl Model {
                         }
                     }
                 }
+            } else if self.groups.contains_key(id) {
+                // a group: every face inside it, nested groups too ("soften the box" when the box is a group)
+                let inside: Vec<Id> = self.faces.iter().filter(|(_, f)| f.group == Some(*id) || self.ancestors(f.group).contains(id)).map(|(&k, _)| k).collect();
+                n += self.soften(&inside, soft)?;
             } else {
-                bail!("{id} is not an edge or face");
+                bail!("{id} is not an edge, face or group");
             }
         }
         Ok(n)
