@@ -176,7 +176,7 @@ describe("what is available", () => {
     const zh = buildMenuActions(stub({ language: "zh" }).ctx);
     expect(zh["lang.zh"].checked).toBe(true);
     expect(zh["lang.it"].checked).toBe(false);
-    for (const lang of ["fr", "es"] as const) {
+    for (const lang of ["fr", "es", "de", "pt"] as const) {
       const m = buildMenuActions(stub({ language: lang }).ctx);
       expect(m[`lang.${lang}`].checked).toBe(true);
       expect(m["lang.en"].checked).toBe(false);
