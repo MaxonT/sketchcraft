@@ -21,6 +21,14 @@ What changed in each SketchCraft release, newest first. The format follows
   (Traditional Chinese systems stay in English until there is a catalog for them). Chinese contributed by fanhui (#161);
   French and Spanish were asked for in #158, and corrections from French and Spanish speakers are welcome.
 
+### Fixed
+- **Plugins work on macOS and Linux again.** Before running a plugin, SketchCraft checks that the plugin sandbox can't
+  reach the network or load outside code. On WebKit (the macOS app and the Linux builds) that check waited for
+  violation reports WebKit never sends from inside a worker, so it decided the sandbox was open and turned plugins off
+  with a confusing "security policy doesn't block fetch, import, eval" message, though the sandbox was holding. The
+  check now judges each probe by whether it was actually blocked, and if plugins ever do have to stay off, the message
+  says so plainly and that everything else still works.
+
 ## [0.3.9] - 2026-11-20
 
 ### Added
