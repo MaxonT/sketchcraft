@@ -146,6 +146,15 @@ pub enum Command {
         #[serde(default)]
         ids: Vec<Id>,
     },
+    /// Where each part would lie if the model were taken apart and laid flat on the ground: on its biggest face,
+    /// length along red, longest first, equal parts next to each other, `gap` meters apart (default: 4% of the
+    /// longest part, 5 to 100 mm). `ids` (groups or components), or every part. Read-only: nothing moves.
+    PartsLayout {
+        #[serde(default)]
+        ids: Vec<Id>,
+        #[serde(default)]
+        gap: Option<f64>,
+    },
     /// The plugins: built in, and those in ~/Documents/SketchCraft/Plugins.
     Plugins,
     /// Turn a plugin on or off (remembered in the Plugins folder).
