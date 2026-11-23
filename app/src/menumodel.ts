@@ -6,6 +6,7 @@
 // ("file.save", "tool:line", "view.xray"), so the key shown beside the item is whatever the person has set.
 
 import { WORKSPACES } from "./workspace";
+import { LANGUAGE_IDS, LANGUAGE_TABLE } from "./languages";
 
 /** one item of a menu */
 export type MenuItem =
@@ -43,7 +44,7 @@ export const EXPORT_FORMATS: [string, string][] = [
 export const FACE_STYLES = ["textured", "physical", "shaded", "monochrome", "hiddenline", "wireframe"] as const;
 export const BACKGROUNDS = ["default", "paper", "blueprint", "night"] as const;
 export const LAYOUTS = ["floating", "classic", "side"] as const;
-export const LANGUAGES = ["system", "en", "it", "zh"] as const;
+export const LANGUAGES = ["system", ...LANGUAGE_IDS] as const;
 
 export const MENUS: Menu[] = [
   {
@@ -142,7 +143,7 @@ export const MENUS: Menu[] = [
       act("view.customize", "menu.customizeWs"),
       SEP,
       act("win.themes", "menu.themes"),
-      { label: "language.label", items: LANGUAGES.map((l): MenuItem => (l === "system" ? act("lang.system", "language.system", "radio") : { id: `lang.${l}`, text: l === "en" ? "English" : l === "it" ? "Italiano" : "简体中文", kind: "radio" })) },
+      { label: "language.label", items: LANGUAGES.map((l): MenuItem => (l === "system" ? act("lang.system", "language.system", "radio") : { id: `lang.${l}`, text: LANGUAGE_TABLE[l].name, kind: "radio" })) },
     ],
   },
   {

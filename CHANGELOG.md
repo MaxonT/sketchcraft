@@ -8,6 +8,10 @@ What changed in each SketchCraft release, newest first. The format follows
 
 ### Added
 - **Help › About links the website,** [trysketchcraft.com](https://trysketchcraft.com/), above the source code, license and changelog.
+- **French, Spanish and Simplified Chinese.** **View › Language** now offers **Français**, **Español** and **简体中文**
+  beside English and Italian, and a new install starts in the system's language when there is a catalog for it
+  (Traditional Chinese systems stay in English until there is a catalog for them). Chinese contributed by fanhui (#161);
+  French and Spanish were asked for in #158, and corrections from French and Spanish speakers are welcome.
 
 ## [0.3.9] - 2026-11-20
 

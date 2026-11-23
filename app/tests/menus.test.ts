@@ -176,6 +176,11 @@ describe("what is available", () => {
     const zh = buildMenuActions(stub({ language: "zh" }).ctx);
     expect(zh["lang.zh"].checked).toBe(true);
     expect(zh["lang.it"].checked).toBe(false);
+    for (const lang of ["fr", "es"] as const) {
+      const m = buildMenuActions(stub({ language: lang }).ctx);
+      expect(m[`lang.${lang}`].checked).toBe(true);
+      expect(m["lang.en"].checked).toBe(false);
+    }
     expect(a["view.panel.left"].checked).toBe(false);
     expect(a["view.panel.right"].checked).toBe(true);
     expect(a["view.xray"].checked).toBe(true);
