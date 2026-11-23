@@ -8,6 +8,7 @@ import { ask, confirm } from "./ask";
 import { AxisGizmo } from "./gizmo";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { TouchGestures, touchMapping } from "./touch";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { GTAOPass } from "three/examples/jsm/postprocessing/GTAOPass.js";
@@ -1125,6 +1126,7 @@ export default function Viewport(props: Props) {
       MIDDLE: THREE.MOUSE.ROTATE,
       RIGHT: THREE.MOUSE.PAN,
     };
+    T.controls.touches = touchMapping(live.current.tool, THREE.TOUCH) as typeof T.controls.touches;
   }
 
   // ---------------------------------------------------------------- helpers
@@ -2557,6 +2559,9 @@ export default function Viewport(props: Props) {
   useEffect(() => {
     const T = t.current!;
     const el = T.renderer.domElement;
+    // touch: which events belong to a two-finger camera gesture (see touchDown below)
+    const gestures = new TouchGestures();
+    const gestureEvents = new WeakSet<Event>();
 
     const moveBox = ({ e, E, op }: MoveArgs<"box">) => {
       op.x1 = e.clientX;
@@ -3002,6 +3007,7 @@ export default function Viewport(props: Props) {
       }
     };
     const move = (e: PointerEvent) => {
+      if (gestureEvents.has(e)) return;
       lastPointer.current = { x: e.clientX, y: e.clientY };
       if (st.current.rightDown) st.current.rightDown.held = (e.buttons & 2) !== 0;
       // camera tools
@@ -3649,6 +3655,10 @@ export default function Viewport(props: Props) {
     };
 
     const down = async (e: PointerEvent) => {
+      if (gestureEvents.has(e)) return;
+      // a finger has no hover: it lands where it clicks, so the tools first see it arrive there (as a mouse would
+      // have moved there), then the press. Without this a rectangle's second tap used the first tap's place.
+      if (e.pointerType === "touch") move(e);
       const L = live.current;
       // PointerEvent.detail is 0 in Chromium (and WebView2), so count clicks here: the same place, quickly
       const now = e.timeStamp;
@@ -3786,6 +3796,7 @@ export default function Viewport(props: Props) {
     };
 
     const up = async (e: PointerEvent) => {
+      if (gestureEvents.has(e)) return;
       const L = live.current;
       {
         const c = camTool.current;
@@ -4012,10 +4023,28 @@ export default function Viewport(props: Props) {
     const padCancel = (e: PointerEvent) => {
       if (e.button === 2 || st.current.rightDown) finishRight(e);
     };
+    // Touch: a second finger makes a camera gesture (TouchGestures). These run first (capture) and mark the
+    // gesture's events, which the tool's handlers skip; OrbitControls, on the same canvas, still gets them.
+    // Pinch zoom is OrbitControls' while a finger is down; the mouse wheel keeps our own handler above.
+    const touchDown = (e: PointerEvent) => {
+      t.current!.controls.enableZoom = e.pointerType === "touch";
+      if (gestures.down(e, st.current.op != null) === "gesture-start" && gestures.cancelsOperation()) cancel();
+      if (gestures.ignore(e)) gestureEvents.add(e);
+    };
+    const touchMove = (e: PointerEvent) => { if (gestures.ignore(e)) gestureEvents.add(e); };
+    const touchUp = (e: PointerEvent) => {
+      if (gestures.ignore(e)) gestureEvents.add(e);
+      gestures.up(e);
+      if (e.pointerType === "touch" && !gestures.touching()) t.current!.controls.enableZoom = false;
+    };
     const leave = () => {
       setHint(null);
       if (badge.current) badge.current.style.opacity = "0";
     };
+    el.addEventListener("pointerdown", touchDown, true);
+    el.addEventListener("pointermove", touchMove, true);
+    el.addEventListener("pointerup", touchUp, true);
+    el.addEventListener("pointercancel", touchUp, true);
     el.addEventListener("pointermove", move);
     el.addEventListener("pointerdown", down);
     el.addEventListener("pointerup", up);
@@ -4025,6 +4054,10 @@ export default function Viewport(props: Props) {
     window.addEventListener("keydown", key);
     window.addEventListener("keyup", key);
     return () => {
+      el.removeEventListener("pointerdown", touchDown, true);
+      el.removeEventListener("pointermove", touchMove, true);
+      el.removeEventListener("pointerup", touchUp, true);
+      el.removeEventListener("pointercancel", touchUp, true);
       el.removeEventListener("pointermove", move);
       el.removeEventListener("pointerdown", down);
       el.removeEventListener("pointerup", up);
