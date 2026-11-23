@@ -21,6 +21,25 @@
     display: none;
   }
 
+  /* Each area keeps its own column. Left to auto-placement, the 3D view moved into the left panel's
+     zero-width column whenever that panel was hidden, and the screen went blank under the menu bar. */
+  &:not(.panels-right) {
+    .panel.left {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .stage {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    .panel.right {
+      grid-column: 3;
+      grid-row: 2;
+    }
+  }
+
   &.panels-right {
     grid-template-columns: minmax(0, 1fr) clamp(185px, 24vw, 288px);
     grid-template-rows: 52px minmax(0, 3fr) minmax(0, 2fr);
