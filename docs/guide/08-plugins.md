@@ -9,8 +9,9 @@ name in **Shift+S**.
 
 - **Cut list:** select the boards (each its own group or component), or select
   nothing for the whole model. It lists every part to cut, grouped by size and
-  material, and roughly how many 4×8 sheets and 8-foot boards to buy. Copy the
-  table or save it as CSV.
+  material, and roughly how many 4×8 sheets and 8-foot boards to buy. Boards
+  that are real dimensional lumber show by name (2×4, 1×6, 4×4…), and every
+  board line has its board feet, with a total. Copy the table or save it as CSV.
 - **Shelf unit:** a bookcase from a few sizes, every board its own group, ready
   for the cut list.
 
