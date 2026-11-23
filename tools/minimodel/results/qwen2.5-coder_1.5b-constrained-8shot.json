@@ -1,0 +1,4400 @@
+{
+ "summary": {
+  "tag": "qwen2.5-coder_1.5b-constrained-8shot",
+  "model": "qwen2.5-coder:1.5b",
+  "mode": "constrained",
+  "shots": 8,
+  "retrieve": 0,
+  "maxSim": null,
+  "subset": false,
+  "repair": false,
+  "fixSchema": false,
+  "variant": "8shot",
+  "n": 100,
+  "skipped": false,
+  "pass": 47,
+  "tiers": {
+   "easy": {
+    "n": 44,
+    "pass": 24
+   },
+   "medium": {
+    "n": 38,
+    "pass": 18
+   },
+   "hard": {
+    "n": 18,
+    "pass": 5
+   }
+  },
+  "a11y": {
+   "n": 22,
+   "pass": 11
+  },
+  "parseOk": 100,
+  "schemaValid": 100,
+  "engineAccepted": 75,
+  "medianMs": 1842.832459,
+  "p90Ms": 4690.673958,
+  "medianGenTok": 37,
+  "medianTokPerSec": 41.005133412149306,
+  "promptTok": 1667,
+  "loadMs": 1198.25625,
+  "peakOllamaRssMb": 1100
+ },
+ "rows": [
+  {
+   "id": "e001",
+   "tier": "easy",
+   "cat": null,
+   "request": "a 4 by 3 meter box 2.4 m tall",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "box",
+     "as": "box"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      4,
+      3,
+      0
+     ],
+     "as": "f"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f",
+     "distance": 2.4
+    },
+    {
+     "cmd": "end_group"
+    }
+   ],
+   "ms": 3964.908458,
+   "load": 135.091542,
+   "promptTok": 1643,
+   "genTok": 63,
+   "tokPerSec": 40.138901982789825,
+   "rssMb": 1066.66
+  },
+  {
+   "id": "e003",
+   "tier": "easy",
+   "cat": null,
+   "request": "a cube 3 m on each side",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: rect corners must share one coordinate (use polygon for tilted shapes)"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      -1.5,
+      -1.5,
+      -1.5
+     ],
+     "to": [
+      1.5,
+      1.5,
+      1.5
+     ]
+    },
+    {
+     "cmd": "paint",
+     "ids": [
+      "@f"
+     ],
+     "color": [
+      0,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 2247.789458,
+   "load": 95.210542,
+   "promptTok": 1637,
+   "genTok": 55,
+   "tokPerSec": 40.653234653149845,
+   "rssMb": 1075.23
+  },
+  {
+   "id": "e005",
+   "tier": "easy",
+   "cat": null,
+   "request": "a 50 cm cube",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size 50,50,0, want 0.5,0.5,0.5 (x/y either way)"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      50,
+      50,
+      0
+     ],
+     "as": "cube"
+    },
+    {
+     "cmd": "paint",
+     "ids": [
+      "@cube"
+     ],
+     "color": [
+      1,
+      1,
+      1
+     ]
+    }
+   ],
+   "ms": 2045.3935,
+   "load": 63.6065,
+   "promptTok": 1635,
+   "genTok": 48,
+   "tokPerSec": 39.93480911971169,
+   "rssMb": 1098.98
+  },
+  {
+   "id": "e007",
+   "tier": "easy",
+   "cat": null,
+   "request": "a tall thin pillar 0.5 m square and 4 m tall",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      2,
+      0
+     ],
+     "size": 0.5,
+     "height": 4
+    }
+   ],
+   "ms": 1209.625333,
+   "load": 77.374667,
+   "promptTok": 1644,
+   "genTok": 27,
+   "tokPerSec": 40.88893303682133,
+   "rssMb": 1079.27
+  },
+  {
+   "id": "e009",
+   "tier": "easy",
+   "cat": null,
+   "request": "a box 1.2 m by 0.6 m, 0.75 m high",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 1: rect corners must share one coordinate (use polygon for tilted shapes)"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "box",
+     "as": "box"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      1.2,
+      0.6,
+      0.75
+     ]
+    },
+    {
+     "cmd": "end_group"
+    }
+   ],
+   "ms": 2181.61475,
+   "load": 65.38525,
+   "promptTok": 1650,
+   "genTok": 51,
+   "tokPerSec": 40.320525885914,
+   "rssMb": 1077.55
+  },
+  {
+   "id": "e011",
+   "tier": "easy",
+   "cat": null,
+   "request": "a 10 foot by 12 foot slab 4 inches thick",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 1: rect corners must share one coordinate (use polygon for tilted shapes)"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "slab",
+     "as": "slab"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      10,
+      12,
+      0.4
+     ],
+     "as": "f"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f",
+     "distance": 0
+    },
+    {
+     "cmd": "end_group"
+    }
+   ],
+   "ms": 2944.59075,
+   "load": 72.40925,
+   "promptTok": 1644,
+   "genTok": 67,
+   "tokPerSec": 39.40633766505912,
+   "rssMb": 1052.06
+  },
+  {
+   "id": "e013",
+   "tier": "easy",
+   "cat": null,
+   "request": "a flat 8 by 8 square on the ground",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 1: unknown name @f"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      8,
+      8,
+      0
+     ]
+    },
+    {
+     "cmd": "paint",
+     "ids": [
+      "@f"
+     ],
+     "color": [
+      1,
+      1,
+      1
+     ]
+    }
+   ],
+   "ms": 1970.730917,
+   "load": 72.269083,
+   "promptTok": 1640,
+   "genTok": 43,
+   "tokPerSec": 38.486701397388224,
+   "rssMb": 1077.86
+  },
+  {
+   "id": "e015",
+   "tier": "easy",
+   "cat": null,
+   "request": "a circle of radius 2 m",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "circle",
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "radius": 2
+    }
+   ],
+   "ms": 1070.705833,
+   "load": 83.294167,
+   "promptTok": 1636,
+   "genTok": 21,
+   "tokPerSec": 39.04611864251654,
+   "rssMb": 1079.31
+  },
+  {
+   "id": "e017",
+   "tier": "easy",
+   "cat": null,
+   "request": "a cylinder with radius 1 m and height 3 m",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 2: no face 1"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "cylinder",
+     "as": "cylinder"
+    },
+    {
+     "cmd": "circle",
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "radius": 1
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@cylinder",
+     "distance": 3
+    }
+   ],
+   "ms": 2179.958708,
+   "load": 73.041292,
+   "promptTok": 1641,
+   "genTok": 51,
+   "tokPerSec": 40.76226226498526,
+   "rssMb": 1032.8
+  },
+  {
+   "id": "e019",
+   "tier": "easy",
+   "cat": null,
+   "request": "a barrel: a cylinder 0.6 m wide and 0.9 m tall",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 3: unknown name @f"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "barrel",
+     "as": "barrel"
+    },
+    {
+     "cmd": "circle",
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "radius": 0.6
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      -0.4,
+      -0.4,
+      0
+     ],
+     "to": [
+      0.4,
+      0.4,
+      0
+     ]
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f",
+     "distance": 0.9
+    },
+    {
+     "cmd": "end_group"
+    }
+   ],
+   "ms": 3625.787417,
+   "load": 93.212583,
+   "promptTok": 1647,
+   "genTok": 88,
+   "tokPerSec": 40.40646915193252,
+   "rssMb": 1079.09
+  },
+  {
+   "id": "e021",
+   "tier": "easy",
+   "cat": null,
+   "request": "a round column 4 m tall and 0.4 m wide",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "column",
+     "at": [
+      2,
+      0,
+      0
+     ],
+     "size": 0.4,
+     "height": 4
+    }
+   ],
+   "ms": 1175.153542,
+   "load": 90.846458,
+   "promptTok": 1643,
+   "genTok": 27,
+   "tokPerSec": 41.327924881482076,
+   "rssMb": 1084.98
+  },
+  {
+   "id": "e023",
+   "tier": "easy",
+   "cat": null,
+   "request": "a 3 m wall along the y axis, 0.3 m thick, 2.4 m tall",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size 3.15,2.55,2.4, want 0.3,3,2.4 (x/y either way)"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       3,
+       0,
+       0
+      ],
+      [
+       3,
+       2.4,
+       0
+      ]
+     ],
+     "thickness": 0.3,
+     "height": 2.4
+    }
+   ],
+   "ms": 1842.832459,
+   "load": 67.167541,
+   "promptTok": 1652,
+   "genTok": 45,
+   "tokPerSec": 40.7934538537914,
+   "rssMb": 1092.69
+  },
+  {
+   "id": "e025",
+   "tier": "easy",
+   "cat": null,
+   "request": "stairs rising 3 m, 1.2 m wide",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox x/y 3.82,3.82 has no side 1.2"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "stairs",
+     "at": [
+      0,
+      0,
+      0
+     ],
+     "rise": 3,
+     "direction": 45,
+     "width": 1.2
+    }
+   ],
+   "ms": 1373.586709,
+   "load": 64.413291,
+   "promptTok": 1641,
+   "genTok": 32,
+   "tokPerSec": 41.15440005843513,
+   "rssMb": 1091.31
+  },
+  {
+   "id": "e027",
+   "tier": "easy",
+   "cat": null,
+   "request": "plant a tree at 5, 5",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 1: unknown name @tree"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "insert",
+     "asset": "tree",
+     "at": [
+      5,
+      5,
+      0
+     ]
+    },
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@tree"
+     ],
+     "center": [
+      5,
+      5,
+      0
+     ],
+     "angle": 45
+    }
+   ],
+   "ms": 1877.955583,
+   "load": 66.044417,
+   "promptTok": 1638,
+   "genTok": 44,
+   "tokPerSec": 40.69793115221077,
+   "rssMb": 1091.89
+  },
+  {
+   "id": "e029",
+   "tier": "easy",
+   "cat": null,
+   "request": "a bench at x 2, y 0",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 1: unknown name @bench"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "insert",
+     "asset": "bench",
+     "at": [
+      2,
+      0,
+      0
+     ]
+    },
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@bench"
+     ],
+     "center": [
+      2,
+      0,
+      0
+     ],
+     "angle": 90
+    }
+   ],
+   "ms": 1905.184959,
+   "load": 63.815041,
+   "promptTok": 1639,
+   "genTok": 44,
+   "tokPerSec": 40.47319608824095,
+   "rssMb": 1042.53
+  },
+  {
+   "id": "e031",
+   "tier": "easy",
+   "cat": null,
+   "request": "add a door at x 3 on the ground",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 1: unknown name @door"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "insert",
+     "asset": "door",
+     "at": [
+      3,
+      0,
+      0
+     ]
+    },
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@door"
+     ],
+     "center": [
+      3,
+      0,
+      0
+     ],
+     "angle": 90
+    }
+   ],
+   "ms": 1861.156792,
+   "load": 64.843208,
+   "promptTok": 1639,
+   "genTok": 44,
+   "tokPerSec": 40.9258704314102,
+   "rssMb": 1092.8
+  },
+  {
+   "id": "e033",
+   "tier": "easy",
+   "cat": null,
+   "request": "a fire hydrant at 4, 4",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 1: unknown name @hydrant"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "insert",
+     "asset": "hydrant",
+     "at": [
+      4,
+      4,
+      0
+     ]
+    },
+    {
+     "cmd": "paint",
+     "ids": [
+      "@hydrant"
+     ],
+     "color": [
+      1,
+      0.5,
+      0
+     ]
+    }
+   ],
+   "ms": 1938.1032500000001,
+   "load": 69.89675,
+   "promptTok": 1639,
+   "genTok": 43,
+   "tokPerSec": 39.45626216998585,
+   "rssMb": 1021.77
+  },
+  {
+   "id": "e035",
+   "tier": "easy",
+   "cat": null,
+   "request": "a palm tree at 8, 2",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 1: unknown name @palm"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "insert",
+     "asset": "palm",
+     "at": [
+      8,
+      2,
+      0
+     ]
+    },
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@palm"
+     ],
+     "center": [
+      8,
+      2,
+      0
+     ],
+     "angle": 45
+    }
+   ],
+   "ms": 1993.897708,
+   "load": 63.102292,
+   "promptTok": 1638,
+   "genTok": 46,
+   "tokPerSec": 39.536479097814265,
+   "rssMb": 1023.28
+  },
+  {
+   "id": "e037",
+   "tier": "easy",
+   "cat": null,
+   "request": "move the house 3 m north and 2 m up",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "move",
+     "ids": [
+      "@house"
+     ],
+     "by": [
+      0,
+      3,
+      2
+     ]
+    },
+    {
+     "cmd": "paint",
+     "ids": [
+      "@house"
+     ],
+     "color": [
+      1,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 1910.349583,
+   "load": 69.650417,
+   "promptTok": 1710,
+   "genTok": 40,
+   "tokPerSec": 39.55481060662246,
+   "rssMb": 1067.81
+  },
+  {
+   "id": "e039",
+   "tier": "easy",
+   "cat": null,
+   "request": "rotate the selected group 45 degrees",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@house"
+     ],
+     "center": [
+      2,
+      1.5,
+      1
+     ],
+     "angle": 45
+    }
+   ],
+   "ms": 1243.843916,
+   "load": 88.156084,
+   "promptTok": 1706,
+   "genTok": 29,
+   "tokPerSec": 41.753640820294336,
+   "rssMb": 1093.5
+  },
+  {
+   "id": "e041",
+   "tier": "easy",
+   "cat": null,
+   "request": "turn the selected group 180 degrees around its own corner at the origin",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@house"
+     ],
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "angle": 180
+    }
+   ],
+   "ms": 1195.574375,
+   "load": 81.425625,
+   "promptTok": 1714,
+   "genTok": 28,
+   "tokPerSec": 41.59998758180942,
+   "rssMb": 1095.03
+  },
+  {
+   "id": "e043",
+   "tier": "easy",
+   "cat": null,
+   "request": "make the house twice as tall",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[x] 8.000, want 4",
+    "bbox size[y] 6.000, want 3"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "scale",
+     "ids": [
+      "@house"
+     ],
+     "center": [
+      0,
+      1.5,
+      0
+     ],
+     "factor": 2
+    }
+   ],
+   "ms": 1211.283875,
+   "load": 80.716125,
+   "promptTok": 1704,
+   "genTok": 28,
+   "tokPerSec": 40.99499737022216,
+   "rssMb": 1096.11
+  },
+  {
+   "id": "e045",
+   "tier": "easy",
+   "cat": null,
+   "request": "copy the house 6 m to the east",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "copy",
+     "group": "@house",
+     "by": [
+      6,
+      0,
+      0
+     ],
+     "as": "new_house"
+    }
+   ],
+   "ms": 1309.418917,
+   "load": 81.581083,
+   "promptTok": 1707,
+   "genTok": 27,
+   "tokPerSec": 37.83736785152133,
+   "rssMb": 1085.02
+  },
+  {
+   "id": "e047",
+   "tier": "easy",
+   "cat": null,
+   "request": "rename the house to shed",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rename",
+     "id": "@house",
+     "name": "shed"
+    }
+   ],
+   "ms": 828.2575420000001,
+   "load": 91.742458,
+   "promptTok": 1703,
+   "genTok": 18,
+   "tokPerSec": 41.92197098475583,
+   "rssMb": 1099.69
+  },
+  {
+   "id": "e049",
+   "tier": "easy",
+   "cat": null,
+   "request": "paint the house red",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "paint",
+     "ids": [
+      "@house"
+     ],
+     "color": [
+      1,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 1016.7975,
+   "load": 102.2025,
+   "promptTok": 1702,
+   "genTok": 22,
+   "tokPerSec": 39.0224954984137,
+   "rssMb": 1062.44
+  },
+  {
+   "id": "e051",
+   "tier": "easy",
+   "cat": null,
+   "request": "color the house green",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "paint",
+     "ids": [
+      "@house"
+     ],
+     "color": [
+      0,
+      0.6,
+      0
+     ]
+    }
+   ],
+   "ms": 1114.292792,
+   "load": 96.707208,
+   "promptTok": 1702,
+   "genTok": 24,
+   "tokPerSec": 39.03437358643217,
+   "rssMb": 1086.66
+  },
+  {
+   "id": "e053",
+   "tier": "easy",
+   "cat": null,
+   "request": "the house should be white",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "paint",
+     "ids": [
+      "@house"
+     ],
+     "color": [
+      1,
+      1,
+      1
+     ]
+    }
+   ],
+   "ms": 981.731666,
+   "load": 101.268334,
+   "promptTok": 1703,
+   "genTok": 22,
+   "tokPerSec": 41.07155684336791,
+   "rssMb": 1094.02
+  },
+  {
+   "id": "e055",
+   "tier": "easy",
+   "cat": null,
+   "request": "paint the top face red",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "1 faces are red, want none {\"normal\":[0,0,-1]}"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "paint",
+     "ids": [
+      "@house"
+     ],
+     "color": [
+      1,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 1069.1385,
+   "load": 111.8615,
+   "promptTok": 1703,
+   "genTok": 22,
+   "tokPerSec": 41.866649696717985,
+   "rssMb": 1081.33
+  },
+  {
+   "id": "e057",
+   "tier": "easy",
+   "cat": null,
+   "request": "what is the volume of the house?",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "volume",
+     "id": "@house"
+    }
+   ],
+   "ms": 735.002833,
+   "load": 96.997167,
+   "promptTok": 1706,
+   "genTok": 14,
+   "tokPerSec": 41.005133412149306,
+   "rssMb": 1086.8
+  },
+  {
+   "id": "e059",
+   "tier": "easy",
+   "cat": null,
+   "request": "push the top of the tower up another 2 m",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "pushpull",
+     "face": "@top",
+     "distance": 2
+    }
+   ],
+   "ms": 1112.344166,
+   "load": 115.655834,
+   "promptTok": 1689,
+   "genTok": 19,
+   "tokPerSec": 40.63732865703481,
+   "rssMb": 1077.81
+  },
+  {
+   "id": "e061",
+   "tier": "easy",
+   "cat": null,
+   "request": "move the lot 4 m south",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "move",
+     "ids": [
+      "@lot"
+     ],
+     "by": [
+      0,
+      -4,
+      0
+     ]
+    }
+   ],
+   "ms": 2239.323625,
+   "load": 639.676375,
+   "promptTok": 1663,
+   "genTok": 22,
+   "tokPerSec": 37.677041979818405,
+   "rssMb": 1007.41
+  },
+  {
+   "id": "e063",
+   "tier": "easy",
+   "cat": null,
+   "request": "delete group a",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "delete",
+     "ids": [
+      "@a"
+     ]
+    }
+   ],
+   "ms": 866.191292,
+   "load": 109.808708,
+   "promptTok": 1689,
+   "genTok": 14,
+   "tokPerSec": 40.78729691524158,
+   "rssMb": 1078.84
+  },
+  {
+   "id": "e065",
+   "tier": "easy",
+   "cat": null,
+   "request": "make the post twice as high",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "scale",
+     "ids": [
+      "@post"
+     ],
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "factor": [
+      1,
+      1,
+      2
+     ]
+    }
+   ],
+   "ms": 1928.597375,
+   "load": 121.402625,
+   "promptTok": 1669,
+   "genTok": 30,
+   "tokPerSec": 34.50711187607448,
+   "rssMb": 1001.72
+  },
+  {
+   "id": "e067",
+   "tier": "easy",
+   "cat": null,
+   "request": "rotate group a 90 degrees around the point 0.5, 0.5",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@a"
+     ],
+     "center": [
+      0.5,
+      0.5,
+      0
+     ],
+     "angle": 90
+    }
+   ],
+   "ms": 2499.822791,
+   "load": 137.177209,
+   "promptTok": 1705,
+   "genTok": 31,
+   "tokPerSec": 35.49669803016353,
+   "rssMb": 1005.58
+  },
+  {
+   "id": "m069",
+   "tier": "medium",
+   "cat": null,
+   "request": "a 6x4 room with 2.4 m walls",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       6,
+       0,
+       0
+      ],
+      [
+       6,
+       4,
+       0
+      ],
+      [
+       0,
+       4,
+       0
+      ]
+     ],
+     "thickness": 0.2,
+     "height": 2.4,
+     "closed": true
+    }
+   ],
+   "ms": 2594.334791,
+   "load": 184.665209,
+   "promptTok": 1642,
+   "genTok": 53,
+   "tokPerSec": 36.10019684286219,
+   "rssMb": 1002.69
+  },
+  {
+   "id": "m071",
+   "tier": "medium",
+   "cat": null,
+   "request": "a 8x3 room with 3 m walls",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       8,
+       0,
+       0
+      ],
+      [
+       8,
+       3,
+       0
+      ]
+     ],
+     "height": 3
+    }
+   ],
+   "ms": 1680.830708,
+   "load": 180.169292,
+   "promptTok": 1640,
+   "genTok": 35,
+   "tokPerSec": 39.678455230944074,
+   "rssMb": 1071.72
+  },
+  {
+   "id": "m073",
+   "tier": "medium",
+   "cat": null,
+   "request": "a 10x6 room with 3 m walls",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       10,
+       0,
+       0
+      ],
+      [
+       10,
+       6,
+       0
+      ],
+      [
+       0,
+       6,
+       0
+      ]
+     ],
+     "height": 3
+    }
+   ],
+   "ms": 1897.024583,
+   "load": 69.975417,
+   "promptTok": 1641,
+   "genTok": 43,
+   "tokPerSec": 39.67650098939076,
+   "rssMb": 1023.14
+  },
+  {
+   "id": "m075",
+   "tier": "medium",
+   "cat": null,
+   "request": "make a 5 by 5 m room, 2.7 m high, with a door in the north wall",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "instances /door/: 0, want >= 1"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       5,
+       0,
+       0
+      ],
+      [
+       5,
+       5,
+       0
+      ],
+      [
+       0,
+       5,
+       0
+      ]
+     ],
+     "height": 2.7,
+     "closed": true
+    },
+    {
+     "cmd": "line",
+     "points": [
+      [
+       0,
+       4,
+       0
+      ],
+      [
+       5,
+       4,
+       0
+      ]
+     ]
+    }
+   ],
+   "ms": 2891.594709,
+   "load": 62.405291,
+   "promptTok": 1653,
+   "genTok": 67,
+   "tokPerSec": 39.46362159927814,
+   "rssMb": 1062.3
+  },
+  {
+   "id": "m077",
+   "tier": "medium",
+   "cat": null,
+   "request": "a 6 m by 4 m room, 2.4 m walls, with a window on the east wall",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "instances /window/: 0, want >= 1"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       6,
+       0,
+       0
+      ],
+      [
+       6,
+       4,
+       0
+      ],
+      [
+       0,
+       4,
+       0
+      ]
+     ],
+     "thickness": 0.2,
+     "height": 2.4,
+     "closed": true
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      3,
+      1,
+      0
+     ],
+     "to": [
+      5,
+      3,
+      0
+     ],
+     "as": "f"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f",
+     "distance": 1.5
+    },
+    {
+     "cmd": "end_group"
+    },
+    {
+     "cmd": "paint",
+     "ids": [
+      "@f"
+     ],
+     "color": [
+      0,
+      0.6,
+      0
+     ]
+    }
+   ],
+   "ms": 4992.182834,
+   "load": 77.817166,
+   "promptTok": 1653,
+   "genTok": 117,
+   "tokPerSec": 38.84431150745019,
+   "rssMb": 1005.98
+  },
+  {
+   "id": "m079",
+   "tier": "medium",
+   "cat": null,
+   "request": "put two windows in the north wall of the room",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 1: rect has zero width"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       1.5,
+       0
+      ],
+      [
+       6,
+       1.5,
+       0
+      ],
+      [
+       6,
+       3,
+       0
+      ],
+      [
+       0,
+       3,
+       0
+      ]
+     ],
+     "thickness": 0.2,
+     "height": 2.4,
+     "closed": true
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      1,
+      1.5,
+      0
+     ],
+     "to": [
+      5,
+      1.5,
+      0
+     ],
+     "as": "f"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f",
+     "distance": 0.7
+    },
+    {
+     "cmd": "end_group"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      1,
+      2.5,
+      0
+     ],
+     "to": [
+      5,
+      2.5,
+      0
+     ],
+     "as": "f"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f",
+     "distance": 0.7
+    },
+    {
+     "cmd": "end_group"
+    }
+   ],
+   "ms": 8223.910125,
+   "load": 179.089875,
+   "promptTok": 1695,
+   "genTok": 155,
+   "tokPerSec": 34.73621710482425,
+   "rssMb": 998
+  },
+  {
+   "id": "m081",
+   "tier": "medium",
+   "cat": null,
+   "request": "give the house a 45 degree gable roof",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "roof",
+     "face": "@top",
+     "kind": "gable",
+     "pitch": 45
+    }
+   ],
+   "ms": 5333.74375,
+   "load": 1198.25625,
+   "promptTok": 1709,
+   "genTok": 23,
+   "tokPerSec": 35.245357776845054,
+   "rssMb": 1004.62
+  },
+  {
+   "id": "m083",
+   "tier": "medium",
+   "cat": null,
+   "request": "a shed roof on the house, pitched at 20 degrees",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "roof",
+     "face": "@top",
+     "kind": "shed",
+     "pitch": 20
+    }
+   ],
+   "ms": 3872.2727919999998,
+   "load": 373.727208,
+   "promptTok": 1711,
+   "genTok": 23,
+   "tokPerSec": 22.070460236017396,
+   "rssMb": 1008.97
+  },
+  {
+   "id": "m085",
+   "tier": "medium",
+   "cat": null,
+   "request": "a row of 4 columns, 2 m apart",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: unknown name @column"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "array",
+     "ids": [
+      "@column"
+     ],
+     "by": [
+      2,
+      0,
+      0
+     ],
+     "count": 4
+    }
+   ],
+   "ms": 1178.596375,
+   "load": 81.403625,
+   "promptTok": 1640,
+   "genTok": 26,
+   "tokPerSec": 37.81642383577339,
+   "rssMb": 1083.58
+  },
+  {
+   "id": "m087",
+   "tier": "medium",
+   "cat": null,
+   "request": "a colonnade of 5 columns 4 m apart",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: unknown name @column"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "array",
+     "ids": [
+      "@column"
+     ],
+     "by": [
+      4,
+      0,
+      0
+     ],
+     "count": 5
+    }
+   ],
+   "ms": 1129.507166,
+   "load": 62.492834,
+   "promptTok": 1641,
+   "genTok": 26,
+   "tokPerSec": 41.97826920625293,
+   "rssMb": 1084.62
+  },
+  {
+   "id": "m089",
+   "tier": "medium",
+   "cat": null,
+   "request": "three 1 m boxes in a row, 3 m between them",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[x] 3.000, want 7",
+    "bbox size[y] 2.000, want 1",
+    "bbox size[z] 3.000, want 1"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "boxes",
+     "as": "boxes"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      1,
+      2,
+      0
+     ],
+     "as": "f1"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f1",
+     "distance": 3
+    },
+    {
+     "cmd": "end_group"
+    },
+    {
+     "cmd": "begin_group",
+     "name": "boxes",
+     "as": "boxes"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      1,
+      0,
+      0
+     ],
+     "to": [
+      2,
+      2,
+      0
+     ],
+     "as": "f2"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f2",
+     "distance": 3
+    },
+    {
+     "cmd": "end_group"
+    },
+    {
+     "cmd": "begin_group",
+     "name": "boxes",
+     "as": "boxes"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      2,
+      0,
+      0
+     ],
+     "to": [
+      3,
+      2,
+      0
+     ],
+     "as": "f3"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f3",
+     "distance": 3
+    }
+   ],
+   "ms": 7744.939708,
+   "load": 62.060292,
+   "promptTok": 1643,
+   "genTok": 174,
+   "tokPerSec": 39.0681321557428,
+   "rssMb": 1011.44
+  },
+  {
+   "id": "m091",
+   "tier": "medium",
+   "cat": null,
+   "request": "array the house 4 times, 6 m apart",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[x] 28.000, want 22",
+    "groups: 5, want 4"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "array",
+     "ids": [
+      "@house"
+     ],
+     "by": [
+      6,
+      0,
+      0
+     ],
+     "count": 4
+    }
+   ],
+   "ms": 1253.549334,
+   "load": 98.450666,
+   "promptTok": 1709,
+   "genTok": 26,
+   "tokPerSec": 42.93763922901096,
+   "rssMb": 1095.73
+  },
+  {
+   "id": "m093",
+   "tier": "medium",
+   "cat": null,
+   "request": "a row of 6 columns along y, 2.5 m apart",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: unknown name @column"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "array",
+     "ids": [
+      "@column"
+     ],
+     "by": [
+      0,
+      2.5,
+      0
+     ],
+     "count": 6
+    }
+   ],
+   "ms": 1126.465125,
+   "load": 85.534875,
+   "promptTok": 1644,
+   "genTok": 28,
+   "tokPerSec": 43.282096796109094,
+   "rssMb": 1097.39
+  },
+  {
+   "id": "m095",
+   "tier": "medium",
+   "cat": null,
+   "request": "a staircase going up 2.1 m toward the east that is 1 m wide",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[y] 3.080, want 1"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "stairs",
+     "at": [
+      0,
+      0,
+      0
+     ],
+     "rise": 2.1,
+     "direction": 90,
+     "width": 1
+    }
+   ],
+   "ms": 1284.861167,
+   "load": 64.138833,
+   "promptTok": 1647,
+   "genTok": 32,
+   "tokPerSec": 43.21124846700669,
+   "rssMb": 1098.05
+  },
+  {
+   "id": "m097",
+   "tier": "medium",
+   "cat": null,
+   "request": "a triangular prism: base triangle with points (0,0), (4,0), (2,3), extruded 2 m up",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 4: rect has zero width"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "prism",
+     "as": "prism"
+    },
+    {
+     "cmd": "polygon",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       4,
+       0,
+       0
+      ],
+      [
+       2,
+       3,
+       0
+      ]
+     ],
+     "as": "f1"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f1",
+     "distance": 2
+    },
+    {
+     "cmd": "end_group"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      2
+     ],
+     "to": [
+      4,
+      0,
+      2
+     ],
+     "as": "f2"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f2",
+     "distance": 2
+    },
+    {
+     "cmd": "end_group"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      3,
+      2
+     ],
+     "to": [
+      4,
+      3,
+      2
+     ],
+     "as": "f3"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f3",
+     "distance": 2
+    },
+    {
+     "cmd": "end_group"
+    }
+   ],
+   "ms": 6704.027542,
+   "load": 67.972458,
+   "promptTok": 1658,
+   "genTok": 161,
+   "tokPerSec": 40.96581389599184,
+   "rssMb": 1035.5
+  },
+  {
+   "id": "m099",
+   "tier": "medium",
+   "cat": null,
+   "request": "a 2 m diameter pond (a flat circle) centered at 3, 4",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "circle",
+     "center": [
+      3,
+      4,
+      0
+     ],
+     "radius": 1,
+     "as": "pond"
+    },
+    {
+     "cmd": "paint",
+     "ids": [
+      "@pond"
+     ],
+     "color": [
+      0.5,
+      0.5,
+      0.5
+     ]
+    }
+   ],
+   "ms": 1990.761,
+   "load": 106.239,
+   "promptTok": 1647,
+   "genTok": 48,
+   "tokPerSec": 42.61496687069861,
+   "rssMb": 1096.89
+  },
+  {
+   "id": "m101",
+   "tier": "medium",
+   "cat": null,
+   "request": "inset the lot by 1 m",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "offset",
+     "face": "@lot",
+     "distance": 1
+    }
+   ],
+   "ms": 798.371584,
+   "load": 60.628416,
+   "promptTok": 1663,
+   "genTok": 18,
+   "tokPerSec": 45.11305059801559,
+   "rssMb": 1099.92
+  },
+  {
+   "id": "m103",
+   "tier": "medium",
+   "cat": null,
+   "request": "cut a 1 m square window hole in the middle of the facade at 1 m height",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: rect has zero width"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      1,
+      1,
+      0
+     ],
+     "to": [
+      5,
+      1,
+      0
+     ],
+     "as": "f"
+    },
+    {
+     "cmd": "offset",
+     "face": "@f",
+     "distance": 1
+    }
+   ],
+   "ms": 1771.778166,
+   "load": 59.221834,
+   "promptTok": 1690,
+   "genTok": 42,
+   "tokPerSec": 43.30069525214918,
+   "rssMb": 1099.88
+  },
+  {
+   "id": "m105",
+   "tier": "medium",
+   "cat": null,
+   "request": "copy the house 6 m east and paint the copy blue",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "copy",
+     "group": "@house",
+     "by": [
+      6,
+      0,
+      0
+     ],
+     "as": "copied_house"
+    },
+    {
+     "cmd": "paint",
+     "ids": [
+      "@copied_house"
+     ],
+     "color": [
+      0,
+      0,
+      1
+     ]
+    }
+   ],
+   "ms": 2199.356792,
+   "load": 108.643208,
+   "promptTok": 1710,
+   "genTok": 47,
+   "tokPerSec": 40.37241567480754,
+   "rssMb": 1019.27
+  },
+  {
+   "id": "m107",
+   "tier": "medium",
+   "cat": null,
+   "request": "place b right next to a, touching it on the east side",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: no component 28"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "place",
+     "component": "@b",
+     "at": [
+      3,
+      1,
+      1
+     ]
+    }
+   ],
+   "ms": 1115.437167,
+   "load": 129.562833,
+   "promptTok": 1699,
+   "genTok": 22,
+   "tokPerSec": 41.42238177889375,
+   "rssMb": 1100.03
+  },
+  {
+   "id": "m109",
+   "tier": "medium",
+   "cat": null,
+   "request": "make the house a component called hut and place another hut 10 m east",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "make_component",
+     "ids": [
+      "@house"
+     ],
+     "name": "hut"
+    },
+    {
+     "cmd": "place",
+     "component": "hut",
+     "at": [
+      10,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 1692.931042,
+   "load": 75.068958,
+   "promptTok": 1714,
+   "genTok": 38,
+   "tokPerSec": 42.33349850416199,
+   "rssMb": 1085.77
+  },
+  {
+   "id": "m111",
+   "tier": "medium",
+   "cat": null,
+   "request": "paint the front face of the block red",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "0/1 faces red {\"normal\":[0,-1,0]} (materials )"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "paint",
+     "ids": [
+      "@f"
+     ],
+     "color": [
+      1,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 1096.64825,
+   "load": 63.35175,
+   "promptTok": 1693,
+   "genTok": 22,
+   "tokPerSec": 42.23807721459571,
+   "rssMb": 1083.81
+  },
+  {
+   "id": "m113",
+   "tier": "medium",
+   "cat": null,
+   "request": "draw a 4 m long dimension along the front edge of the block, set 1 m out",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "dimension",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      4,
+      0,
+      0
+     ],
+     "offset": [
+      -1,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 1449.120625,
+   "load": 74.879375,
+   "promptTok": 1705,
+   "genTok": 34,
+   "tokPerSec": 41.760457276024574,
+   "rssMb": 1011.77
+  },
+  {
+   "id": "m115",
+   "tier": "medium",
+   "cat": null,
+   "request": "a tree and a bench side by side near 5, 5",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "insert",
+     "asset": "tree",
+     "at": [
+      5,
+      5,
+      0
+     ]
+    },
+    {
+     "cmd": "insert",
+     "asset": "bench",
+     "at": [
+      5,
+      5,
+      2.7
+     ]
+    }
+   ],
+   "ms": 1670.44,
+   "load": 79.56,
+   "promptTok": 1643,
+   "genTok": 40,
+   "tokPerSec": 41.213380273395224,
+   "rssMb": 1077.84
+  },
+  {
+   "id": "m117",
+   "tier": "medium",
+   "cat": null,
+   "request": "a box 2 by 2 by 2 at x 10, y 10",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox max[z] 0.000, want 2"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "box",
+     "as": "box"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      10,
+      10,
+      0
+     ],
+     "to": [
+      12,
+      12,
+      0
+     ],
+     "as": "f"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f",
+     "distance": 0
+    },
+    {
+     "cmd": "end_group"
+    }
+   ],
+   "ms": 2652.606375,
+   "load": 74.393625,
+   "promptTok": 1649,
+   "genTok": 65,
+   "tokPerSec": 41.7401065915304,
+   "rssMb": 1028.14
+  },
+  {
+   "id": "m119",
+   "tier": "medium",
+   "cat": null,
+   "request": "measure the volume of the tower",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "volume",
+     "id": "@tower"
+    }
+   ],
+   "ms": 805.800958,
+   "load": 84.199042,
+   "promptTok": 1684,
+   "genTok": 14,
+   "tokPerSec": 44.330890656927245,
+   "rssMb": 1099.78
+  },
+  {
+   "id": "m121",
+   "tier": "medium",
+   "cat": null,
+   "request": "pull the lot up into a 10 by 8 box 2 m high",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "pushpull",
+     "face": "@lot",
+     "distance": 2
+    }
+   ],
+   "ms": 898.292875,
+   "load": 71.707125,
+   "promptTok": 1673,
+   "genTok": 19,
+   "tokPerSec": 42.873695843098226,
+   "rssMb": 1083.28
+  },
+  {
+   "id": "m123",
+   "tier": "medium",
+   "cat": null,
+   "request": "a gable roof at 30° on a 6 by 4 m box 3 m tall",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: unknown name @top"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "roof",
+     "face": "@top",
+     "kind": "gable",
+     "pitch": 30
+    }
+   ],
+   "ms": 980.01325,
+   "load": 71.98675,
+   "promptTok": 1651,
+   "genTok": 23,
+   "tokPerSec": 41.824167084623454,
+   "rssMb": 1032.55
+  },
+  {
+   "id": "h125",
+   "tier": "hard",
+   "cat": null,
+   "request": "a white 6 x 5 house 2.8 m tall with a dark gray hip roof at 25 degrees",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "0/6 faces white {\"group\":\"^house$\"} (materials )",
+    "0/5 faces gray {\"group\":\"roof\"} (materials )",
+    "roof top z 2.80, want 3.82..4.58 for the pitch"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "house",
+     "as": "house"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      6,
+      5,
+      0
+     ],
+     "as": "f"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f",
+     "distance": 2.8
+    },
+    {
+     "cmd": "end_group"
+    },
+    {
+     "cmd": "roof",
+     "face": "@f",
+     "kind": "hip",
+     "pitch": 25
+    }
+   ],
+   "ms": 3263.237667,
+   "load": 65.762333,
+   "promptTok": 1654,
+   "genTok": 81,
+   "tokPerSec": 41.63079830752159,
+   "rssMb": 1091.64
+  },
+  {
+   "id": "h127",
+   "tier": "hard",
+   "cat": null,
+   "request": "four 3 m columns at the corners of a 6 by 6 square",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      0,
+      0
+     ],
+     "size": 0.3,
+     "height": 3
+    },
+    {
+     "cmd": "column",
+     "at": [
+      6,
+      0,
+      0
+     ],
+     "size": 0.3,
+     "height": 3
+    },
+    {
+     "cmd": "column",
+     "at": [
+      0,
+      6,
+      0
+     ],
+     "size": 0.3,
+     "height": 3
+    },
+    {
+     "cmd": "column",
+     "at": [
+      6,
+      6,
+      0
+     ],
+     "size": 0.3,
+     "height": 3
+    }
+   ],
+   "ms": 3823.539,
+   "load": 78.461,
+   "promptTok": 1645,
+   "genTok": 93,
+   "tokPerSec": 40.30955795246243,
+   "rssMb": 1002.41
+  },
+  {
+   "id": "h129",
+   "tier": "hard",
+   "cat": null,
+   "request": "a 3 by 3 grid of columns, 4 m apart",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[x] 0.300, want 8.3",
+    "bbox size[y] 0.300, want 8.3",
+    "bbox size[z] 2.000, want 2.7",
+    "groups /column/: 2, want 9"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "columns",
+     "as": "columns"
+    },
+    {
+     "cmd": "column",
+     "at": [
+      2,
+      1,
+      0
+     ],
+     "size": 0.3,
+     "height": 2
+    }
+   ],
+   "ms": 1721.832292,
+   "load": 102.167708,
+   "promptTok": 1643,
+   "genTok": 40,
+   "tokPerSec": 41.367504458465525,
+   "rssMb": 1090.81
+  },
+  {
+   "id": "h131",
+   "tier": "hard",
+   "cat": null,
+   "request": "8 columns evenly spaced on a circle of radius 5 m around the origin",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[x] 10.000, want 10.3",
+    "bbox size[y] 10.000, want 10.3",
+    "bbox size[z] 10.000, want 2.7",
+    "groups /column/: 0, want 8"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "circle",
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "radius": 5,
+     "as": "c"
+    },
+    {
+     "cmd": "array",
+     "ids": [
+      "@c"
+     ],
+     "by": [
+      0,
+      0,
+      1.25
+     ],
+     "count": 8
+    }
+   ],
+   "ms": 2052.595667,
+   "load": 76.404333,
+   "promptTok": 1645,
+   "genTok": 49,
+   "tokPerSec": 39.41002393106143,
+   "rssMb": 1026.91
+  },
+  {
+   "id": "h133",
+   "tier": "hard",
+   "cat": null,
+   "request": "three houses in a row, 10 m apart, the middle one twice as tall",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[x] 36.000, want 24",
+    "bbox size[y] 4.500, want 3",
+    "bbox size[z] 2.880, want 4.8",
+    "groups: 4, want 3"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "array",
+     "ids": [
+      "@house"
+     ],
+     "by": [
+      10,
+      0,
+      0
+     ],
+     "count": 3
+    },
+    {
+     "cmd": "scale",
+     "ids": [
+      "@house",
+      "@house",
+      "@house"
+     ],
+     "center": [
+      2,
+      1.5,
+      1.2
+     ],
+     "factor": [
+      2,
+      1.5,
+      1.2
+     ]
+    }
+   ],
+   "ms": 2913.01725,
+   "load": 73.98275,
+   "promptTok": 1716,
+   "genTok": 67,
+   "tokPerSec": 40.59988036924086,
+   "rssMb": 1074.39
+  },
+  {
+   "id": "h135",
+   "tier": "hard",
+   "cat": null,
+   "request": "an L-shaped room: 8 by 6 overall with a 4 by 3 notch cut from the north-east corner, 2.7 m walls",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "groups: 3, want 1"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       8,
+       0,
+       0
+      ],
+      [
+       8,
+       6,
+       0
+      ],
+      [
+       0,
+       6,
+       0
+      ]
+     ],
+     "thickness": 0.2,
+     "height": 2.7
+    },
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       3,
+       0
+      ],
+      [
+       4,
+       3,
+       0
+      ],
+      [
+       4,
+       6,
+       0
+      ],
+      [
+       0,
+       6,
+       0
+      ]
+     ],
+     "thickness": 0.2,
+     "height": 2.7
+    },
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       4,
+       0,
+       0
+      ],
+      [
+       8,
+       0,
+       0
+      ],
+      [
+       8,
+       3,
+       0
+      ],
+      [
+       4,
+       3,
+       0
+      ]
+     ],
+     "thickness": 0.2,
+     "height": 2.7
+    }
+   ],
+   "ms": 5470.578209,
+   "load": 79.421791,
+   "promptTok": 1661,
+   "genTok": 137,
+   "tokPerSec": 40.98761707333828,
+   "rssMb": 1002.92
+  },
+  {
+   "id": "h137",
+   "tier": "hard",
+   "cat": null,
+   "request": "a table: top 1.6 by 0.8 m and 4 cm thick at 0.75 m height, with four 5 cm square legs at the corners",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 3: points are not on one plane"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "table",
+     "as": "table"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0.75,
+      1.6
+     ],
+     "to": [
+      0.8,
+      0.75,
+      2.4
+     ],
+     "as": "f"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f",
+     "distance": 0.3
+    },
+    {
+     "cmd": "polygon",
+     "points": [
+      [
+       0,
+       0.75,
+       2.4
+      ],
+      [
+       0.8,
+       0.75,
+       2.4
+      ],
+      [
+       0.8,
+       0.65,
+       2.4
+      ],
+      [
+       0.8,
+       0.65,
+       1.6
+      ],
+      [
+       0,
+       0.65,
+       1.6
+      ],
+      [
+       0,
+       0.65,
+       0.75
+      ],
+      [
+       0,
+       0.65,
+       0.75
+      ],
+      [
+       0,
+       0.75,
+       0.65
+      ],
+      [
+       0,
+       0.75,
+       0.65
+      ],
+      [
+       0,
+       0.75,
+       0.65
+      ],
+      [
+       0,
+       0.75,
+       0.65
+      ],
+      [
+       0,
+       0.75,
+       0.65
+      ],
+      [
+       0,
+       0.75,
+       0.65
+      ],
+      [
+       0,
+       0.75,
+       0.65
+      ],
+      [
+       0,
+       0.75,
+       0.65
+      ],
+      [
+       0,
+       0.75,
+       0.65
+      ],
+      [
+       0,
+       0.75,
+       0.65
+      ],
+      [
+       0,
+       0.75,
+       0.65
+      ],
+      [
+       0,
+       0.75,
+       0.65
+      ],
+      [
+       0,
+       0.75,
+       0.65
+      ],
+      [
+       0,
+       0.75,
+       0.65
+      ],
+      [
+       0,
+       0.75,
+       0.65
+      ],
+      [
+       0,
+       0.75,
+       0.65
+      ],
+      [
+       0,
+       0.75,
+       0.65
+      ]
+     ]
+    },
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@table"
+     ],
+     "center": [
+      0.4,
+      0.4,
+      1.2
+     ],
+     "angle": 90
+    }
+   ],
+   "ms": 16419.938125,
+   "load": 77.061875,
+   "promptTok": 1667,
+   "genTok": 400,
+   "tokPerSec": 38.70728645653557,
+   "rssMb": 1006
+  },
+  {
+   "id": "h139",
+   "tier": "hard",
+   "cat": null,
+   "request": "a staircase 1 m wide rising 2.7 m with a 1.5 m square landing at the top",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "stairs",
+     "at": [
+      0,
+      0,
+      0
+     ],
+     "rise": 2.7,
+     "direction": 45,
+     "width": 1.5
+    }
+   ],
+   "ms": 1511.620708,
+   "load": 153.379292,
+   "promptTok": 1653,
+   "genTok": 34,
+   "tokPerSec": 42.17280707347723,
+   "rssMb": 1078.19
+  },
+  {
+   "id": "h141",
+   "tier": "hard",
+   "cat": null,
+   "request": "two rooms side by side, each 4 by 4 m with 2.5 m walls, sharing the wall at x = 4",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       4,
+       0,
+       0
+      ],
+      [
+       4,
+       4,
+       0
+      ],
+      [
+       0,
+       4,
+       0
+      ]
+     ],
+     "thickness": 0.2,
+     "height": 2.5,
+     "closed": true
+    },
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       4,
+       0,
+       0
+      ],
+      [
+       8,
+       0,
+       0
+      ],
+      [
+       8,
+       4,
+       0
+      ],
+      [
+       4,
+       4,
+       0
+      ]
+     ],
+     "thickness": 0.2,
+     "height": 2.5,
+     "closed": true
+    }
+   ],
+   "ms": 4250.81225,
+   "load": 157.18775,
+   "promptTok": 1658,
+   "genTok": 101,
+   "tokPerSec": 40.049924237023,
+   "rssMb": 1000.64
+  },
+  {
+   "id": "h143",
+   "tier": "hard",
+   "cat": null,
+   "request": "move the tower so it stands against the east side of the house, then raise the tower another 1 m on top",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: unknown name @tower"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "move",
+     "ids": [
+      "@tower"
+     ],
+     "by": [
+      -4,
+      0,
+      0
+     ]
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@top",
+     "distance": 1
+    }
+   ],
+   "ms": 1816.422208,
+   "load": 80.577792,
+   "promptTok": 1722,
+   "genTok": 37,
+   "tokPerSec": 40.48103314091046,
+   "rssMb": 1074.2
+  },
+  {
+   "id": "h145",
+   "tier": "hard",
+   "cat": null,
+   "request": "a street of 4 houses 8 m apart along x, each with a 30 degree gable roof",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "groups /roof/: 1, want 4"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "houses",
+     "as": "houses"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      8,
+      2,
+      0
+     ],
+     "as": "f"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f",
+     "distance": 1
+    },
+    {
+     "cmd": "end_group"
+    },
+    {
+     "cmd": "roof",
+     "face": "@f",
+     "kind": "gable",
+     "pitch": 30
+    }
+   ],
+   "ms": 3246.623375,
+   "load": 82.376625,
+   "promptTok": 1652,
+   "genTok": 79,
+   "tokPerSec": 41.861567146372316,
+   "rssMb": 1068.36
+  },
+  {
+   "id": "h147",
+   "tier": "hard",
+   "cat": null,
+   "request": "a 12 m by 8 m lot with a 6 by 4 m house 3 m tall in its middle",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[x] 12.100, want 12",
+    "bbox size[y] 8.200, want 8",
+    "bbox size[z] 6.000, want 3",
+    "groups: 4, want 1"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "lot",
+     "as": "lot"
+    },
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       12,
+       0,
+       0
+      ],
+      [
+       12,
+       8,
+       0
+      ],
+      [
+       0,
+       8,
+       0
+      ]
+     ],
+     "thickness": 0.2,
+     "height": 6
+    },
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       4,
+       0
+      ],
+      [
+       12,
+       4,
+       0
+      ],
+      [
+       12,
+       8,
+       4
+      ]
+     ],
+     "thickness": 0.2,
+     "height": 4
+    },
+    {
+     "cmd": "begin_group",
+     "name": "house",
+     "as": "house"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      3,
+      2,
+      0
+     ],
+     "to": [
+      6,
+      4,
+      0
+     ],
+     "as": "f"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f",
+     "distance": 3
+    },
+    {
+     "cmd": "end_group"
+    }
+   ],
+   "ms": 6430.902917,
+   "load": 90.097083,
+   "promptTok": 1655,
+   "genTok": 156,
+   "tokPerSec": 39.53652590778349,
+   "rssMb": 1026.02
+  },
+  {
+   "id": "h149",
+   "tier": "hard",
+   "cat": null,
+   "request": "an outdoor scene: a house 6 by 4 by 3 m, a tree 4 m to the east of it, and a car 3 m in front of it",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "groups: 3, want 1",
+    "instances: 0, want 2"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "house",
+     "as": "house"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      6,
+      4,
+      0
+     ],
+     "as": "f"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f",
+     "distance": 3
+    },
+    {
+     "cmd": "end_group"
+    },
+    {
+     "cmd": "begin_group",
+     "name": "tree",
+     "as": "tree"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      4,
+      0,
+      0
+     ],
+     "to": [
+      8,
+      2,
+      0
+     ],
+     "as": "f"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f",
+     "distance": 1.5
+    },
+    {
+     "cmd": "end_group"
+    },
+    {
+     "cmd": "begin_group",
+     "name": "car",
+     "as": "car"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      3,
+      0,
+      0
+     ],
+     "to": [
+      6,
+      4,
+      0
+     ],
+     "as": "f"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f",
+     "distance": 2
+    },
+    {
+     "cmd": "end_group"
+    }
+   ],
+   "ms": 7031.065584,
+   "load": 104.934416,
+   "promptTok": 1666,
+   "genTok": 175,
+   "tokPerSec": 41.63379789346438,
+   "rssMb": 1025.66
+  },
+  {
+   "id": "h151",
+   "tier": "hard",
+   "cat": null,
+   "request": "mirror the house to the other side of the y axis, so the two are back to back",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[y] 3.000, want 6",
+    "groups: 1, want 2"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@house"
+     ],
+     "center": [
+      2,
+      1.5,
+      0
+     ],
+     "angle": 180
+    }
+   ],
+   "ms": 1437.34775,
+   "load": 103.65225,
+   "promptTok": 1717,
+   "genTok": 30,
+   "tokPerSec": 43.09203563502782,
+   "rssMb": 1100.27
+  },
+  {
+   "id": "h153",
+   "tier": "hard",
+   "cat": null,
+   "request": "make the house 3 times longer along x only, then add a shed roof at 15 degrees",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "scale",
+     "ids": [
+      "@house"
+     ],
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "factor": 3
+    },
+    {
+     "cmd": "roof",
+     "face": "@top",
+     "kind": "shed",
+     "pitch": 15
+    }
+   ],
+   "ms": 1899.510125,
+   "load": 167.489875,
+   "promptTok": 1719,
+   "genTok": 44,
+   "tokPerSec": 42.40868986671507,
+   "rssMb": 1086.34
+  },
+  {
+   "id": "h155",
+   "tier": "hard",
+   "cat": null,
+   "request": "turn the whole street around: rotate both houses 180 degrees around their shared middle point at 7, 1.5",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@a",
+      "@b"
+     ],
+     "center": [
+      7,
+      1.5,
+      1
+     ],
+     "angle": 180
+    }
+   ],
+   "ms": 1473.100167,
+   "load": 100.899833,
+   "promptTok": 1713,
+   "genTok": 33,
+   "tokPerSec": 42.697051869229966,
+   "rssMb": 1096.64
+  },
+  {
+   "id": "a157",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "a wall 4.2 m long, 2.4 m high, 20 cm thick starting at the origin",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size 4.3,2.5,2.4, want 4.2,0.2,2.4 (x/y either way)"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       4.2,
+       0,
+       0
+      ],
+      [
+       4.2,
+       2.4,
+       0
+      ]
+     ],
+     "thickness": 0.2,
+     "height": 2.4
+    }
+   ],
+   "ms": 1925.37325,
+   "load": 86.62675,
+   "promptTok": 1654,
+   "genTok": 49,
+   "tokPerSec": 43.07031584435646,
+   "rssMb": 1094.97
+  },
+  {
+   "id": "a159",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "a column at x 2 y 3, 0.4 m square, 3.2 m tall",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "column",
+     "at": [
+      2,
+      3,
+      0
+     ],
+     "size": 0.4,
+     "height": 3.2
+    }
+   ],
+   "ms": 1179.326125,
+   "load": 67.673875,
+   "promptTok": 1652,
+   "genTok": 29,
+   "tokPerSec": 43.370781829919224,
+   "rssMb": 1092.92
+  },
+  {
+   "id": "a161",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "a circle centered at 5 5 with a radius of 1.75 meters",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "circle",
+     "center": [
+      5,
+      5,
+      0
+     ],
+     "radius": 1.75
+    }
+   ],
+   "ms": 990.549709,
+   "load": 64.450291,
+   "promptTok": 1647,
+   "genTok": 24,
+   "tokPerSec": 43.76915671125648,
+   "rssMb": 1093.69
+  },
+  {
+   "id": "a163",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "a tree at x 12 y 8",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 1: unknown name @tree"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "insert",
+     "asset": "tree",
+     "at": [
+      12,
+      8,
+      0
+     ]
+    },
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@tree"
+     ],
+     "center": [
+      12,
+      8,
+      0
+     ],
+     "angle": 45
+    }
+   ],
+   "ms": 1855.816417,
+   "load": 69.183583,
+   "promptTok": 1639,
+   "genTok": 46,
+   "tokPerSec": 42.528909213257364,
+   "rssMb": 1082.91
+  },
+  {
+   "id": "a165",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "a box 2 m by 2 m by 2 m centered on the origin",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 1: rect corners must share one coordinate (use polygon for tilted shapes)"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "box",
+     "as": "box"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      -1,
+      -1,
+      -1
+     ],
+     "to": [
+      3,
+      3,
+      3
+     ],
+     "as": "f"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f",
+     "distance": 0
+    },
+    {
+     "cmd": "end_group"
+    }
+   ],
+   "ms": 2473.677417,
+   "load": 72.322583,
+   "promptTok": 1646,
+   "genTok": 61,
+   "tokPerSec": 42.305486065924235,
+   "rssMb": 1074.05
+  },
+  {
+   "id": "a167",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "a wall from 0 0 to 6 0 and another from 6 0 to 6 4, both 2.7 m high and 0.2 m thick",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       6,
+       0,
+       0
+      ],
+      [
+       6,
+       4,
+       0
+      ]
+     ],
+     "height": 2.7,
+     "closed": true
+    },
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       6,
+       0,
+       0
+      ],
+      [
+       6,
+       4,
+       0
+      ]
+     ],
+     "thickness": 0.2
+    }
+   ],
+   "ms": 2948.282041,
+   "load": 66.717959,
+   "promptTok": 1668,
+   "genTok": 73,
+   "tokPerSec": 42.25993789432057,
+   "rssMb": 1092.33
+  },
+  {
+   "id": "a169",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "put a window 1 m from the left end of the north wall, 1.2 m wide, 1 m tall, sill at 1 m",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "no face matching {\"normal\":[0,1,0],\"normal_abs\":true,\"area\":1.2,\"x\":[1.55,1.65],\"z\":[1.45,1.55]}"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      4,
+      0
+     ],
+     "to": [
+      1,
+      5,
+      0
+     ],
+     "as": "f"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f",
+     "distance": 1,
+     "toward": [
+      0,
+      1,
+      0
+     ]
+    },
+    {
+     "cmd": "paint",
+     "ids": [
+      "@f"
+     ],
+     "color": [
+      1,
+      1,
+      1
+     ]
+    }
+   ],
+   "ms": 3292.629208,
+   "load": 77.370792,
+   "promptTok": 1730,
+   "genTok": 70,
+   "tokPerSec": 39.28215233646735,
+   "rssMb": 1010.7
+  },
+  {
+   "id": "a171",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "a 2 m cube sitting 3 m east of the house",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "name": "cube",
+     "as": "cube"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      7,
+      0,
+      0
+     ],
+     "to": [
+      9,
+      2,
+      0
+     ],
+     "as": "f"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "@f",
+     "distance": 2
+    },
+    {
+     "cmd": "end_group"
+    },
+    {
+     "cmd": "paint",
+     "ids": [
+      "@cube"
+     ],
+     "color": [
+      0,
+      0.6,
+      0
+     ]
+    }
+   ],
+   "ms": 3526.228083,
+   "load": 108.771917,
+   "promptTok": 1711,
+   "genTok": 80,
+   "tokPerSec": 40.82307473066192,
+   "rssMb": 1029.12
+  },
+  {
+   "id": "a173",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "a tree 3 m south of the house at its middle",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 1: unknown name @tree"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "insert",
+     "asset": "tree",
+     "at": [
+      4,
+      1.5,
+      0
+     ]
+    },
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@tree"
+     ],
+     "center": [
+      4,
+      1.5,
+      0
+     ],
+     "angle": 90
+    }
+   ],
+   "ms": 1973.262958,
+   "load": 113.737042,
+   "promptTok": 1710,
+   "genTok": 48,
+   "tokPerSec": 42.30536777010717,
+   "rssMb": 1087.17
+  },
+  {
+   "id": "a175",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "slide group a 1 m toward group b",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "/^a$/ min[x] 1.500, want 1",
+    "/^a$/ min[y] -1.500, want 0",
+    "/^a$/ max[x] 2.500, want 2",
+    "/^a$/ max[y] -0.500, want 1"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@a"
+     ],
+     "center": [
+      2,
+      0.5,
+      0.5
+     ],
+     "angle": 90
+    }
+   ],
+   "ms": 1404.301541,
+   "load": 97.698459,
+   "promptTok": 1695,
+   "genTok": 31,
+   "tokPerSec": 43.19802185165804,
+   "rssMb": 1090.12
+  },
+  {
+   "id": "a177",
+   "tier": "hard",
+   "cat": "a11y",
+   "request": "a door in the middle of the south wall of the room and a window in the middle of the north wall",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 1: rect has zero width"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "wall",
+     "points": [
+      [
+       0,
+       2.1,
+       0
+      ],
+      [
+       6,
+       2.1,
+       0
+      ],
+      [
+       6,
+       3.5,
+       0
+      ],
+      [
+       0,
+       3.5,
+       0
+      ]
+     ],
+     "thickness": 0.2,
+     "height": 2.4,
+     "closed": true
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      3,
+      1.7,
+      0
+     ],
+     "to": [
+      3,
+      3.3,
+      0
+     ],
+     "as": "door"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      3,
+      2.9,
+      0
+     ],
+     "to": [
+      3,
+      4.5,
+      0
+     ],
+     "as": "window"
+    }
+   ],
+   "ms": 4690.673958,
+   "load": 107.326042,
+   "promptTok": 1707,
+   "genTok": 117,
+   "tokPerSec": 41.46076866528006,
+   "rssMb": 1015.14
+  },
+  {
+   "id": "a179",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "make it taller by 1 meter",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[x] 6.000, want 4",
+    "bbox size[y] 4.500, want 3",
+    "bbox size[z] 3.600, want 3.4"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "scale",
+     "ids": [
+      "@house"
+     ],
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "factor": 1.5
+    }
+   ],
+   "ms": 1235.672292,
+   "load": 92.327708,
+   "promptTok": 1683,
+   "genTok": 28,
+   "tokPerSec": 43.179604508595325,
+   "rssMb": 1088.75
+  },
+  {
+   "id": "a181",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "move it back 5 meters",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox min[x] -5.000, want 0",
+    "bbox max[x] -1.000, want 4"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "undo"
+    },
+    {
+     "cmd": "move",
+     "ids": [
+      "@house"
+     ],
+     "by": [
+      -5,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 1320.430167,
+   "load": 73.569833,
+   "promptTok": 1707,
+   "genTok": 26,
+   "tokPerSec": 43.13204749765437,
+   "rssMb": 1090.03
+  },
+  {
+   "id": "a183",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "move the door 0.5 m to the right",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "move",
+     "ids": [
+      "@door"
+     ],
+     "by": [
+      0.5,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 1300.757625,
+   "load": 81.242375,
+   "promptTok": 1760,
+   "genTok": 24,
+   "tokPerSec": 42.851445068837016,
+   "rssMb": 1096.72
+  },
+  {
+   "id": "a185",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "a bit wider: add 1 meter to the width",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size[x] 4.800, want 5",
+    "bbox size[y] 3.600, want 3",
+    "bbox size[z] 2.880, want 2.4"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "scale",
+     "ids": [
+      "@house"
+     ],
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "factor": 1.2
+    }
+   ],
+   "ms": 1329.883833,
+   "load": 101.116167,
+   "promptTok": 1687,
+   "genTok": 28,
+   "tokPerSec": 42.44260708309936,
+   "rssMb": 1089.78
+  },
+  {
+   "id": "a187",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "undo that and then move the house 2 m east",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "undo"
+    },
+    {
+     "cmd": "move",
+     "ids": [
+      "@house"
+     ],
+     "by": [
+      2,
+      0,
+      0
+     ]
+    }
+   ],
+   "ms": 1510.632084,
+   "load": 342.367916,
+   "promptTok": 1712,
+   "genTok": 26,
+   "tokPerSec": 38.09637077151018,
+   "rssMb": 1013.09
+  },
+  {
+   "id": "a189",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "rotate it a quarter turn about the origin",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@house"
+     ],
+     "center": [
+      0,
+      0,
+      0
+     ],
+     "angle": 90
+    }
+   ],
+   "ms": 1349.139125,
+   "load": 164.860875,
+   "promptTok": 1684,
+   "genTok": 27,
+   "tokPerSec": 41.64476242136555,
+   "rssMb": 1086.28
+  },
+  {
+   "id": "a191",
+   "tier": "hard",
+   "cat": "a11y",
+   "request": "move the door 1 m left and raise it 0.1 m",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "/^door$/ min[x] 2.450, want 1.5",
+    "/^door$/ min[z] 0.000, want 0.1",
+    "/^door$/ max[z] 2.100, want 2.2"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "move",
+     "ids": [
+      "@door"
+     ],
+     "by": [
+      -1,
+      0,
+      0
+     ]
+    },
+    {
+     "cmd": "rotate",
+     "ids": [
+      "@door"
+     ],
+     "center": [
+      2.5,
+      0,
+      -0.05
+     ],
+     "angle": 90
+    }
+   ],
+   "ms": 2276.593375,
+   "load": 96.406625,
+   "promptTok": 1764,
+   "genTok": 50,
+   "tokPerSec": 41.859553500869886,
+   "rssMb": 1089.48
+  },
+  {
+   "id": "a193",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "what's in the model?",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "parts",
+     "ids": [
+      "@room"
+     ]
+    }
+   ],
+   "ms": 798.355958,
+   "load": 97.644042,
+   "promptTok": 1691,
+   "genTok": 14,
+   "tokPerSec": 45.155293699577335,
+   "rssMb": 1092.11
+  },
+  {
+   "id": "a195",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "what's the volume of the house?",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "volume",
+     "id": "@house"
+    }
+   ],
+   "ms": 802.387208,
+   "load": 69.612792,
+   "promptTok": 1706,
+   "genTok": 14,
+   "tokPerSec": 44.20915964778891,
+   "rssMb": 1094.52
+  },
+  {
+   "id": "a197",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "is there a door? where is it?",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "parts",
+     "ids": [
+      "@room"
+     ]
+    },
+    {
+     "cmd": "faces"
+    }
+   ],
+   "ms": 1308.066208,
+   "load": 94.933792,
+   "promptTok": 1758,
+   "genTok": 19,
+   "tokPerSec": 40.92512317923589,
+   "rssMb": 1086.48
+  },
+  {
+   "id": "a199",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "how many things are there and what are they called?",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "parts",
+     "ids": [
+      "@a",
+      "@b"
+     ]
+    }
+   ],
+   "ms": 929.640084,
+   "load": 195.359916,
+   "promptTok": 1697,
+   "genTok": 17,
+   "tokPerSec": 41.606593577995355,
+   "rssMb": 1083.17
+  }
+ ]
+}

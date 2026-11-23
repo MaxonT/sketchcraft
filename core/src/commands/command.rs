@@ -1301,6 +1301,14 @@ pub enum Command {
         #[serde(default)]
         closed: bool,
     },
+    /// Read-only: a room by name (loose: "master" finds "Primary Bedroom"): its floor area in m² and ft², perimeter, level.
+    RoomInfo { name: String },
+    /// A whole house from a compact plan: floors of rooms (rect or orthogonal polygon on the wall centerlines)
+    /// and openings between two rooms (or a room and "outside"). See `floorplan.rs`. One undo step.
+    FloorplanBuild {
+        #[serde(flatten)]
+        plan: serde_json::Map<String, Value>,
+    },
     /// Pull a whole wall (the one `face` is a side of) `by` metres along that face's outward normal (negative: back
     /// the other way). Both sides move together so it keeps its thickness; its doors and windows ride along; walls
     /// joined to it stretch or shrink to stay joined. Refused, with the model untouched, when it can't be done cleanly.

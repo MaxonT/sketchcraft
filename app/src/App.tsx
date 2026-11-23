@@ -26,6 +26,7 @@ import { MatchPhoto, type PhotoMatch } from "./matchphoto";
 import { prepareImage } from "./textures";
 import { savedSettings, store } from "./skins";
 import { STYLE_KEY, STYLE_PRESETS, chosenStyle, readChosenStyle, startingStyles, styleForModel } from "./styledefaults";
+import { AiPanel } from "./aibox";
 import { panelTabs, readSideTab, shownTab, SIDE_TAB_KEY, stepTab, type SideTab } from "./sidetabs";
 import { useLook } from "./uselook";
 import { CommandPalette, type Command } from "./palette";
@@ -59,7 +60,7 @@ import { PositionPanel } from "./positionpanel";
 import { UvPanel } from "./uvpanel";
 import { RestoreDialog } from "./restore";
 import { TimelinePanel } from "./timeline";
-import { LearnCenter, LessonCard, lessonsDone, useLearnCtx } from "./learn";
+import { LearnCenter, LessonCard, useLearnCtx } from "./learn";
 
 const DEFAULT_BUILD: BuildSettings = {
   roomOpening: "door",
@@ -756,6 +757,11 @@ function ModelingApp() {
   const tabs = panelTabs(wsId, layout);
   const curTab = shownTab(tab, tabs);
   const showSide = ws.showLeft || (merged && ws.showRight);
+  // the top-bar SketchCraft AI button: show the side panel on its AI tab
+  const openAi = () => {
+    if (!showSide) editWs(merged ? { showLeft: true, showRight: true } : { showLeft: true });
+    chooseTab("ai");
+  };
   const chooseTab = (t: SideTab) => {
     setTab(t);
     if (merged) store.set(SIDE_TAB_KEY, t);
@@ -952,8 +958,8 @@ function ModelingApp() {
           </button>
         </div>
         <div className="top-actions">
-          <button className="btn small ghost learn-btn" title="Lessons and demos: learn SketchCraft by doing" onClick={() => setShowLearn(true)}>
-            Learn{lessonsDone().length === 0 && <i className="learn-dot" aria-label="(new)" />}
+          <button className="btn small ghost ai-btn" data-testid="ai-btn" title="SketchCraft AI: ask for changes in plain words (local test)" onClick={openAi}>
+            SketchCraft AI
           </button>
           <button className="btn small ghost skin-btn" title="Themes: SketchCraft's colors, layout and icons" onClick={() => setShowSkins(true)}>
             <Icons.theme />
@@ -987,13 +993,14 @@ function ModelingApp() {
         >
           {tabs.map((t) => (
             <button key={t} id={`side-tab-${t}`} role="tab" aria-selected={curTab === t} aria-controls="side-tabpanel" tabIndex={curTab === t ? 0 : -1} className={curTab === t ? "on" : ""} onClick={() => chooseTab(t)}>
-              {t === "outliner" ? "Outliner" : t === "library" ? "Library" : t === "pages" ? "Pages" : t === "properties" ? tr("tab.properties") : "Views"}
+              {t === "outliner" ? "Outliner" : t === "library" ? "Library" : t === "pages" ? "Pages" : t === "properties" ? tr("tab.properties") : t === "ai" ? tr("tab.ai") : "Views"}
               {t === "properties" && selCount > 0 && curTab !== "properties" && <i className="tab-dot" role="img" aria-label={tr("tab.hasSelection")} title={tr("tab.hasSelection")} />}
             </button>
           ))}
         </div>
         <div id="side-tabpanel" role="tabpanel" aria-labelledby={`side-tab-${curTab}`} className={curTab === "properties" ? "inspector-body" : "section grow"}>
           {curTab === "properties" && inspector}
+          {curTab === "ai" && <AiPanel scene={scene} run={run} refresh={refresh} say={say} importFile={importFile} />}
           {curTab === "pages" && <PagesPanel L={L} />}
           {scene && curTab === "outliner" && <Outliner scene={scene} sel={sel} setSel={setSel} run={run} byTag={!!styles.byTag} setByTag={(on) => setStyles((s) => ({ ...s, byTag: on }))} />}
           {scene && curTab === "library" && (

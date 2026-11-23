@@ -192,6 +192,10 @@ What changed in each SketchCraft release, newest first. The format follows
 ## [0.3.8] - 2026-11-18
 
 ### Added
+- **Build a whole house from a room list.** `floorplan_build` (for AI agents and plugins) takes floors of rooms, doors,
+  windows, open-plan sides and stairs, in meters or feet, and builds the walls (shared walls once), cuts the openings,
+  names each room and stacks the floors, as one undo step. `room_info` answers "how big is the master?" with the
+  room's area in square feet and square meters.
 - **Big drawing sets use far less memory and redraw faster.** The 52-page A1 permit set (about 200,000 faces) missed two
   of its budgets the first time it was measured: it peaked at 1.94 GB of memory (budget 1.5 GB) and its slowest drawing
   took 1.06 s to redraw after a wall moved (budget 1 s). Drawings kept for the pages now hold their plain lines packed

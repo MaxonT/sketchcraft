@@ -1,0 +1,3691 @@
+{
+ "summary": {
+  "tag": "smollm2_1.7b-free",
+  "model": "smollm2:1.7b",
+  "mode": "free",
+  "shots": 0,
+  "n": 100,
+  "skipped": false,
+  "pass": 1,
+  "tiers": {
+   "easy": {
+    "n": 44,
+    "pass": 1
+   },
+   "medium": {
+    "n": 38,
+    "pass": 0
+   },
+   "hard": {
+    "n": 18,
+    "pass": 0
+   }
+  },
+  "a11y": {
+   "n": 22,
+   "pass": 0
+  },
+  "parseOk": 78,
+  "schemaValid": 11,
+  "engineAccepted": 4,
+  "medianMs": 1944.582125,
+  "p90Ms": 10011.960167,
+  "medianGenTok": 50,
+  "medianTokPerSec": 29.66201392923252,
+  "promptTok": 958,
+  "loadMs": 1883.79425,
+  "peakOllamaRssMb": 93
+ },
+ "rows": [
+  {
+   "id": "e001",
+   "tier": "easy",
+   "cat": null,
+   "request": "a 4 by 3 meter box 2.4 m tall",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size 4,3,0, want 4,3,2.4 (x/y either way)"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      4,
+      3,
+      0
+     ],
+     "as": "instance"
+    }
+   ],
+   "ms": 1558.578125,
+   "load": 202.421875,
+   "promptTok": 934,
+   "genTok": 35,
+   "tokPerSec": 29.377591728388868,
+   "rssMb": 72.6094
+  },
+  {
+   "id": "e003",
+   "tier": "easy",
+   "cat": null,
+   "request": "a cube 3 m on each side",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size 3,3,0, want 3,3,3 (x/y either way)"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      3,
+      3,
+      0
+     ],
+     "as": "instance"
+    }
+   ],
+   "ms": 1448.809083,
+   "load": 283.190917,
+   "promptTok": 928,
+   "genTok": 35,
+   "tokPerSec": 30.26504180597993,
+   "rssMb": 75.3906
+  },
+  {
+   "id": "e005",
+   "tier": "easy",
+   "cat": null,
+   "request": "a 50 cm cube",
+   "pass": false,
+   "stage": "check",
+   "errs": [
+    "bbox size 50,50,0, want 0.5,0.5,0.5 (x/y either way)"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      50,
+      50,
+      0
+     ],
+     "as": "instance"
+    }
+   ],
+   "ms": 1380.565958,
+   "load": 54.434042,
+   "promptTok": 926,
+   "genTok": 37,
+   "tokPerSec": 29.663644321860083,
+   "rssMb": 75.9531
+  },
+  {
+   "id": "e007",
+   "tier": "easy",
+   "cat": null,
+   "request": "a tall thin pillar 0.5 m square and 4 m tall",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 32827.620458,
+   "load": 37.379542,
+   "promptTok": 935,
+   "genTok": 900,
+   "tokPerSec": 28.157600939001327,
+   "rssMb": 45.3438,
+   "raw": "{\n  \"commands\": [\n    {\n      \"cmd\": \"place\",\n      \"args\": {\n        \"component\": \"column\",\n        \"at\": [0, 0, 2]\n      }\n    },\n    {\n      \"cmd\": \"dimension\",\n      \"args\": {\n        \"from\": [0, 0, -4],\n        \"to\": [0, 0, 4],\n        \"offset\": [-0.5, 0, 0]\n      }\n    },\n    {\n      \"cmd\": \"dimension\",\n      \"args\": {\n        \"from\": [0, 0, 3.5],\n        \"to\": [0, 0, 4.5],\n        \"offset\":"
+  },
+  {
+   "id": "e009",
+   "tier": "easy",
+   "cat": null,
+   "request": "a box 1.2 m by 0.6 m, 0.75 m high",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `from`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "rect",
+     "args": {
+      "from": [
+       0,
+       0,
+       0
+      ],
+      "to": [
+       1.2,
+       0,
+       0
+      ],
+      "as": "box"
+     }
+    },
+    {
+     "cmd": "rect",
+     "args": {
+      "from": [
+       0,
+       0,
+       0
+      ],
+      "to": [
+       0,
+       0,
+       0.75
+      ],
+      "as": "box"
+     }
+    },
+    {
+     "cmd": "rect",
+     "args": {
+      "from": [
+       0,
+       0,
+       1.2
+      ],
+      "to": [
+       0,
+       0,
+       2.7
+      ],
+      "as": "box"
+     }
+    }
+   ],
+   "ms": 4306.15325,
+   "load": 101.84675,
+   "promptTok": 941,
+   "genTok": 115,
+   "tokPerSec": 28.861647422809796,
+   "rssMb": 69.5312
+  },
+  {
+   "id": "e011",
+   "tier": "easy",
+   "cat": null,
+   "request": "a 10 foot by 12 foot slab 4 inches thick",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `from`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "rect",
+     "args": [
+      "-x",
+      "10",
+      "-y",
+      "12",
+      "-z",
+      "4"
+     ]
+    }
+   ],
+   "ms": 1910.601,
+   "load": 128.399,
+   "promptTok": 935,
+   "genTok": 47,
+   "tokPerSec": 29.973616107063663,
+   "rssMb": 72.25
+  },
+  {
+   "id": "e013",
+   "tier": "easy",
+   "cat": null,
+   "request": "a flat 8 by 8 square on the ground",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `from`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "rect",
+     "args": [
+      "0,0,8,8"
+     ]
+    }
+   ],
+   "ms": 1384.137292,
+   "load": 119.862708,
+   "promptTok": 931,
+   "genTok": 35,
+   "tokPerSec": 31.25222175392901,
+   "rssMb": 71.9844
+  },
+  {
+   "id": "e015",
+   "tier": "easy",
+   "cat": null,
+   "request": "a circle of radius 2 m",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 2618.196666,
+   "load": 69.803334,
+   "promptTok": 927,
+   "genTok": 76,
+   "tokPerSec": 30.83298973448509,
+   "rssMb": 75.8906,
+   "raw": "{\"commands\":[{\"cmd\":\"circle\",\"args\":{\"radius\":2}}],\"commands\":[{\"cmd\":\"rect\",\"args\":{\"from\":[-1,-1,0],[1,-1,0],\"as\":\"face\"}},{\"cmd\":\"polygon\",\"args\":{\"points\":[[0,0,0]]},\"as\":\"face\"}]}"
+  },
+  {
+   "id": "e017",
+   "tier": "easy",
+   "cat": null,
+   "request": "a cylinder with radius 1 m and height 3 m",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 2270.71525,
+   "load": 108.28475,
+   "promptTok": 932,
+   "genTok": 61,
+   "tokPerSec": 30.39354537638064,
+   "rssMb": 73.0156,
+   "raw": "{\"commands\":[{\"cmd\":\"rect\",\"from\":[0,0,0],\"to\":[2*math.pi,1,0],\"as\":\"cylinder\"},{\"cmd\":\"move\",\"ids\":[\"cylinder\"],\"by\":[0,-3,0]}]}"
+  },
+  {
+   "id": "e019",
+   "tier": "easy",
+   "cat": null,
+   "request": "a barrel: a cylinder 0.6 m wide and 0.9 m tall",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `from`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "rect",
+     "args": [
+      "0.3",
+      "0.9",
+      "as:barrel"
+     ]
+    }
+   ],
+   "ms": 1554.903042,
+   "load": 44.096958,
+   "promptTok": 938,
+   "genTok": 42,
+   "tokPerSec": 29.803413702874472,
+   "rssMb": 74.6562
+  },
+  {
+   "id": "e021",
+   "tier": "easy",
+   "cat": null,
+   "request": "a round column 4 m tall and 0.4 m wide",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `at`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "column",
+     "args": {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "size": 0.3,
+      "height": 2.7,
+      "round": true
+     }
+    }
+   ],
+   "ms": 2380.879916,
+   "load": 101.120084,
+   "promptTok": 934,
+   "genTok": 65,
+   "tokPerSec": 30.900065390670846,
+   "rssMb": 71.9688
+  },
+  {
+   "id": "e023",
+   "tier": "easy",
+   "cat": null,
+   "request": "a 3 m wall along the y axis, 0.3 m thick, 2.4 m tall",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `points`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "wall",
+     "args": {
+      "points": [
+       [
+        -1,
+        -1,
+        0
+       ],
+       [
+        -1,
+        1,
+        0
+       ],
+       [
+        1,
+        1,
+        0
+       ],
+       [
+        1,
+        -1,
+        0
+       ]
+      ],
+      "thickness": 0.3,
+      "height": 2.4
+     }
+    }
+   ],
+   "ms": 3380.0685,
+   "load": 51.9315,
+   "promptTok": 943,
+   "genTok": 94,
+   "tokPerSec": 29.66201392923252,
+   "rssMb": 71.8125
+  },
+  {
+   "id": "e025",
+   "tier": "easy",
+   "cat": null,
+   "request": "stairs rising 3 m, 1.2 m wide",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `component`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "place",
+     "args": {
+      "component": "stairs",
+      "at": [
+       0,
+       0,
+       3
+      ]
+     }
+    },
+    {
+     "cmd": "place",
+     "args": {
+      "component": "stairs",
+      "at": [
+       0.2,
+       0,
+       1.8
+      ],
+      "rotate": -90
+     }
+    },
+    {
+     "cmd": "place",
+     "args": {
+      "component": "stairs",
+      "at": [
+       0.4,
+       0,
+       1.8
+      ],
+      "rotate": -90
+     }
+    },
+    {
+     "cmd": "place",
+     "args": {
+      "component": "stairs",
+      "at": [
+       0.6,
+       0,
+       1.8
+      ],
+      "rotate": -90
+     }
+    },
+    {
+     "cmd": "place",
+     "args": {
+      "component": "stairs",
+      "at": [
+       0.8,
+       0,
+       1.8
+      ],
+      "rotate": -90
+     }
+    },
+    {
+     "cmd": "place",
+     "args": {
+      "component": "stairs",
+      "at": [
+       1,
+       0,
+       1.8
+      ]
+     }
+    }
+   ],
+   "ms": 10003.886667,
+   "load": 86.113333,
+   "promptTok": 932,
+   "genTok": 285,
+   "tokPerSec": 29.512805327931215,
+   "rssMb": 64.5
+  },
+  {
+   "id": "e027",
+   "tier": "easy",
+   "cat": null,
+   "request": "plant a tree at 5, 5",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `component`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "place",
+     "args": {
+      "component": "tree",
+      "at": [
+       5,
+       5
+      ]
+     }
+    }
+   ],
+   "ms": 1736.325375,
+   "load": 100.674625,
+   "promptTok": 929,
+   "genTok": 46,
+   "tokPerSec": 29.707347917084604,
+   "rssMb": 73.2031
+  },
+  {
+   "id": "e029",
+   "tier": "easy",
+   "cat": null,
+   "request": "a bench at x 2, y 0",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `component`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "place",
+     "args": {
+      "component": {
+       "name": "bench"
+      },
+      "at": {
+       "x": 2,
+       "y": 0
+      }
+     }
+    }
+   ],
+   "ms": 1244.347041,
+   "load": 58.652959,
+   "promptTok": 930,
+   "genTok": 34,
+   "tokPerSec": 30.56610102023028,
+   "rssMb": 71.875
+  },
+  {
+   "id": "e031",
+   "tier": "easy",
+   "cat": null,
+   "request": "add a door at x 3 on the ground",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `component`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "place",
+     "args": {
+      "component": "door",
+      "at": {
+       "x": 3,
+       "z": 0
+      }
+     }
+    }
+   ],
+   "ms": 1146.138542,
+   "load": 72.861458,
+   "promptTok": 930,
+   "genTok": 30,
+   "tokPerSec": 31.01607094511027,
+   "rssMb": 72.9688
+  },
+  {
+   "id": "e033",
+   "tier": "easy",
+   "cat": null,
+   "request": "a fire hydrant at 4, 4",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `asset`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "insert",
+     "args": {
+      "asset": "firehydrant",
+      "at": [
+       4,
+       4
+      ]
+     },
+     "as": ""
+    }
+   ],
+   "ms": 1831.109167,
+   "load": 115.890833,
+   "promptTok": 930,
+   "genTok": 49,
+   "tokPerSec": 30.172190009834566,
+   "rssMb": 73.4219
+  },
+  {
+   "id": "e035",
+   "tier": "easy",
+   "cat": null,
+   "request": "a palm tree at 8, 2",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `component`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "place",
+     "args": {
+      "component": {
+       "name": "palm_tree",
+       "as": "instance"
+      },
+      "at": {
+       "x": 8,
+       "y": 2
+      }
+     }
+    }
+   ],
+   "ms": 1557.459375,
+   "load": 74.540625,
+   "promptTok": 929,
+   "genTok": 41,
+   "tokPerSec": 29.29706168642609,
+   "rssMb": 70.3125
+  },
+  {
+   "id": "e037",
+   "tier": "easy",
+   "cat": null,
+   "request": "move the house 3 m north and 2 m up",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 1010.7625,
+   "load": 138.2375,
+   "promptTok": 1002,
+   "genTok": 21,
+   "tokPerSec": 30.843626454890373,
+   "rssMb": 75.2812,
+   "raw": "{cmd:\"move\", \"ids\":[\"@house\"], \"by\":[3,2]}"
+  },
+  {
+   "id": "e039",
+   "tier": "easy",
+   "cat": null,
+   "request": "rotate the selected group 45 degrees",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `ids`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "rotate",
+     "args": {
+      "ids": "@house",
+      "center": [
+       0,
+       0,
+       0
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "angle": 45
+     }
+    }
+   ],
+   "ms": 1710.0685,
+   "load": 151.9315,
+   "promptTok": 998,
+   "genTok": 44,
+   "tokPerSec": 29.262877259823533,
+   "rssMb": 73.625
+  },
+  {
+   "id": "e041",
+   "tier": "easy",
+   "cat": null,
+   "request": "turn the selected group 180 degrees around its own corner at the origin",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: a command needs a \"cmd\""
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    0,
+    0,
+    1
+   ],
+   "ms": 1446.503417,
+   "load": 64.496583,
+   "promptTok": 1006,
+   "genTok": 38,
+   "tokPerSec": 30.26919882502394,
+   "rssMb": 74.5
+  },
+  {
+   "id": "e043",
+   "tier": "easy",
+   "cat": null,
+   "request": "make the house twice as tall",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `ids`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "make_component",
+     "args": {
+      "ids": [
+       "@house"
+      ],
+      "name": "house_copy",
+      "as": "group"
+     }
+    },
+    {
+     "cmd": "place",
+     "args": {
+      "component": [
+       "@house_copy"
+      ],
+      "at": [
+       0,
+       3,
+       2.4
+      ]
+     }
+    }
+   ],
+   "ms": 2292.27825,
+   "load": 64.72175,
+   "promptTok": 996,
+   "genTok": 63,
+   "tokPerSec": 30.19599774950858,
+   "rssMb": 77.3125
+  },
+  {
+   "id": "e045",
+   "tier": "easy",
+   "cat": null,
+   "request": "copy the house 6 m to the east",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: invalid length 1, expected an array of length 3"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "copy",
+     "group_ids": [
+      "@house"
+     ],
+     "by": [
+      6
+     ]
+    }
+   ],
+   "ms": 1003.556084,
+   "load": 100.443916,
+   "promptTok": 999,
+   "genTok": 26,
+   "tokPerSec": 30.81391550498452,
+   "rssMb": 74.1094
+  },
+  {
+   "id": "e047",
+   "tier": "easy",
+   "cat": null,
+   "request": "rename the house to shed",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `id`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "rename",
+     "args": {
+      "id": "house",
+      "name": "shed"
+     }
+    }
+   ],
+   "ms": 863.729875,
+   "load": 47.270125,
+   "promptTok": 995,
+   "genTok": 23,
+   "tokPerSec": 31.109829716762654,
+   "rssMb": 77.5469
+  },
+  {
+   "id": "e049",
+   "tier": "easy",
+   "cat": null,
+   "request": "paint the house red",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `ids`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "paint",
+     "args": {
+      "ids": "@house",
+      "color": [
+       1,
+       0,
+       0
+      ]
+     }
+    }
+   ],
+   "ms": 1096.6813750000001,
+   "load": 64.318625,
+   "promptTok": 994,
+   "genTok": 30,
+   "tokPerSec": 30.872844849543185,
+   "rssMb": 78.7969
+  },
+  {
+   "id": "e051",
+   "tier": "easy",
+   "cat": null,
+   "request": "color the house green",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `ids`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "paint",
+     "args": {
+      "ids": "@house",
+      "color": [
+       0.588235,
+       0.686274,
+       0.6
+      ]
+     }
+    }
+   ],
+   "ms": 1658.5105,
+   "load": 61.4895,
+   "promptTok": 994,
+   "genTok": 46,
+   "tokPerSec": 30.423791792489823,
+   "rssMb": 78.2188
+  },
+  {
+   "id": "e053",
+   "tier": "easy",
+   "cat": null,
+   "request": "the house should be white",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `ids`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "paint",
+     "args": {
+      "ids": [
+       "@house"
+      ],
+      "color": [
+       1,
+       1,
+       1
+      ]
+     }
+    }
+   ],
+   "ms": 1788.574791,
+   "load": 54.425209,
+   "promptTok": 995,
+   "genTok": 51,
+   "tokPerSec": 30.6115734277675,
+   "rssMb": 79.8906
+  },
+  {
+   "id": "e055",
+   "tier": "easy",
+   "cat": null,
+   "request": "paint the top face red",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `ids`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "paint",
+     "args": {
+      "ids": "@house",
+      "color": [
+       1,
+       0,
+       0
+      ]
+     }
+    }
+   ],
+   "ms": 1077.12175,
+   "load": 53.87825,
+   "promptTok": 995,
+   "genTok": 30,
+   "tokPerSec": 31.17090784757903,
+   "rssMb": 81.625
+  },
+  {
+   "id": "e057",
+   "tier": "easy",
+   "cat": null,
+   "request": "what is the volume of the house?",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `at`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "pick",
+     "args": {
+      "at": {
+       "x": 1,
+       "y": 2,
+       "z": 2
+      },
+      "as": "@house"
+     }
+    },
+    {
+     "cmd": "volume",
+     "args": {
+      "id": "@house"
+     }
+    }
+   ],
+   "ms": 1790.458792,
+   "load": 61.541208,
+   "promptTok": 998,
+   "genTok": 50,
+   "tokPerSec": 30.996536343500548,
+   "rssMb": 80.5625
+  },
+  {
+   "id": "e059",
+   "tier": "easy",
+   "cat": null,
+   "request": "push the top of the tower up another 2 m",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `face`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "pushpull",
+     "as": "@tower",
+     "distance": 2,
+     "toward": [
+      0,
+      0,
+      1
+     ]
+    },
+    {
+     "cmd": "pick",
+     "at": [
+      0,
+      0,
+      6
+     ]
+    }
+   ],
+   "ms": 1802.697958,
+   "load": 58.302042,
+   "promptTok": 981,
+   "genTok": 47,
+   "tokPerSec": 31.02976906123425,
+   "rssMb": 75.1406
+  },
+  {
+   "id": "e061",
+   "tier": "easy",
+   "cat": null,
+   "request": "move the lot 4 m south",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `ids`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "move",
+     "args": {
+      "ids": [
+       "@lot"
+      ],
+      "by": [
+       -4
+      ]
+     }
+    },
+    {
+     "cmd": "info"
+    }
+   ],
+   "ms": 1260.97725,
+   "load": 56.02275,
+   "promptTok": 955,
+   "genTok": 33,
+   "tokPerSec": 30.827838356000775,
+   "rssMb": 75.1719
+  },
+  {
+   "id": "e063",
+   "tier": "easy",
+   "cat": null,
+   "request": "delete group a",
+   "pass": true,
+   "stage": "ok",
+   "errs": [],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "delete",
+     "ids": [
+      "@a"
+     ]
+    }
+   ],
+   "ms": 787.170167,
+   "load": 40.829833,
+   "promptTok": 981,
+   "genTok": 18,
+   "tokPerSec": 31.78761852867861,
+   "rssMb": 77.0938
+  },
+  {
+   "id": "e065",
+   "tier": "easy",
+   "cat": null,
+   "request": "make the post twice as high",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `ids`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "make_component",
+     "args": {
+      "ids": [
+       "@post"
+      ],
+      "name": "Column",
+      "as": "group"
+     }
+    },
+    {
+     "cmd": "make_component",
+     "args": {
+      "ids": [
+       "@post"
+      ],
+      "name": "Column",
+      "as": "group"
+     }
+    }
+   ],
+   "ms": 2148.396042,
+   "load": 63.603958,
+   "promptTok": 960,
+   "genTok": 58,
+   "tokPerSec": 30.26077352015361,
+   "rssMb": 72.9062
+  },
+  {
+   "id": "e067",
+   "tier": "easy",
+   "cat": null,
+   "request": "rotate group a 90 degrees around the point 0.5, 0.5",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `ids`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "rotate",
+     "args": {
+      "ids": [
+       "@a"
+      ],
+      "center": [
+       0.5,
+       0.5
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "angle": 90
+     }
+    }
+   ],
+   "ms": 1896.624834,
+   "load": 82.375166,
+   "promptTok": 997,
+   "genTok": 48,
+   "tokPerSec": 30.2158092792924,
+   "rssMb": 73.4844
+  },
+  {
+   "id": "m069",
+   "tier": "medium",
+   "cat": null,
+   "request": "a 6x4 room with 2.4 m walls",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `from`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "rect",
+     "args": [
+      "0,0,2.4,4,false"
+     ]
+    },
+    {
+     "cmd": "move",
+     "args": [
+      "1,0,0"
+     ]
+    },
+    {
+     "cmd": "move",
+     "args": [
+      "1,0,0"
+     ]
+    },
+    {
+     "cmd": "move",
+     "args": [
+      "1,0,0"
+     ]
+    },
+    {
+     "cmd": "move",
+     "args": [
+      "1,0,0"
+     ]
+    },
+    {
+     "cmd": "move",
+     "args": [
+      "1,0,0"
+     ]
+    },
+    {
+     "cmd": "rect",
+     "args": [
+      "2.4,0,0,4,false"
+     ]
+    }
+   ],
+   "ms": 6118.7845,
+   "load": 65.2155,
+   "promptTok": 933,
+   "genTok": 177,
+   "tokPerSec": 30.205545718056804,
+   "rssMb": 72.0469
+  },
+  {
+   "id": "m071",
+   "tier": "medium",
+   "cat": null,
+   "request": "a 8x3 room with 3 m walls",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 31973.301375,
+   "load": 88.698625,
+   "promptTok": 931,
+   "genTok": 900,
+   "tokPerSec": 28.839573393133083,
+   "rssMb": 37.7812,
+   "raw": "{\n  \"commands\": [\n    {\n      \"cmd\": \"place\",\n      \"args\": {\n        \"component\": \"wall\",\n        \"at\": [0, 0, 2.7]\n      }\n    },\n    {\n      \"cmd\": \"place\",\n      \"args\": {\n        \"component\": \"wall\",\n        \"at\": [3, 0, 2.7]\n      }\n    },\n    {\n      \"cmd\": \"place\",\n      \"args\": {\n        \"component\": \"wall\",\n        \"at\": [6, 0, 2.7]\n      }\n    },\n    {\n      \"cmd\": \"place\",\n      \"args\""
+  },
+  {
+   "id": "m073",
+   "tier": "medium",
+   "cat": null,
+   "request": "a 10x6 room with 3 m walls",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `from`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "rect",
+     "args": [
+      "-20",
+      "30",
+      null
+     ]
+    },
+    {
+     "cmd": "rect",
+     "args": [
+      "-20",
+      "-15",
+      null
+     ]
+    },
+    {
+     "cmd": "rect",
+     "args": [
+      "-15",
+      "-15",
+      null
+     ]
+    },
+    {
+     "cmd": "rect",
+     "args": [
+      "-15",
+      "30",
+      null
+     ]
+    }
+   ],
+   "ms": 4303.269,
+   "load": 87.731,
+   "promptTok": 932,
+   "genTok": 115,
+   "tokPerSec": 28.197531904457907,
+   "rssMb": 69.6406
+  },
+  {
+   "id": "m075",
+   "tier": "medium",
+   "cat": null,
+   "request": "make a 5 by 5 m room, 2.7 m high, with a door in the north wall",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `component`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "place",
+     "args": {
+      "component": "wall",
+      "at": [
+       -10,
+       -3,
+       0
+      ],
+      "name": "north_wall"
+     }
+    },
+    {
+     "cmd": "place",
+     "args": {
+      "component": "wall",
+      "at": [
+       10,
+       -3,
+       0
+      ],
+      "name": "south_wall"
+     }
+    },
+    {
+     "cmd": "place",
+     "args": {
+      "component": "wall",
+      "at": [
+       -10,
+       7,
+       0
+      ],
+      "name": "west_wall"
+     }
+    },
+    {
+     "cmd": "place",
+     "args": {
+      "component": "wall",
+      "at": [
+       10,
+       7,
+       0
+      ],
+      "name": "east_wall"
+     }
+    },
+    {
+     "cmd": "place",
+     "args": {
+      "component": "door",
+      "at": [
+       -5.25,
+       -3,
+       0
+      ],
+      "name": "north_west_door"
+     }
+    }
+   ],
+   "ms": 10011.960167,
+   "load": 584.039833,
+   "promptTok": 944,
+   "genTok": 255,
+   "tokPerSec": 29.215979728324506,
+   "rssMb": 72.9219
+  },
+  {
+   "id": "m077",
+   "tier": "medium",
+   "cat": null,
+   "request": "a 6 m by 4 m room, 2.4 m walls, with a window on the east wall",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `from`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "rect",
+     "args": [
+      "0,0,6,4"
+     ]
+    },
+    {
+     "cmd": "place",
+     "args": {
+      "component": "window",
+      "at": "0,2.4"
+     }
+    }
+   ],
+   "ms": 2344.575,
+   "load": 43.425,
+   "promptTok": 944,
+   "genTok": 66,
+   "tokPerSec": 30.18406565658084,
+   "rssMb": 75.1562
+  },
+  {
+   "id": "m079",
+   "tier": "medium",
+   "cat": null,
+   "request": "put two windows in the north wall of the room",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: a command needs a \"cmd\""
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    0,
+    1.8,
+    -0.5
+   ],
+   "ms": 1441.325542,
+   "load": 45.674458,
+   "promptTok": 987,
+   "genTok": 33,
+   "tokPerSec": 29.131250958892643,
+   "rssMb": 75.5
+  },
+  {
+   "id": "m081",
+   "tier": "medium",
+   "cat": null,
+   "request": "give the house a 45 degree gable roof",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: a command needs a \"cmd\""
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    "house"
+   ],
+   "ms": 1240.677708,
+   "load": 45.322292,
+   "promptTok": 1001,
+   "genTok": 27,
+   "tokPerSec": 27.743824673923413,
+   "rssMb": 66.4219
+  },
+  {
+   "id": "m083",
+   "tier": "medium",
+   "cat": null,
+   "request": "a shed roof on the house, pitched at 20 degrees",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 1635.778417,
+   "load": 43.221583,
+   "promptTok": 1003,
+   "genTok": 42,
+   "tokPerSec": 28.58430768821752,
+   "rssMb": 75.0938,
+   "raw": "{cmd:\"place\", cmd:\"house\", cmd:\"roof\", cmd:\"gable\", cmd:\"pitch\", cmd:\"20\", cmd:\"offset\", cmd:\"-1\", cmd:\"3\"}"
+  },
+  {
+   "id": "m085",
+   "tier": "medium",
+   "cat": null,
+   "request": "a row of 4 columns, 2 m apart",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: rect has zero width"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      1,
+      0,
+      0
+     ],
+     "as": "face"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      1,
+      0,
+      0
+     ],
+     "to": [
+      2,
+      0,
+      0
+     ],
+     "as": "face"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      2,
+      0,
+      0
+     ],
+     "to": [
+      3,
+      0,
+      0
+     ],
+     "as": "face"
+    },
+    {
+     "cmd": "rect",
+     "from": [
+      3,
+      0,
+      0
+     ],
+     "to": [
+      4,
+      0,
+      0
+     ],
+     "as": "face"
+    }
+   ],
+   "ms": 7059.008875,
+   "load": 40.991125,
+   "promptTok": 931,
+   "genTok": 122,
+   "tokPerSec": 18.05901051297259,
+   "rssMb": 39.9062
+  },
+  {
+   "id": "m087",
+   "tier": "medium",
+   "cat": null,
+   "request": "a colonnade of 5 columns 4 m apart",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `ids`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "group",
+     "name": "colonnade_1",
+     "as": "instance"
+    },
+    {
+     "cmd": "group",
+     "name": "colonnade_2",
+     "as": "instance"
+    },
+    {
+     "cmd": "group",
+     "name": "colonnade_3",
+     "as": "instance"
+    },
+    {
+     "cmd": "group",
+     "name": "colonnade_4",
+     "as": "instance"
+    },
+    {
+     "cmd": "group",
+     "name": "colonnade_5",
+     "as": "instance"
+    }
+   ],
+   "ms": 3770.196708,
+   "load": 70.803292,
+   "promptTok": 932,
+   "genTok": 96,
+   "tokPerSec": 27.58792976276541,
+   "rssMb": 71.1406
+  },
+  {
+   "id": "m089",
+   "tier": "medium",
+   "cat": null,
+   "request": "three 1 m boxes in a row, 3 m between them",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 1: bad command: invalid type: integer `3`, expected an array of length 3"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "begin_group",
+     "as": "box"
+    },
+    {
+     "cmd": "move",
+     "ids": "0,1,2",
+     "by": 3
+    },
+    {
+     "cmd": "end_group"
+    }
+   ],
+   "ms": 1654.779958,
+   "load": 55.220042,
+   "promptTok": 934,
+   "genTok": 41,
+   "tokPerSec": 28.294101188091943,
+   "rssMb": 72.5
+  },
+  {
+   "id": "m091",
+   "tier": "medium",
+   "cat": null,
+   "request": "array the house 4 times, 6 m apart",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `ids`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "array",
+     "args": {
+      "ids": [
+       "house"
+      ],
+      "by": 6
+     }
+    },
+    {
+     "cmd": "array",
+     "args": {
+      "ids": [
+       "house"
+      ],
+      "by": 6
+     }
+    },
+    {
+     "cmd": "array",
+     "args": {
+      "ids": [
+       "house"
+      ],
+      "by": 6
+     }
+    },
+    {
+     "cmd": "array",
+     "args": {
+      "ids": [
+       "house"
+      ],
+      "by": 6
+     }
+    },
+    {
+     "cmd": "array",
+     "args": {
+      "ids": [
+       "house"
+      ],
+      "by": 6
+     }
+    },
+    {
+     "cmd": "array",
+     "args": {
+      "ids": [
+       "house"
+      ],
+      "by": 6
+     }
+    }
+   ],
+   "ms": 9926.707834,
+   "load": 36.292166,
+   "promptTok": 1001,
+   "genTok": 120,
+   "tokPerSec": 12.87895998462314,
+   "rssMb": 32.1875
+  },
+  {
+   "id": "m093",
+   "tier": "medium",
+   "cat": null,
+   "request": "a row of 6 columns along y, 2.5 m apart",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: rect has zero width"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      18,
+      0,
+      0
+     ],
+     "as": "face"
+    }
+   ],
+   "ms": 1614.331792,
+   "load": 245.668208,
+   "promptTok": 935,
+   "genTok": 36,
+   "tokPerSec": 30.26069907468456,
+   "rssMb": 73.8125
+  },
+  {
+   "id": "m095",
+   "tier": "medium",
+   "cat": null,
+   "request": "a staircase going up 2.1 m toward the east that is 1 m wide",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `component`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "place",
+     "args": {
+      "component": "staircase",
+      "at": [
+       0,
+       0,
+       2.1
+      ],
+      "rotate": [
+       90,
+       0,
+       0
+      ]
+     }
+    }
+   ],
+   "ms": 2433.135209,
+   "load": 48.864791,
+   "promptTok": 938,
+   "genTok": 67,
+   "tokPerSec": 29.932870516293114,
+   "rssMb": 75.875
+  },
+  {
+   "id": "m097",
+   "tier": "medium",
+   "cat": null,
+   "request": "a triangular prism: base triangle with points (0,0), (4,0), (2,3), extruded 2 m up",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: rect has zero width"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      4,
+      0,
+      0
+     ],
+     "as": "prism_base"
+    },
+    {
+     "cmd": "pushpull",
+     "face": "prism_base",
+     "distance": 2,
+     "toward": [
+      0,
+      0,
+      1
+     ]
+    }
+   ],
+   "ms": 2463.061667,
+   "load": 62.938333,
+   "promptTok": 949,
+   "genTok": 66,
+   "tokPerSec": 29.359113884399108,
+   "rssMb": 77.375
+  },
+  {
+   "id": "m099",
+   "tier": "medium",
+   "cat": null,
+   "request": "a 2 m diameter pond (a flat circle) centered at 3, 4",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `from`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "rect",
+     "args": {
+      "from": [
+       -1,
+       -1
+      ],
+      "to": [
+       1,
+       1
+      ],
+      "as": null
+     }
+    },
+    {
+     "cmd": "rect",
+     "args": {
+      "from": [
+       3,
+       4
+      ],
+      "to": [
+       5,
+       6
+      ],
+      "as": null
+     }
+    }
+   ],
+   "ms": 3390.902625,
+   "load": 59.097375,
+   "promptTok": 938,
+   "genTok": 87,
+   "tokPerSec": 27.074097578712948,
+   "rssMb": 78.9688
+  },
+  {
+   "id": "m101",
+   "tier": "medium",
+   "cat": null,
+   "request": "inset the lot by 1 m",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 3573.453,
+   "load": 48.547,
+   "promptTok": 956,
+   "genTok": 71,
+   "tokPerSec": 22.530619036697694,
+   "rssMb": 76.7812,
+   "raw": "{\"commands\":[{\"cmd\":\"insert\",\"asset\":\"tree\",\"at\",{\"x\":-2,\"y\":7}},{\"cmd\":\"insert\",\"asset\":\"palm\",\"at\",{\"x\":0,\"y\":8}},{\"cmd\":\"insert\",\"asset\":\"car\",\"at\",{\"x\":1,\"y\":9}}]}\""
+  },
+  {
+   "id": "m103",
+   "tier": "medium",
+   "cat": null,
+   "request": "cut a 1 m square window hole in the middle of the facade at 1 m height",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 1: bad command: invalid type: string \"facade\", expected u32"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      6,
+      0,
+      3
+     ],
+     "as": "facade"
+    },
+    {
+     "cmd": "paint",
+     "ids": [
+      "facade"
+     ],
+     "color": [
+      1,
+      1,
+      1
+     ]
+    }
+   ],
+   "ms": 3393.807958,
+   "load": 49.192042,
+   "promptTok": 982,
+   "genTok": 89,
+   "tokPerSec": 28.69198825326789,
+   "rssMb": 82.2344
+  },
+  {
+   "id": "m105",
+   "tier": "medium",
+   "cat": null,
+   "request": "copy the house 6 m east and paint the copy blue",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 918.9054169999999,
+   "load": 60.094583,
+   "promptTok": 1002,
+   "genTok": 18,
+   "tokPerSec": 27.665367753059222,
+   "rssMb": 84.9688,
+   "raw": "{cmd:\"copy\", \"ids\":[\"house\"], \"by\":[6]}"
+  },
+  {
+   "id": "m107",
+   "tier": "medium",
+   "cat": null,
+   "request": "place b right next to a, touching it on the east side",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `component`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "place",
+     "args": {
+      "component": "b",
+      "at": [
+       3,
+       0,
+       0
+      ],
+      "by": [
+       1,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "cmd": "copy",
+     "args": {
+      "group": "a"
+     }
+    }
+   ],
+   "ms": 3943.46175,
+   "load": 57.53825,
+   "promptTok": 991,
+   "genTok": 87,
+   "tokPerSec": 23.956072836350046,
+   "rssMb": 61.8906
+  },
+  {
+   "id": "m109",
+   "tier": "medium",
+   "cat": null,
+   "request": "make the house a component called hut and place another hut 10 m east",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `ids`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "make_component",
+     "args": {
+      "ids": "@house",
+      "name": "hut"
+     }
+    },
+    {
+     "cmd": "place",
+     "args": {
+      "component": "hut",
+      "at": "10m[east]"
+     }
+    }
+   ],
+   "ms": 2870.844209,
+   "load": 58.155791,
+   "promptTok": 1006,
+   "genTok": 75,
+   "tokPerSec": 28.922763494297378,
+   "rssMb": 79
+  },
+  {
+   "id": "m111",
+   "tier": "medium",
+   "cat": null,
+   "request": "paint the front face of the block red",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `ids`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "paint",
+     "args": {
+      "ids": "@top"
+     }
+    },
+    {
+     "cmd": "info",
+     "args": {}
+    }
+   ],
+   "ms": 1255.167459,
+   "load": 52.832541,
+   "promptTok": 984,
+   "genTok": 30,
+   "tokPerSec": 29.348939043386476,
+   "rssMb": 81.7969
+  },
+  {
+   "id": "m113",
+   "tier": "medium",
+   "cat": null,
+   "request": "draw a 4 m long dimension along the front edge of the block, set 1 m out",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 1215.390167,
+   "load": 56.609833,
+   "promptTok": 996,
+   "genTok": 32,
+   "tokPerSec": 29.09504846990495,
+   "rssMb": 83.5469,
+   "raw": "{cmd:\"rect\", from:[0,0,2.4], to:[4,0,2.4], as:\"top\"}"
+  },
+  {
+   "id": "m115",
+   "tier": "medium",
+   "cat": null,
+   "request": "a tree and a bench side by side near 5, 5",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `component`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "place",
+     "args": {
+      "component": "tree",
+      "at": [
+       5,
+       5
+      ]
+     }
+    },
+    {
+     "cmd": "place",
+     "args": {
+      "component": "bench",
+      "at": [
+       5,
+       5
+      ]
+     }
+    }
+   ],
+   "ms": 2930.913833,
+   "load": 57.086167,
+   "promptTok": 934,
+   "genTok": 81,
+   "tokPerSec": 29.014061443512055,
+   "rssMb": 81.9062
+  },
+  {
+   "id": "m117",
+   "tier": "medium",
+   "cat": null,
+   "request": "a box 2 by 2 by 2 at x 10, y 10",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `component`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "place",
+     "args": {
+      "component": "box",
+      "at": [
+       10,
+       10
+      ]
+     }
+    }
+   ],
+   "ms": 1678.548542,
+   "load": 50.451458,
+   "promptTok": 940,
+   "genTok": 48,
+   "tokPerSec": 30.850458781318064,
+   "rssMb": 83.3906
+  },
+  {
+   "id": "m119",
+   "tier": "medium",
+   "cat": null,
+   "request": "measure the volume of the tower",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: \"measure\" isn't available to agents"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "measure",
+     "args": {
+      "name": "tower"
+     }
+    },
+    {
+     "cmd": "measure",
+     "args": {
+      "name": "top"
+     }
+    }
+   ],
+   "ms": 1397.984083,
+   "load": 52.015917,
+   "promptTok": 976,
+   "genTok": 32,
+   "tokPerSec": 29.318076367641037,
+   "rssMb": 88.9375
+  },
+  {
+   "id": "m121",
+   "tier": "medium",
+   "cat": null,
+   "request": "pull the lot up into a 10 by 8 box 2 m high",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `face`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "offset",
+     "points": [
+      "-5",
+      "0",
+      "0"
+     ],
+     "distance": 2
+    },
+    {
+     "cmd": "offset",
+     "points": [
+      "5",
+      "0",
+      "0"
+     ],
+     "distance": 2
+    }
+   ],
+   "ms": 1963.576875,
+   "load": 55.423125,
+   "promptTok": 965,
+   "genTok": 50,
+   "tokPerSec": 28.28985234797879,
+   "rssMb": 90.2344
+  },
+  {
+   "id": "m123",
+   "tier": "medium",
+   "cat": null,
+   "request": "a gable roof at 30° on a 6 by 4 m box 3 m tall",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 32784.311625,
+   "load": 51.688375,
+   "promptTok": 942,
+   "genTok": 900,
+   "tokPerSec": 28.155124962206433,
+   "rssMb": 47.7188,
+   "raw": "{\n  \"commands\": [\n    {\n      \"cmd\": \"place\",\n      \"args\": {\n        \"component\": \"gable_roof\",\n        \"at\": [-1.5, -2, 0]\n      }\n    },\n    {\n      \"cmd\": \"dimension\",\n      \"args\": {\n        \"from\": [\n          -3,\n          4,\n          0,\n          null,\n          null,\n          null,\n          null,\n          null,\n          null,\n          null,\n          null,\n          null,\n          "
+  },
+  {
+   "id": "h125",
+   "tier": "hard",
+   "cat": null,
+   "request": "a white 6 x 5 house 2.8 m tall with a dark gray hip roof at 25 degrees",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 34668.091167,
+   "load": 162.908833,
+   "promptTok": 945,
+   "genTok": 900,
+   "tokPerSec": 26.640141553692185,
+   "rssMb": 34.1562,
+   "raw": "{\n  \"commands\": [\n    {\n      \"cmd\": \"place\",\n      \"args\": {\n        \"component\": \"house\",\n        \"at\": [-1, -0.7, 2.8]\n      }\n    },\n    {\n      \"cmd\": \"place\",\n      \"args\": {\n        \"component\": \"roof\",\n        \"at\": [0, 0, 3],\n        \"name\": \"roof\"\n      }\n    },\n    {\n      \"cmd\": \"place\",\n      \"args\": {\n        \"component\": \"roof\",\n        \"at\": [-1.5, -0.7, 2.8],\n        \"name\": \"roof"
+  },
+  {
+   "id": "h127",
+   "tier": "hard",
+   "cat": null,
+   "request": "four 3 m columns at the corners of a 6 by 6 square",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `asset`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "insert",
+     "args": {
+      "asset": "column",
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rotate": false
+     }
+    },
+    {
+     "cmd": "insert",
+     "args": {
+      "asset": "column",
+      "at": [
+       6,
+       0,
+       0
+      ],
+      "rotate": false
+     }
+    },
+    {
+     "cmd": "insert",
+     "args": {
+      "asset": "column",
+      "at": [
+       3,
+       6,
+       0
+      ],
+      "rotate": false
+     }
+    },
+    {
+     "cmd": "insert",
+     "args": {
+      "asset": "column",
+      "at": [
+       0,
+       3,
+       0
+      ],
+      "rotate": false
+     }
+    }
+   ],
+   "ms": 5739.665625,
+   "load": 102.334375,
+   "promptTok": 936,
+   "genTok": 163,
+   "tokPerSec": 29.5991055147408,
+   "rssMb": 74.4375
+  },
+  {
+   "id": "h129",
+   "tier": "hard",
+   "cat": null,
+   "request": "a 3 by 3 grid of columns, 4 m apart",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 37653.93425,
+   "load": 38.06575,
+   "promptTok": 934,
+   "genTok": 900,
+   "tokPerSec": 24.652552316966528,
+   "rssMb": 33.3438,
+   "raw": "{\n  \"commands\": [\n    {\n      \"cmd\": \"group\",\n      \"args\": {\n        \"ids\": [\"0\"],\n        \"name\": \"columns\"\n      }\n    },\n    {\n      \"cmd\": \"group\",\n      \"args\": {\n        \"ids\": [\"1\"],\n        \"name\": \"columns\"\n      }\n    },\n    {\n      \"cmd\": \"group\",\n      \"args\": {\n        \"ids\": [\"2\"],\n        \"name\": \"columns\"\n      }\n    },\n    {\n      \"cmd\": \"group\",\n      \"args\": {\n        \"ids\": [\""
+  },
+  {
+   "id": "h131",
+   "tier": "hard",
+   "cat": null,
+   "request": "8 columns evenly spaced on a circle of radius 5 m around the origin",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `from`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "rect",
+     "args": {
+      "from": [
+       0,
+       0,
+       -5
+      ],
+      "to": [
+       0,
+       0,
+       5
+      ],
+      "as": "columns"
+     }
+    }
+   ],
+   "ms": 5863.20575,
+   "load": 1883.79425,
+   "promptTok": 936,
+   "genTok": 56,
+   "tokPerSec": 13.941313177816564,
+   "rssMb": 39.5469
+  },
+  {
+   "id": "h133",
+   "tier": "hard",
+   "cat": null,
+   "request": "three houses in a row, 10 m apart, the middle one twice as tall",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `ids`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "move",
+     "args": {
+      "ids": [
+       "@house",
+       "@house",
+       "@house"
+      ],
+      "by": [
+       10,
+       0
+      ]
+     }
+    },
+    {
+     "cmd": "copy",
+     "args": {
+      "group": "@top",
+      "by": [
+       5,
+       0,
+       2.4
+      ],
+      "as": "@middle_house"
+     }
+    },
+    {
+     "cmd": "move",
+     "args": {
+      "ids": [
+       "@house",
+       "@house",
+       "@house"
+      ],
+      "by": [
+       -10,
+       0
+      ]
+     }
+    }
+   ],
+   "ms": 6974.545834,
+   "load": 41.454166,
+   "promptTok": 1008,
+   "genTok": 136,
+   "tokPerSec": 21.04728219062828,
+   "rssMb": 41.0312
+  },
+  {
+   "id": "h135",
+   "tier": "hard",
+   "cat": null,
+   "request": "an L-shaped room: 8 by 6 overall with a 4 by 3 notch cut from the north-east corner, 2.7 m walls",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 34045.517708,
+   "load": 89.482292,
+   "promptTok": 954,
+   "genTok": 900,
+   "tokPerSec": 27.03363273821311,
+   "rssMb": 42.6875,
+   "raw": "{\n  \"commands\": [\n    {\n      \"cmd\": \"place\",\n      \"args\": {\n        \"component\": \"wall\",\n        \"at\": [-1.5, -0.6, 2.7]\n      }\n    },\n    {\n      \"cmd\": \"place\",\n      \"args\": {\n        \"component\": \"wall\",\n        \"at\": [1.5, -0.6, 2.7]\n      }\n    },\n    {\n      \"cmd\": \"place\",\n      \"args\": {\n        \"component\": \"wall\",\n        \"at\": [-1.5, 3.9, 2.7]\n      }\n    },\n    {\n      \"cmd\": \"plac"
+  },
+  {
+   "id": "h137",
+   "tier": "hard",
+   "cat": null,
+   "request": "a table: top 1.6 by 0.8 m and 4 cm thick at 0.75 m height, with four 5 cm square legs at the corners",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 34687.051,
+   "load": 55.949,
+   "promptTok": 958,
+   "genTok": 900,
+   "tokPerSec": 26.61608092006524,
+   "rssMb": 35.5312,
+   "raw": "{\"commands\":[{\"cmd\":\"rect\",\"from\":[0.75,0.75,0],\"to\":[1.6,0.8,-0.04]},{\"cmd\":\"copy\",\"ids\":[\"0\"]}],\"commands\":[{\"cmd\":\"move\",\"ids\":[\"0\"],\"by\":[-0.3,-0.2]}],\"commands\":[{\"cmd\":\"rect\",\"from\":[0.75,0.75,0],\"to\":[1.6,0.8,-0.04]},{\"cmd\":\"copy\",\"ids\":[\"1\"]}],\"commands\":[{\"cmd\":\"move\",\"ids\":[\"1\"],\"by\":[-0.3,-0.2]}],\"commands\":[{\"cmd\":\"rect\",\"from\":[0.75,0.75,0],\"to\":[1.6,0.8,-0.04]},{\"cmd\":\"copy\",\"ids\":[\""
+  },
+  {
+   "id": "h139",
+   "tier": "hard",
+   "cat": null,
+   "request": "a staircase 1 m wide rising 2.7 m with a 1.5 m square landing at the top",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `component`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "place",
+     "args": {
+      "component": "staircase",
+      "at": [
+       0,
+       0,
+       2.7
+      ]
+     }
+    },
+    {
+     "cmd": "insert",
+     "args": {
+      "asset": "landing_square",
+      "at": [
+       1.5,
+       0,
+       0
+      ],
+      "rotate": true
+     }
+    }
+   ],
+   "ms": 4013.057834,
+   "load": 65.942166,
+   "promptTok": 944,
+   "genTok": 101,
+   "tokPerSec": 26.597523036513664,
+   "rssMb": 42.5
+  },
+  {
+   "id": "h141",
+   "tier": "hard",
+   "cat": null,
+   "request": "two rooms side by side, each 4 by 4 m with 2.5 m walls, sharing the wall at x = 4",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 32227.943375,
+   "load": 47.056625,
+   "promptTok": 949,
+   "genTok": 900,
+   "tokPerSec": 28.614361051867828,
+   "rssMb": 44.125,
+   "raw": "{\n  \"commands\": [\n    {\n      \"cmd\": \"place\",\n      \"args\": {\n        \"component\": \"wall\",\n        \"at\": [4, 0]\n      }\n    },\n    {\n      \"cmd\": \"place\",\n      \"args\": {\n        \"component\": \"wall\",\n        \"at\": [8, 0]\n      }\n    },\n    {\n      \"cmd\": \"place\",\n      \"args\": {\n        \"component\": \"wall\",\n        \"at\": [4, 4]\n      }\n    },\n    {\n      \"cmd\": \"place\",\n      \"args\": {\n        \"co"
+  },
+  {
+   "id": "h143",
+   "tier": "hard",
+   "cat": null,
+   "request": "move the tower so it stands against the east side of the house, then raise the tower another 1 m on top",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `ids`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "move",
+     "args": {
+      "ids": [
+       "@house"
+      ],
+      "by": [
+       -4,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "cmd": "raise",
+     "args": {
+      "ids": [
+       "@tower"
+      ],
+      "by": [
+       0,
+       1,
+       0
+      ]
+     }
+    }
+   ],
+   "ms": 3052.611167,
+   "load": 179.388833,
+   "promptTok": 1014,
+   "genTok": 79,
+   "tokPerSec": 29.63427509470337,
+   "rssMb": 78.0312
+  },
+  {
+   "id": "h145",
+   "tier": "hard",
+   "cat": null,
+   "request": "a street of 4 houses 8 m apart along x, each with a 30 degree gable roof",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 32454.955,
+   "load": 55.045,
+   "promptTok": 943,
+   "genTok": 900,
+   "tokPerSec": 28.27021254494634,
+   "rssMb": 77.4688,
+   "raw": "{\n  \"commands\": [\n    {\n      \"cmd\": \"place\",\n      \"args\": {\n        \"component\": \"house\",\n        \"at\": [1.2, -0.5, 0]\n      }\n    },\n    {\n      \"cmd\": \"place\",\n      \"args\": {\n        \"component\": \"house\",\n        \"at\": [3.4, -0.5, 0]\n      }\n    },\n    {\n      \"cmd\": \"place\",\n      \"args\": {\n        \"component\": \"house\",\n        \"at\": [5.6, -0.5, 0]\n      }\n    },\n    {\n      \"cmd\": \"place\",\n"
+  },
+  {
+   "id": "h147",
+   "tier": "hard",
+   "cat": null,
+   "request": "a 12 m by 8 m lot with a 6 by 4 m house 3 m tall in its middle",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `from`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "rect",
+     "args": [
+      "0,0,12,8"
+     ]
+    },
+    {
+     "cmd": "place",
+     "args": [
+      "house",
+      "0,4,6"
+     ]
+    }
+   ],
+   "ms": 2173.24925,
+   "load": 58.75075,
+   "promptTok": 946,
+   "genTok": 61,
+   "tokPerSec": 30.00314782698048,
+   "rssMb": 81.0625
+  },
+  {
+   "id": "h149",
+   "tier": "hard",
+   "cat": null,
+   "request": "an outdoor scene: a house 6 by 4 by 3 m, a tree 4 m to the east of it, and a car 3 m in front of it",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `component`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "place",
+     "args": {
+      "component": "house",
+      "at": [
+       6,
+       0,
+       3
+      ]
+     }
+    },
+    {
+     "cmd": "place",
+     "args": {
+      "component": "tree",
+      "at": [
+       6.4,
+       0,
+       2.7
+      ],
+      "rotate": -90
+     }
+    },
+    {
+     "cmd": "place",
+     "args": {
+      "component": "car",
+      "at": [
+       3,
+       0,
+       1
+      ]
+     }
+    }
+   ],
+   "ms": 4932.837334,
+   "load": 49.162666,
+   "promptTok": 957,
+   "genTok": 136,
+   "tokPerSec": 28.86777255241543,
+   "rssMb": 87.0625
+  },
+  {
+   "id": "h151",
+   "tier": "hard",
+   "cat": null,
+   "request": "mirror the house to the other side of the y axis, so the two are back to back",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 774.505917,
+   "load": 54.494083,
+   "promptTok": 1009,
+   "genTok": 16,
+   "tokPerSec": 32.67750272944458,
+   "rssMb": 87.7969,
+   "raw": "{cmd:\"copy\", cmd:\"@house\", cmd:\"-1\"}"
+  },
+  {
+   "id": "h153",
+   "tier": "hard",
+   "cat": null,
+   "request": "make the house 3 times longer along x only, then add a shed roof at 15 degrees",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `from`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "rect",
+     "args": [
+      "4m",
+      "3m",
+      null
+     ]
+    },
+    {
+     "cmd": "place",
+     "args": {
+      "component": "shed_roof",
+      "at": "0.5m 1.2m 0"
+     }
+    }
+   ],
+   "ms": 2701.931834,
+   "load": 57.068166,
+   "promptTok": 1011,
+   "genTok": 76,
+   "tokPerSec": 29.682078568349493,
+   "rssMb": 88.0312
+  },
+  {
+   "id": "h155",
+   "tier": "hard",
+   "cat": null,
+   "request": "turn the whole street around: rotate both houses 180 degrees around their shared middle point at 7, 1.5",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `ids`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "rotate",
+     "args": {
+      "ids": [
+       "@a",
+       "@b"
+      ],
+      "center": [
+       7,
+       1.5
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ]
+     }
+    }
+   ],
+   "ms": 2498.313917,
+   "load": 50.686083,
+   "promptTok": 1005,
+   "genTok": 66,
+   "tokPerSec": 29.511772448587816,
+   "rssMb": 88.625
+  },
+  {
+   "id": "a157",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "a wall 4.2 m long, 2.4 m high, 20 cm thick starting at the origin",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `points`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "wall",
+     "args": {
+      "points": [
+       -1.6,
+       -1.6,
+       0
+      ],
+      "thickness": 0.2,
+      "height": 2.4,
+      "closed": false
+     }
+    },
+    {
+     "cmd": "wall",
+     "args": {
+      "points": [
+       1.6,
+       -1.6,
+       0
+      ],
+      "thickness": 0.2,
+      "height": 2.4,
+      "closed": true
+     }
+    }
+   ],
+   "ms": 4492.625833,
+   "load": 56.374167,
+   "promptTok": 945,
+   "genTok": 129,
+   "tokPerSec": 30.12651414526003,
+   "rssMb": 88.8125
+  },
+  {
+   "id": "a159",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "a column at x 2 y 3, 0.4 m square, 3.2 m tall",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 1760.429417,
+   "load": 47.570583,
+   "promptTok": 943,
+   "genTok": 50,
+   "tokPerSec": 30.510456752734928,
+   "rssMb": 89.7344,
+   "raw": "{\"commands\":[{\"cmd\":\"place\",\"args\":{\"component\":{\"name\":\"column\",\"at\":{\"x\":2,\"y\":3},\"size\":{\"x\":0.4,\"z\":3.2}}}]}\"}}"
+  },
+  {
+   "id": "a161",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "a circle centered at 5 5 with a radius of 1.75 meters",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: invalid length 2, expected an array of length 3"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      5,
+      5
+     ],
+     "to": [
+      10,
+      10
+     ],
+     "as": "circle"
+    }
+   ],
+   "ms": 1161.9965,
+   "load": 37.0035,
+   "promptTok": 938,
+   "genTok": 33,
+   "tokPerSec": 31.187492085051606,
+   "rssMb": 90.5312
+  },
+  {
+   "id": "a163",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "a tree at x 12 y 8",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 1646.951625,
+   "load": 54.048375,
+   "promptTok": 930,
+   "genTok": 46,
+   "tokPerSec": 30.24531502930351,
+   "rssMb": 91.625,
+   "raw": "{\"commands\":[{\"cmd\":\"place\",\"args\":{\"component\":{\"name\":\"tree\",\"at\":{\"x\":12,\"y\":8}}}],\"id\":\"0\"}],\"model_state\":{}}"
+  },
+  {
+   "id": "a165",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "a box 2 m by 2 m by 2 m centered on the origin",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `from`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "rect",
+     "args": [
+      "0,0,2,2"
+     ]
+    },
+    {
+     "cmd": "place",
+     "args": [
+      "box_instance",
+      "0,0,0"
+     ]
+    }
+   ],
+   "ms": 2154.81125,
+   "load": 55.18875,
+   "promptTok": 937,
+   "genTok": 62,
+   "tokPerSec": 30.44453006548413,
+   "rssMb": 91.7812
+  },
+  {
+   "id": "a167",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "a wall from 0 0 to 6 0 and another from 6 0 to 6 4, both 2.7 m high and 0.2 m thick",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 1391.637791,
+   "load": 53.362209,
+   "promptTok": 959,
+   "genTok": 38,
+   "tokPerSec": 30.97591544563704,
+   "rssMb": 90.2656,
+   "raw": "{\"commands\":[{\"rect\",[\"0\",\"0\",\"6\",\"0\"]},{\"rect\",[\"6\",\"0\",\"6\",\"4\"]}],\"model_state\":{}}"
+  },
+  {
+   "id": "a169",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "put a window 1 m from the left end of the north wall, 1.2 m wide, 1 m tall, sill at 1 m",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `from`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "rect",
+     "args": {
+      "from": [
+       0,
+       4,
+       0
+      ],
+      "to": [
+       6,
+       4,
+       2.4
+      ],
+      "as": "nwall"
+     }
+    },
+    {
+     "cmd": "paint",
+     "args": {
+      "ids": [
+       "nwall"
+      ],
+      "color": [
+       1,
+       1,
+       1
+      ]
+     }
+    },
+    {
+     "cmd": "place",
+     "args": {
+      "component": "window",
+      "at": [
+       0.8,
+       4,
+       0
+      ]
+     }
+    }
+   ],
+   "ms": 5212.800792,
+   "load": 47.199208,
+   "promptTok": 1023,
+   "genTok": 145,
+   "tokPerSec": 30.144626069965156,
+   "rssMb": 93.3438
+  },
+  {
+   "id": "a171",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "a 2 m cube sitting 3 m east of the house",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `from`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "rect",
+     "args": {
+      "from": [
+       0,
+       0,
+       0
+      ],
+      "to": [
+       4,
+       3,
+       2.4
+      ],
+      "as": "house"
+     },
+     "result_ids": [
+      "@house"
+     ]
+    },
+    {
+     "cmd": "rect",
+     "args": {
+      "from": [
+       4,
+       0,
+       0
+      ],
+      "to": [
+       8,
+       3,
+       2.4
+      ],
+      "as": "house"
+     },
+     "result_ids": [
+      "@house"
+     ]
+    },
+    {
+     "cmd": "move",
+     "args": {
+      "ids": [
+       "@house"
+      ],
+      "by": [
+       0,
+       3,
+       0
+      ]
+     }
+    },
+    {
+     "cmd": "rect",
+     "args": {
+      "from": [
+       4,
+       0,
+       2.4
+      ],
+      "to": [
+       8,
+       3,
+       5
+      ],
+      "as": "house"
+     },
+     "result_ids": [
+      "@house"
+     ]
+    }
+   ],
+   "ms": 8338.452125,
+   "load": 52.547875,
+   "promptTok": 1003,
+   "genTok": 239,
+   "tokPerSec": 30.027323333971164,
+   "rssMb": 93.1094
+  },
+  {
+   "id": "a173",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "a tree 3 m south of the house at its middle",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: a command needs a \"cmd\""
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    [
+     -1,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     2.4
+    ]
+   ],
+   "ms": 1151.40125,
+   "load": 53.59875,
+   "promptTok": 1002,
+   "genTok": 32,
+   "tokPerSec": 31.075413169807884,
+   "rssMb": 93.1719
+  },
+  {
+   "id": "a175",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "slide group a 1 m toward group b",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `ids`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "move",
+     "args": {
+      "ids": [
+       "@a"
+      ],
+      "by": [
+       -1
+      ]
+     }
+    }
+   ],
+   "ms": 1095.742125,
+   "load": 52.257875,
+   "promptTok": 987,
+   "genTok": 27,
+   "tokPerSec": 31.135473350525647,
+   "rssMb": 93.2188
+  },
+  {
+   "id": "a177",
+   "tier": "hard",
+   "cat": "a11y",
+   "request": "a door in the middle of the south wall of the room and a window in the middle of the north wall",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `component`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "place",
+     "args": {
+      "component": "Wall",
+      "at": [
+       6,
+       4
+      ],
+      "name": "Door"
+     }
+    },
+    {
+     "cmd": "place",
+     "args": {
+      "component": "Wall",
+      "at": [
+       6.2,
+       3.8
+      ],
+      "name": "Window"
+     }
+    }
+   ],
+   "ms": 3735.275916,
+   "load": 59.724084,
+   "promptTok": 999,
+   "genTok": 100,
+   "tokPerSec": 28.992933042443873,
+   "rssMb": 91.4219
+  },
+  {
+   "id": "a179",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "make it taller by 1 meter",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `ids`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "move",
+     "args": {
+      "ids": [
+       "house"
+      ],
+      "by": [
+       0,
+       0,
+       1
+      ]
+     }
+    }
+   ],
+   "ms": 1248.613333,
+   "load": 52.386667,
+   "promptTok": 975,
+   "genTok": 30,
+   "tokPerSec": 29.285042384344337,
+   "rssMb": 91.75
+  },
+  {
+   "id": "a181",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "move it back 5 meters",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: a command needs a \"cmd\""
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    5
+   ],
+   "ms": 685.718333,
+   "load": 58.281667,
+   "promptTok": 1000,
+   "genTok": 14,
+   "tokPerSec": 30.231179622853034,
+   "rssMb": 92.7344
+  },
+  {
+   "id": "a183",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "move the door 0.5 m to the right",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 1162.778042,
+   "load": 59.221958,
+   "promptTok": 1052,
+   "genTok": 21,
+   "tokPerSec": 27.883445746839033,
+   "rssMb": 87.8906,
+   "raw": "{cmd:\"move\", \"ids\":[\"@door\"], \"by\":[0.5]}"
+  },
+  {
+   "id": "a185",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "a bit wider: add 1 meter to the width",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: rect corners must share one coordinate (use polygon for tilted shapes)"
+   ],
+   "parseOk": true,
+   "schemaValid": true,
+   "commands": [
+    {
+     "cmd": "rect",
+     "from": [
+      0,
+      0,
+      0
+     ],
+     "to": [
+      4,
+      3,
+      2.4
+     ],
+     "as": "house_width"
+    }
+   ],
+   "ms": 1547.749708,
+   "load": 54.250292,
+   "promptTok": 979,
+   "genTok": 39,
+   "tokPerSec": 29.716741324658173,
+   "rssMb": 91.5312
+  },
+  {
+   "id": "a187",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "undo that and then move the house 2 m east",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 1: bad command: missing field `ids`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "undo",
+     "args": {}
+    },
+    {
+     "cmd": "move",
+     "args": {
+      "ids": [
+       "house"
+      ],
+      "by": [
+       5,
+       0
+      ]
+     }
+    }
+   ],
+   "ms": 1474.048459,
+   "load": 53.951541,
+   "promptTok": 1005,
+   "genTok": 37,
+   "tokPerSec": 30.108104344836985,
+   "rssMb": 91.875
+  },
+  {
+   "id": "a189",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "rotate it a quarter turn about the origin",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `ids`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "rotate",
+     "args": {
+      "ids": "@house",
+      "center": [
+       0,
+       0,
+       0
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "angle": 90
+     }
+    }
+   ],
+   "ms": 1634.845917,
+   "load": 59.154083,
+   "promptTok": 976,
+   "genTok": 44,
+   "tokPerSec": 30.34167569293591,
+   "rssMb": 92.5938
+  },
+  {
+   "id": "a191",
+   "tier": "hard",
+   "cat": "a11y",
+   "request": "move the door 1 m left and raise it 0.1 m",
+   "pass": false,
+   "stage": "parse",
+   "errs": [
+    "output was not a parseable command list"
+   ],
+   "parseOk": false,
+   "schemaValid": false,
+   "commands": null,
+   "ms": 1155.790667,
+   "load": 56.209333,
+   "promptTok": 1056,
+   "genTok": 23,
+   "tokPerSec": 29.27291645028042,
+   "rssMb": 92.7344,
+   "raw": "{cmd:\"move\", \"ids\":[\"@door\"], \"by\":[-1,0,0]}"
+  },
+  {
+   "id": "a193",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "what's in the model?",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `ids`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "paint",
+     "args": {
+      "ids": "@room"
+     }
+    },
+    {
+     "cmd": "info",
+     "args": {}
+    }
+   ],
+   "ms": 1252.356167,
+   "load": 58.643833,
+   "promptTok": 983,
+   "genTok": 30,
+   "tokPerSec": 29.25132334815035,
+   "rssMb": 92.8594
+  },
+  {
+   "id": "a195",
+   "tier": "medium",
+   "cat": "a11y",
+   "request": "what's the volume of the house?",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `at`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "pick",
+     "args": {
+      "at": {
+       "x": 1,
+       "y": 2,
+       "z": 2
+      },
+      "as": "@house"
+     }
+    },
+    {
+     "cmd": "volume",
+     "args": {
+      "id": "@house"
+     }
+    }
+   ],
+   "ms": 1944.582125,
+   "load": 54.417875,
+   "promptTok": 998,
+   "genTok": 50,
+   "tokPerSec": 29.486837639466078,
+   "rssMb": 92.9375
+  },
+  {
+   "id": "a197",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "is there a door? where is it?",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `at`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "pick",
+     "args": {
+      "at": {
+       "x": 2.5,
+       "y": -0.05
+      },
+      "as": "@door"
+     }
+    },
+    {
+     "cmd": "paint",
+     "args": {
+      "ids": "@room, @door"
+     }
+    }
+   ],
+   "ms": 2281.675209,
+   "load": 55.324791,
+   "promptTok": 1050,
+   "genTok": 56,
+   "tokPerSec": 29.50293749105475,
+   "rssMb": 93.125
+  },
+  {
+   "id": "a199",
+   "tier": "easy",
+   "cat": "a11y",
+   "request": "how many things are there and what are they called?",
+   "pass": false,
+   "stage": "engine",
+   "errs": [
+    "engine rejected command 0: bad command: missing field `at`"
+   ],
+   "parseOk": true,
+   "schemaValid": false,
+   "commands": [
+    {
+     "cmd": "pick",
+     "args": {
+      "at": {
+       "x": 3,
+       "y": 0.5,
+       "z": 0
+      },
+      "as": "@b"
+     }
+    },
+    {
+     "cmd": "paint",
+     "args": {
+      "ids": [
+       "@a"
+      ]
+     }
+    }
+   ],
+   "ms": 2072.442708,
+   "load": 59.557292,
+   "promptTok": 989,
+   "genTok": 54,
+   "tokPerSec": 29.491688837121117,
+   "rssMb": 93.2188
+  }
+ ]
+}

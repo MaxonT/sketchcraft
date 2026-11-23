@@ -103,6 +103,7 @@ export default {
   "menu.entityInfo": "Entity info",
   "tab.panel": "Side panel",
   "tab.properties": "Properties",
+  "tab.ai": "AI",
   "tab.hasSelection": "Something is selected",
   "menu.learn": "Learn center",
   "menu.commands": "Search commands…",
