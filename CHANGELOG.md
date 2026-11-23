@@ -7,6 +7,10 @@ What changed in each SketchCraft release, newest first. The format follows
 ## [Unreleased]
 
 ### Added
+- **Linux on arm64.** Releases now include ARM builds for Linux (Raspberry Pi 5, Ampere servers, Snapdragon
+  laptops): `SketchCraft_…_aarch64.AppImage`, `…_arm64.deb`, `…-1.aarch64.rpm` and `sketchcraft-cli-linux-arm64.zip`,
+  built natively on the same Ubuntu as the x64 build, signed for auto-update, and listed in the checksums and build
+  attestations. CI runs the engine tests and builds those installers on arm64 before each release. (#160)
 - **Help › About links the website,** [trysketchcraft.com](https://trysketchcraft.com/), above the source code, license and changelog.
 - **French, Spanish and Simplified Chinese.** **View › Language** now offers **Français**, **Español** and **简体中文**
   beside English and Italian, and a new install starts in the system's language when there is a catalog for it
