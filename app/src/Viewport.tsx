@@ -1617,6 +1617,7 @@ export default function Viewport(props: Props) {
   function showSnap(sn: Snap) {
     st.current.snap = sn;
     if (sn.from) t.current!.preview.add(polyline([sn.from, sn.p], sn.axis != null ? AXIS_COLORS[sn.axis] : 0x8a8ea0, false, true));
+    if (sn.from2) t.current!.preview.add(polyline([sn.from2, sn.p], sn.axis2 != null ? AXIS_COLORS[sn.axis2] : 0x8a8ea0, false, true));
     const r = rect();
     const q = sn.p.clone().project(t.current!.camera);
     setHint({ x: (q.x * 0.5 + 0.5) * r.width, y: (-q.y * 0.5 + 0.5) * r.height, label: sn.label, kind: sn.kind });
