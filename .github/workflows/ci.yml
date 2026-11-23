@@ -160,12 +160,28 @@ jobs:
   # shipped npm packages have no known high advisory, and no lockfile takes code from anywhere but
   # the crates.io / npm registries. (`cargo audit` isn't run here: it would mean installing an
   # unpinned tool in CI; run it by hand before a release.)
+  # Also: no commit in a pull request names an AI assistant as a co-author (see CONTRIBUTING.md, "Pull requests").
   audit:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
+      - name: No AI co-author trailers in the PR's commits
+        if: github.event_name == 'pull_request'
+        run: |
+          # the checkout is the merge commit: its second parent is the PR head, its first the base
+          bad=0
+          for c in $(git rev-list HEAD^1..HEAD^2); do
+            if git log -1 --format=%B "$c" | grep -qiE '^co-authored-by:.*(claude|anthropic)'; then
+              git log -1 --format='%h %s' "$c"; bad=1
+            fi
+          done
+          if [ "$bad" = 1 ]; then
+            echo "::error::a commit names an AI assistant as a co-author. Remove the Co-authored-by line (git commit --amend, or git rebase -i) and push again; see CONTRIBUTING.md"
+            exit 1
+          fi
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
