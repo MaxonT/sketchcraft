@@ -215,6 +215,7 @@ export const MENUS: Menu[] = [
       act("tools.projecttexture", "menu.projectTexture"),
       act("tools.positiontexture", "menu.positionTexture"),
       act("tools.uveditor", "menu.uvEditor"),
+      act("tools.photocraft", "menu.photocraft"),
       tool("erase"),
       tool("section"),
     ],

@@ -1,5 +1,6 @@
 // File actions: New, Open, Save, the imports and the exports. Each runs engine commands and
 // says what happened.
+import { stopWatching } from "./photocraft";
 import type { RefObject } from "react";
 import type { Reply, Scene } from "./engine";
 import { exec } from "./engine";
@@ -143,6 +144,7 @@ export function useFileActions({ run, say, refresh, api, scene, figure, currentF
 
   const file = {
     new: async () => {
+      stopWatching();
       await run({ cmd: "new", figure: figureToday(figure) });
       setCurrentFile(null);
       setSel(EMPTY);
@@ -151,6 +153,7 @@ export function useFileActions({ run, say, refresh, api, scene, figure, currentF
     open: async () => {
       const path = await pickOpen();
       if (!path) return;
+      stopWatching();
       if (path.toLowerCase().endsWith(".sketchcraft")) {
         const r = await run({ cmd: "open", path });
         if (!r.ok) return;

@@ -55,6 +55,8 @@ import { VertexPaintPanel } from "./vertexpaintpanel";
 import { DEFAULT_VPAINT, effectiveRadius, sceneDiagonal, type VPaintSettings } from "./vertexpaint";
 import { DEFAULT_TPAINT, paintMaterialOf, type TPaintSettings } from "./texturepaint";
 import { exportTexture, TexturePaintPanel } from "./texturepaintpanel";
+import { editInPhotoCraft, photocraftHere } from "./photocraft";
+import { targetIds } from "./projection";
 import { PositionPanel } from "./positionpanel";
 import { UvPanel } from "./uvpanel";
 import { RestoreDialog } from "./restore";
@@ -326,6 +328,11 @@ function ModelingApp() {
   const askNewPaintTexture = () => {
     if (sel.faces.length + sel.groups.length + sel.instances.length === 0) return say(tr("tp.none"), true);
     chooseTool("tpaint");
+  };
+  const askPhotoCraft = () => {
+    if (!photocraftHere) return say(tr("pc.desktop"), true);
+    if (!scene) return;
+    void editInPhotoCraft(scene, targetIds(sel), sel, run, say, tr);
   };
   const askExportTexture = () => {
     const name = scene ? paintMaterialOf(scene, sel) ?? scene.materials.find((m) => m.texture && m.name.startsWith("Paint "))?.name ?? null : null;
@@ -607,6 +614,7 @@ function ModelingApp() {
         },
       },
       { id: "tools.positiontexture", label: "Position texture…", hint: "Tools · move, rotate, scale and skew the picture on the selected face (also right-click a textured face: Texture › Position)", run: askPosition },
+      { id: "tools.photocraft", label: "Edit texture in PhotoCraft…", hint: "Tools · open the selection's picture in PhotoCraft with its UV layout as a guide layer; save there and it comes back", run: askPhotoCraft },
       { id: "tools.newpainttexture", label: "New paint texture…", hint: "Tools · make a paint texture for the selected faces (unwraps them if needed), then paint on it with Texture Paint", run: askNewPaintTexture },
       { id: "file.exporttexture", label: "Export texture…", hint: "File · save the selected faces' picture (or the first paint texture) as a PNG", run: askExportTexture },
       { id: "tools.uveditor", label: "UV editor", hint: "Tools · a 2D view of the selected faces' UVs: mark seams, unwrap, pack, move islands, make the lightmap UVs", run: askUv },
@@ -729,6 +737,7 @@ function ModelingApp() {
       positionTexture: askPosition,
       uvEditor: askUv,
       newPaintTexture: askNewPaintTexture,
+      photocraft: askPhotoCraft,
       plugins: () => (reloadPlugins(), setShowPlugins(true)),
       themes: () => setShowSkins(true),
       keys: () => setShowKeys(true),

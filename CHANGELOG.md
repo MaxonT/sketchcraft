@@ -7,6 +7,12 @@ What changed in each SketchCraft release, newest first. The format follows
 ## [Unreleased]
 
 ### Added
+- **Edit texture in PhotoCraft.** Select faces and choose **Tools › Edit texture in PhotoCraft…**: their picture opens
+  in PhotoCraft with the UV layout on top as a guide layer. Paint, add layers, use filters; each time you save there
+  (⌘S / Ctrl+S), the picture comes back onto the model, one Undo per save. Faces with only a colour first get a picture
+  of their own (unwrapped if needed, their look kept). The file is an OpenRaster `.ora` in a `Textures` folder beside
+  the model, so the next edit reopens it with your PhotoCraft layers. Desktop only; needs PhotoCraft (ArtCraft
+  Launcher). Adjustment layers, styles and masks have to be merged before saving, since OpenRaster can't hold them.
 - **Android tablets (early).** SketchCraft builds for Android: the same engine and interface as on a computer, made
   for tablets in either orientation. One finger draws (tap or drag), two fingers orbit, pinch zooms; the model is
   kept in the app's own folder, and the launcher icon is the beaver. Builds are a debug APK for testing for now;

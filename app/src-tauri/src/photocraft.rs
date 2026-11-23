@@ -1,0 +1,350 @@
+//! Edit a material's picture in PhotoCraft and bring it back.
+//!
+//! SketchCraft writes the picture as an OpenRaster file (`.ora`: a zip of PNG layers and a `stack.xml`), with the
+//! UV layout on top as a guide layer, into a `Textures` folder beside the model, and opens it in PhotoCraft. When the
+//! file is saved there, `read` flattens its visible layers, leaving out the guide, into a PNG the UI hands to the
+//! engine's `texture` command (one undo step). OpenRaster is an open format PhotoCraft opens and saves with its
+//! layers, so the next edit reopens the same file and the layers made in PhotoCraft are still there.
+//!
+//! Every path is the `Textures` folder plus a name made from the material's (letters, digits, `-`, `_` only), so
+//! the page can't name a file anywhere else; PhotoCraft is started as a fixed program with the file as its only
+//! argument, never through a shell.
+
+use base64::Engine as _;
+use image::{imageops, ImageFormat, RgbaImage};
+use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
+
+/// The guide layer's name. Any layer whose name starts with this is left out when the picture comes back.
+pub const GUIDE: &str = "UV layout (SketchCraft guide)";
+/// Largest picture taken either way (pixels per side), the engine's own limit for textures.
+const MAX_SIDE: u32 = 8192;
+
+/// A file name for a material: letters, digits, `-` and `_`, at most 80 characters, never empty.
+pub fn file_stem(material: &str) -> String {
+    let s: String = material.chars().map(|c| if c.is_ascii_alphanumeric() || c == '-' || c == '_' { c } else { '_' }).take(80).collect();
+    let s = s.trim_matches('_').to_string();
+    if s.is_empty() { "texture".into() } else { s }
+}
+
+/// `<folder>/<stem>.ora`.
+pub fn ora_path(folder: &Path, material: &str) -> PathBuf {
+    folder.join(format!("{}.ora", file_stem(material)))
+}
+
+/// The bytes of a `data:` URL (base64 only).
+pub fn decode_data_url(url: &str) -> Result<Vec<u8>, String> {
+    let (head, body) = url.split_once(',').ok_or("not a data: URL")?;
+    if !head.starts_with("data:") || !head.ends_with(";base64") {
+        return Err("not a base64 data: URL".into());
+    }
+    base64::engine::general_purpose::STANDARD.decode(body.trim()).map_err(|e| format!("bad base64: {e}"))
+}
+
+fn png_bytes(img: &RgbaImage) -> Result<Vec<u8>, String> {
+    let mut out = std::io::Cursor::new(Vec::new());
+    img.write_to(&mut out, ImageFormat::Png).map_err(|e| e.to_string())?;
+    Ok(out.into_inner())
+}
+
+fn load(bytes: &[u8]) -> Result<RgbaImage, String> {
+    let img = image::load_from_memory(bytes).map_err(|e| format!("unreadable picture: {e}"))?.to_rgba8();
+    if img.width() == 0 || img.height() == 0 || img.width() > MAX_SIDE || img.height() > MAX_SIDE {
+        return Err(format!("the picture is {}×{}; it must be 1 to {MAX_SIDE} pixels a side", img.width(), img.height()));
+    }
+    Ok(img)
+}
+
+fn xml_escape(s: &str) -> String {
+    s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;").replace('"', "&quot;")
+}
+
+/// Write `<path>` as OpenRaster: the texture, and (if given, scaled to the texture's size) the UV guide on top.
+pub fn write_ora(path: &Path, texture: &[u8], guide: Option<&[u8]>) -> Result<(u32, u32), String> {
+    let tex = load(texture)?;
+    let (w, h) = tex.dimensions();
+    let guide = match guide {
+        Some(g) => {
+            let g = load(g)?;
+            Some(if g.dimensions() == (w, h) { g } else { imageops::resize(&g, w, h, imageops::FilterType::Triangle) })
+        }
+        None => None,
+    };
+    let mut merged = tex.clone();
+    if let Some(g) = &guide {
+        over(&mut merged, g, 0, 0, GUIDE_OPACITY);
+    }
+    let thumb = {
+        let s = 256.0 / w.max(h) as f32;
+        if s < 1.0 { imageops::resize(&merged, ((w as f32 * s) as u32).max(1), ((h as f32 * s) as u32).max(1), imageops::FilterType::Triangle) } else { merged.clone() }
+    };
+    let mut layers = String::new();
+    if guide.is_some() {
+        layers += &format!("    <layer name=\"{}\" src=\"data/guide.png\" x=\"0\" y=\"0\" opacity=\"{GUIDE_OPACITY}\" visibility=\"visible\" composite-op=\"svg:src-over\"/>\n", xml_escape(GUIDE));
+    }
+    layers += "    <layer name=\"Texture\" src=\"data/texture.png\" x=\"0\" y=\"0\" opacity=\"1.0\" visibility=\"visible\" composite-op=\"svg:src-over\"/>\n";
+    let stack = format!("<?xml version='1.0' encoding='UTF-8'?>\n<image version=\"0.0.5\" w=\"{w}\" h=\"{h}\">\n  <stack>\n{layers}  </stack>\n</image>\n");
+
+    if let Some(dir) = path.parent() {
+        std::fs::create_dir_all(dir).map_err(|e| format!("can't make {}: {e}", dir.display()))?;
+    }
+    // written beside the target, then moved into place: PhotoCraft never sees half a file
+    let tmp = path.with_extension("ora.part");
+    {
+        let f = std::fs::File::create(&tmp).map_err(|e| format!("can't write {}: {e}", tmp.display()))?;
+        let mut z = zip::ZipWriter::new(f);
+        let stored = zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Stored);
+        let deflated = zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+        let mut put = |name: &str, bytes: &[u8], opts| -> Result<(), String> {
+            z.start_file(name, opts).map_err(|e| e.to_string())?;
+            z.write_all(bytes).map_err(|e| e.to_string())
+        };
+        // the spec: "mimetype" first and uncompressed
+        put("mimetype", b"image/openraster", stored)?;
+        put("stack.xml", stack.as_bytes(), deflated)?;
+        put("data/texture.png", &png_bytes(&tex)?, stored)?;
+        if let Some(g) = &guide {
+            put("data/guide.png", &png_bytes(g)?, stored)?;
+        }
+        put("mergedimage.png", &png_bytes(&merged)?, stored)?;
+        put("Thumbnails/thumbnail.png", &png_bytes(&thumb)?, stored)?;
+        z.finish().map_err(|e| e.to_string())?;
+    }
+    std::fs::rename(&tmp, path).map_err(|e| format!("can't write {}: {e}", path.display()))?;
+    Ok((w, h))
+}
+
+const GUIDE_OPACITY: f32 = 0.6;
+
+/// Draw `src` over `dst` at (x, y) with `opacity` (straight alpha, source-over).
+fn over(dst: &mut RgbaImage, src: &RgbaImage, x: i64, y: i64, opacity: f32) {
+    let o = opacity.clamp(0.0, 1.0);
+    for (sx, sy, p) in src.enumerate_pixels() {
+        let (dx, dy) = (x + sx as i64, y + sy as i64);
+        if dx < 0 || dy < 0 || dx >= dst.width() as i64 || dy >= dst.height() as i64 {
+            continue;
+        }
+        let sa = p[3] as f32 / 255.0 * o;
+        if sa <= 0.0 {
+            continue;
+        }
+        let d = dst.get_pixel_mut(dx as u32, dy as u32);
+        let da = d[3] as f32 / 255.0;
+        let oa = sa + da * (1.0 - sa);
+        for c in 0..3 {
+            let v = (p[c] as f32 * sa + d[c] as f32 * da * (1.0 - sa)) / oa.max(1e-6);
+            d[c] = v.round().clamp(0.0, 255.0) as u8;
+        }
+        d[3] = (oa * 255.0).round() as u8;
+    }
+}
+
+/// One `<layer>` of a stack.xml (nested stacks are flattened into document order).
+#[derive(Debug, PartialEq)]
+pub struct Layer {
+    pub name: String,
+    pub src: String,
+    pub x: i64,
+    pub y: i64,
+    pub opacity: f32,
+    pub visible: bool,
+}
+
+fn attr(tag: &str, key: &str) -> Option<String> {
+    let at = tag.find(&format!(" {key}="))? + key.len() + 2;
+    let q = tag[at..].chars().next()?;
+    if q != '"' && q != '\'' {
+        return None;
+    }
+    let rest = &tag[at + 1..];
+    let end = rest.find(q)?;
+    Some(rest[..end].replace("&quot;", "\"").replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&"))
+}
+
+/// The layers of a stack.xml, top first, as OpenRaster lists them. A hidden `<stack>` hides what's inside it.
+pub fn parse_stack(xml: &str) -> Vec<Layer> {
+    let mut out = Vec::new();
+    let mut hidden_depth: Vec<bool> = Vec::new();
+    let mut rest = xml;
+    while let Some(i) = rest.find('<') {
+        rest = &rest[i..];
+        let Some(j) = rest.find('>') else { break };
+        let tag = &rest[..=j];
+        rest = &rest[j + 1..];
+        if tag.starts_with("<stack") {
+            let hidden = attr(tag, "visibility").as_deref() == Some("hidden");
+            if !tag.ends_with("/>") {
+                hidden_depth.push(hidden);
+            }
+        } else if tag.starts_with("</stack") {
+            hidden_depth.pop();
+        } else if tag.starts_with("<layer") {
+            let inside_hidden = hidden_depth.iter().any(|h| *h);
+            out.push(Layer {
+                name: attr(tag, "name").unwrap_or_default(),
+                src: attr(tag, "src").unwrap_or_default(),
+                x: attr(tag, "x").and_then(|v| v.parse().ok()).unwrap_or(0),
+                y: attr(tag, "y").and_then(|v| v.parse().ok()).unwrap_or(0),
+                opacity: attr(tag, "opacity").and_then(|v| v.parse().ok()).unwrap_or(1.0),
+                visible: !inside_hidden && attr(tag, "visibility").as_deref() != Some("hidden"),
+            });
+        }
+    }
+    out
+}
+
+/// The picture to bring back: the visible layers of `<path>`, bottom to top, without the guide, as a PNG.
+pub fn read_ora(path: &Path) -> Result<Vec<u8>, String> {
+    let f = std::fs::File::open(path).map_err(|e| format!("can't open {}: {e}", path.display()))?;
+    let mut z = zip::ZipArchive::new(f).map_err(|e| format!("{} isn't an OpenRaster file: {e}", path.display()))?;
+    let mut read = |name: &str, limit: u64| -> Result<Vec<u8>, String> {
+        let entry = z.by_name(name).map_err(|_| format!("the file has no {name}"))?;
+        let mut v = Vec::new();
+        entry.take(limit).read_to_end(&mut v).map_err(|e| e.to_string())?;
+        Ok(v)
+    };
+    let xml = String::from_utf8(read("stack.xml", 4 << 20)?).map_err(|_| "stack.xml isn't text".to_string())?;
+    let (w, h) = {
+        let tag = &xml[xml.find("<image").ok_or("stack.xml has no <image>")?..];
+        let tag = &tag[..tag.find('>').unwrap_or(tag.len())];
+        let w: u32 = attr(tag, "w").and_then(|v| v.parse().ok()).ok_or("stack.xml has no width")?;
+        let h: u32 = attr(tag, "h").and_then(|v| v.parse().ok()).ok_or("stack.xml has no height")?;
+        (w, h)
+    };
+    if w == 0 || h == 0 || w > MAX_SIDE || h > MAX_SIDE {
+        return Err(format!("the picture is {w}×{h}; it must be 1 to {MAX_SIDE} pixels a side"));
+    }
+    let mut canvas = RgbaImage::new(w, h);
+    // OpenRaster lists the top layer first: paint from the bottom up
+    for l in parse_stack(&xml).into_iter().rev() {
+        if !l.visible || l.name.starts_with(GUIDE) || l.src.is_empty() || l.src.contains("..") {
+            continue;
+        }
+        let img = load(&read(&l.src, 512 << 20)?)?;
+        over(&mut canvas, &img, l.x, l.y, l.opacity);
+    }
+    png_bytes(&canvas)
+}
+
+/// Seconds since the epoch the file was last written (0 when it isn't there).
+pub fn modified(path: &Path) -> u64 {
+    std::fs::metadata(path).and_then(|m| m.modified()).ok().and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok()).map(|d| d.as_millis() as u64).unwrap_or(0)
+}
+
+/// Open `path` in PhotoCraft. A fixed program, the file as its only argument.
+#[cfg(desktop)]
+pub fn launch(path: &Path) -> Result<(), String> {
+    use std::process::Command;
+    #[cfg(target_os = "macos")]
+    {
+        let ok = Command::new("open").args(["-a", "PhotoCraft"]).arg(path).status().map(|s| s.success()).unwrap_or(false);
+        return if ok { Ok(()) } else { Err(NOT_FOUND.into()) };
+    }
+    #[cfg(target_os = "windows")]
+    {
+        let mut places = Vec::new();
+        if let Some(l) = std::env::var_os("LOCALAPPDATA") {
+            places.push(PathBuf::from(l).join(r"Programs\ArtCraft\PhotoCraft\photocraft.exe"));
+        }
+        for pf in ["ProgramFiles", "ProgramW6432"] {
+            if let Some(p) = std::env::var_os(pf) {
+                places.push(PathBuf::from(p).join(r"ArtCraft\PhotoCraft\photocraft.exe"));
+            }
+        }
+        let exe = places.into_iter().find(|p| p.is_file()).ok_or(NOT_FOUND)?;
+        return Command::new(exe).arg(path).spawn().map(|_| ()).map_err(|e| e.to_string());
+    }
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        let exe = ["/usr/bin/photocraft", "/usr/local/bin/photocraft", "/opt/photocraft/photocraft"].iter().map(PathBuf::from).find(|p| p.is_file()).ok_or(NOT_FOUND)?;
+        return Command::new(exe).arg(path).spawn().map(|_| ()).map_err(|e| e.to_string());
+    }
+}
+
+#[cfg(desktop)]
+const NOT_FOUND: &str = "PhotoCraft isn't installed (get it from ArtCraft Launcher)";
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn solid(w: u32, h: u32, c: [u8; 4]) -> Vec<u8> {
+        png_bytes(&RgbaImage::from_pixel(w, h, image::Rgba(c))).unwrap()
+    }
+
+    #[test]
+    fn names_stay_inside_the_folder() {
+        assert_eq!(file_stem("Oak floor"), "Oak_floor");
+        assert_eq!(file_stem("../../etc/passwd"), "etc_passwd");
+        assert_eq!(file_stem("..."), "texture");
+        assert_eq!(file_stem(""), "texture");
+        let p = ora_path(Path::new("/m/Textures"), "a/b\\c");
+        assert_eq!(p, PathBuf::from("/m/Textures/a_b_c.ora"));
+        assert!(file_stem(&"x".repeat(500)).len() <= 80);
+    }
+
+    #[test]
+    fn writes_openraster_that_reads_back_without_the_guide() {
+        let dir = std::env::temp_dir().join(format!("sc-ora-{}", std::process::id()));
+        let path = dir.join("Wall.ora");
+        let red = solid(8, 4, [200, 10, 10, 255]);
+        let guide = solid(16, 8, [0, 255, 255, 255]); // a different size: scaled to the texture
+        assert_eq!(write_ora(&path, &red, Some(&guide)).unwrap(), (8, 4));
+        // the file is OpenRaster: mimetype first and stored
+        let mut z = zip::ZipArchive::new(std::fs::File::open(&path).unwrap()).unwrap();
+        {
+            let first = z.by_index(0).unwrap();
+            assert_eq!(first.name().unwrap(), "mimetype");
+            assert_eq!(first.compression(), zip::CompressionMethod::Stored);
+        }
+        let mut xml = String::new();
+        z.by_name("stack.xml").unwrap().read_to_string(&mut xml).unwrap();
+        let layers = parse_stack(&xml);
+        assert_eq!(layers.len(), 2);
+        assert!(layers[0].name.starts_with(GUIDE)); // the guide is on top
+        // coming back, the guide is left out: pure red again
+        let back = image::load_from_memory(&read_ora(&path).unwrap()).unwrap().to_rgba8();
+        assert_eq!(back.dimensions(), (8, 4));
+        assert!(back.pixels().all(|p| p.0 == [200, 10, 10, 255]));
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn flattens_layers_with_offsets_opacity_and_hidden_ones() {
+        let dir = std::env::temp_dir().join(format!("sc-ora2-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("t.ora");
+        let f = std::fs::File::create(&path).unwrap();
+        let mut z = zip::ZipWriter::new(f);
+        let o = zip::write::SimpleFileOptions::default();
+        let mut put = |n: &str, b: &[u8]| {
+            z.start_file(n, o).unwrap();
+            z.write_all(b).unwrap();
+        };
+        put("mimetype", b"image/openraster");
+        put(
+            "stack.xml",
+            br#"<?xml version="1.0"?><image w="4" h="2"><stack>
+              <layer name="hidden" src="data/h.png" visibility="hidden"/>
+              <stack visibility="hidden"><layer name="in hidden group" src="data/h.png"/></stack>
+              <layer name="half" src="data/w.png" x="2" y="0" opacity="0.5"/>
+              <layer name="base" src="data/b.png"/>
+            </stack></image>"#,
+        );
+        put("data/h.png", &solid(4, 2, [0, 255, 0, 255]));
+        put("data/w.png", &solid(2, 2, [255, 255, 255, 255]));
+        put("data/b.png", &solid(4, 2, [0, 0, 0, 255]));
+        z.finish().unwrap();
+        let img = image::load_from_memory(&read_ora(&path).unwrap()).unwrap().to_rgba8();
+        assert_eq!(img.get_pixel(0, 0).0, [0, 0, 0, 255]); // base only
+        assert_eq!(img.get_pixel(3, 1).0, [128, 128, 128, 255]); // half white over black; no green anywhere
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn refuses_what_isnt_a_picture_or_a_data_url() {
+        assert!(decode_data_url("https://example.com/x.png").is_err());
+        assert!(decode_data_url("data:image/png,abc").is_err());
+        assert!(write_ora(Path::new("/tmp/never.ora"), b"not a png", None).is_err());
+    }
+}
