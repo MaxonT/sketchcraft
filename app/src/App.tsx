@@ -8,7 +8,7 @@ import { BuildTools, Sandbox } from "./buildpanels";
 import { ContextMenu, contextItems } from "./contextmenu";
 import { LocationDialog, SheetsDialog } from "./dialogs";
 import { EntityInfo } from "./entityinfo";
-import { Environments, Templates } from "./environments";
+import { Environments, Examples, Templates } from "./environments";
 import { Library } from "./library";
 import { Outliner } from "./outliner";
 import { RenderDialog } from "./renderdialog";
@@ -306,7 +306,7 @@ function ModelingApp() {
   useKeymap();
   const pluginCommandDefs = livePlugins.flatMap((pl) => pl.commands.map((c) => ({ id: `plugin:${pl.id}:${c.id}`, label: c.label, group: "Plugins" as const, key: "" })));
   useEffect(() => keymap.setExtra(pluginCommandDefs));
-  const { file, importFile, runTemplate } = useFileActions({ run, say, refresh, api, scene, figure, currentFile, setCurrentFile, setSel });
+  const { file, importFile, runTemplate, openExample } = useFileActions({ run, say, refresh, api, scene, figure, currentFile, setCurrentFile, setSel });
 
   // SubD: make one from a group or component (Subdivide…) or from a cube cage (SubD box); both end in SubD mode
   const [subdividing, setSubdividing] = useState<{ id: number; component: boolean } | null>(null);
@@ -1072,6 +1072,10 @@ function ModelingApp() {
               <details className="panel-fold" open={!!scene.environment || undefined}>
                 <summary>Environments</summary>
                 <Environments scene={scene} run={run} onToast={say} />
+              </details>
+              <details className="panel-fold" open={scene.faces.length === 0 || undefined}>
+                <summary>Examples</summary>
+                <Examples onExample={(name, data) => void openExample(name, data)} />
               </details>
               <details className="panel-fold">
                 <summary>Templates</summary>

@@ -3,6 +3,7 @@ out/
 *.png
 !docs/*.png
 !brand/*.png
+!examples/*.png
 # also a node_modules symlink (a worktree sharing the main checkout's), which "node_modules/" would not match
 node_modules
 dist/

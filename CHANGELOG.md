@@ -7,6 +7,10 @@ What changed in each SketchCraft release, newest first. The format follows
 ## [Unreleased]
 
 ### Added
+- **An example to open: the Townhouse.** **Library › Examples** has a finished two-storey townhouse with its fixtures,
+  to open, walk through and take apart. It takes the place of the model you have open (after asking; that one is kept
+  in File › Restore from backup…), opens as Untitled, and File › Save As… keeps a copy. `open` takes a model's
+  contents (`data`) as well as a path; it is checked exactly like a file.
 - **The cut list knows lumber.** A board whose cross-section is real dimensional lumber shows as **2×4**, **1×6**,
   **4×4** and so on (a 2×4 is 1½" × 3½"; either way round), in the list and in what to buy, and every board line has
   its **board feet**: by the nominal size for dimensional lumber, as lumber yards price it (an 8 ft 2×4 is 5.33), by the
