@@ -75,6 +75,7 @@ export default {
   "menu.notes": "尺寸与标签",
   "menu.coach": "工具提示",
   "menu.hideRest": "隐藏模型其余部分",
+  "menu.layOutParts": "平铺零件",
   "menu.plan": "平面图剖切",
   "menu.clearSection": "移除剖切",
   "menu.leftPanel": "左侧面板",
@@ -493,5 +494,8 @@ export default {
   "proj.clear": "移除投影",
   "proj.clear.tip": "恢复图片在这些面上的原始位置",
   "proj.done": "纹理已投影。撤销可还原。",
-  "proj.cleared": "投影已移除。"
+  "proj.cleared": "投影已移除。",
+  "laidOut.bar": "已平铺的零件：{n}。回到模型后才能修改。",
+  "laidOut.loose": "未显示不属于任何组的面：{n}。",
+  "laidOut.back": "回到模型",
 };

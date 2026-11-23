@@ -75,6 +75,7 @@ export default {
   "menu.notes": "Cotes et étiquettes",
   "menu.coach": "Assistant d’outils",
   "menu.hideRest": "Masquer le reste du modèle",
+  "menu.layOutParts": "Disposer les pièces",
   "menu.plan": "Coupe de plan d’étage",
   "menu.clearSection": "Supprimer la coupe",
   "menu.leftPanel": "Panneau de gauche",
@@ -493,5 +494,8 @@ export default {
   "proj.clear": "Supprimer la projection",
   "proj.clear.tip": "Revenir au placement propre de l’image sur ces faces",
   "proj.done": "Texture projetée. Annuler la reprend.",
-  "proj.cleared": "Projection supprimée."
+  "proj.cleared": "Projection supprimée.",
+  "laidOut.bar": "Pièces disposées à plat : {n}. Les modifications attendent le retour au modèle.",
+  "laidOut.loose": "Faces hors de tout groupe non affichées : {n}.",
+  "laidOut.back": "Revenir au modèle",
 };

@@ -61,6 +61,7 @@ import { PositionPanel } from "./positionpanel";
 import { UvPanel } from "./uvpanel";
 import { RestoreDialog } from "./restore";
 import { TimelinePanel } from "./timeline";
+import { LaidOutBar } from "./laidoutbar";
 import { LearnCenter, LessonCard, lessonsDone, useLearnCtx } from "./learn";
 
 const DEFAULT_BUILD: BuildSettings = {
@@ -371,6 +372,7 @@ function ModelingApp() {
     await openCage(g);
   };
 
+
   // a notice from the engine (a damaged model file was set aside...): say it once
   const lastNotice = useRef("");
   useEffect(() => {
@@ -407,6 +409,30 @@ function ModelingApp() {
     setTool(t);
     if (t !== "place") setPlacing(null);
   }, []);
+
+  // the parts laid out flat (from the menu, a plugin or an agent): the Select tool, so a click names a part, and
+  // all of them in view; going back with the bar or the menu, the camera as it was before (not after New or Open)
+  const laidOutNow = !!scene?.laid_out;
+  const laidOutBefore = useRef(laidOutNow);
+  const camBeforeLaidOut = useRef<ReturnType<ViewportApi["camera"]> | null>(null);
+  const backAsked = useRef(false);
+  useEffect(() => {
+    if (laidOutBefore.current === laidOutNow) return;
+    laidOutBefore.current = laidOutNow;
+    if (laidOutNow) {
+      chooseTool("select");
+      camBeforeLaidOut.current = api.current?.camera() ?? null;
+      api.current?.fit();
+    } else {
+      if (backAsked.current && camBeforeLaidOut.current) api.current?.goTo(camBeforeLaidOut.current);
+      camBeforeLaidOut.current = null;
+    }
+    backAsked.current = false;
+  }, [laidOutNow, chooseTool]);
+  const backFromLaidOut = useCallback(() => {
+    backAsked.current = true;
+    void run({ cmd: "lay_out_parts", on: false });
+  }, [run]);
   const { skin, wearSkin, wsId, layout, setLayout, ws, editWs, switchWs } = useLook({ tool, chooseTool, setStyles, setTab });
   // Layout: the paper covers the 3D view, which stays loaded (and paused) underneath
   const inLayout = wsId === "layout";
@@ -702,6 +728,8 @@ function ModelingApp() {
       api.current?.clearSection();
       setSection(false);
     },
+    laidOut: !!scene?.laid_out,
+    layOutParts: () => (scene?.laid_out ? backFromLaidOut() : void run({ cmd: "lay_out_parts", on: true })),
     toggleStyle: (k) =>
       setStyles((s) => (k === "backEdges" ? { ...s, backEdges: !s.backEdges, xray: false } : k === "notes" || k === "help" || k === "vertexColors" ? { ...s, [k]: s[k] === false } : { ...s, [k]: !s[k] })),
     setStyles: (patch) => setStyles((s) => ({ ...s, ...patch })),
@@ -1245,6 +1273,7 @@ function ModelingApp() {
           </ErrorBoundary>
         )}
         {showWs && <WorkspaceDialog ws={ws} onChange={editWs} onReset={() => editWs(null)} onClose={() => setShowWs(false)} />}
+        {scene?.laid_out && <LaidOutBar laid={scene.laid_out} selected={selIds(sel)} units={scene.units || "m"} onBack={backFromLaidOut} />}
         {toast && (
           <div className={`toast ${toast.bad ? "bad" : ""}`}>
             {toast.text}

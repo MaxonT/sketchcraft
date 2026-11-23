@@ -1,6 +1,7 @@
 import { translate, useLocale } from "./locale";
 import { TEXTURING_SET } from "./texturing-set";
 import { fixtureOf, wallSnap } from "./fixtures";
+import { innermostPart, laidOutParts } from "./laidoutbar";
 // The 3D view. Draws the engine's scene with three.js and turns mouse and
 // keyboard input into engine commands. Z is up, units are meters.
 import { useEffect, useRef, useState } from "react";
@@ -1350,6 +1351,10 @@ export default function Viewport(props: Props) {
     const parentOf = new Map(s.groups.map((x) => [x.id, x.parent]));
     const chain: number[] = [];
     for (let c: number | null | undefined = g; c != null && chain.length < 256; c = parentOf.get(c)) chain.push(c);
+    // laid out, the click takes the part itself, not a group around it
+    const parts = laidOutParts(s.laid_out);
+    const part = parts && innermostPart(chain, parts);
+    if (part != null) return part;
     if (s.activeGroup == null) return chain[chain.length - 1];
     const i = chain.indexOf(s.activeGroup);
     if (i === 0) return null;
@@ -1360,8 +1365,9 @@ export default function Viewport(props: Props) {
     const tree = subtree(g);
     const s = sceneNow();
     const out = new Set(s.faces.filter((f) => f.group != null && tree.has(f.group)).map((f) => f.id));
-    // components placed inside it light up with it
-    for (const i of s.instances) if (i.parent != null && tree.has(i.parent)) out.add(i.id);
+    // components placed inside it light up with it (laid out, a component is a part of its own, lying elsewhere)
+    const parts = laidOutParts(s.laid_out);
+    for (const i of s.instances) if (i.parent != null && tree.has(i.parent) && !parts?.has(i.id)) out.add(i.id);
     return out;
   }
 
@@ -1528,6 +1534,7 @@ export default function Viewport(props: Props) {
   /** What hovering this owner would select (a whole group, unless it's open). */
   function hoverOwners(owner: number): Set<number> {
     const inst = sceneNow().instances.find((i) => i.id === owner);
+    if (inst && laidOutParts(sceneNow().laid_out)?.has(inst.id)) return new Set([owner]);
     const g = selectableGroup(inst ? inst.parent : groupOfFace(owner));
     if (g != null) return groupFaces(g);
     return new Set([owner]);
@@ -1538,6 +1545,8 @@ export default function Viewport(props: Props) {
     const s = sceneNow();
     const inst = !p.face ? s.instances.find((i) => i.id === p.owner) : undefined;
     if (inst) {
+      // laid out, a component is a part of its own: the click takes it
+      if (laidOutParts(s.laid_out)?.has(inst.id)) return { kind: "instances", id: p.owner };
       // a component inside a closed group: the click takes the group
       const g = selectableGroup(inst.parent);
       return g != null ? { kind: "groups", id: g } : { kind: "instances", id: p.owner };

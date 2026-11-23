@@ -75,6 +75,7 @@ export default {
   "menu.notes": "Cotas y etiquetas",
   "menu.coach": "Asistente de herramientas",
   "menu.hideRest": "Ocultar el resto del modelo",
+  "menu.layOutParts": "Disponer las piezas",
   "menu.plan": "Corte de planta",
   "menu.clearSection": "Quitar corte de sección",
   "menu.leftPanel": "Panel izquierdo",
@@ -493,5 +494,8 @@ export default {
   "proj.clear": "Quitar proyección",
   "proj.clear.tip": "Volver a la ubicación propia de la imagen en estas caras",
   "proj.done": "Textura proyectada. Deshacer la revierte.",
-  "proj.cleared": "Proyección quitada."
+  "proj.cleared": "Proyección quitada.",
+  "laidOut.bar": "Piezas dispuestas en plano: {n}. Los cambios esperan a que vuelvas al modelo.",
+  "laidOut.loose": "Caras fuera de cualquier grupo no mostradas: {n}.",
+  "laidOut.back": "Volver al modelo",
 };

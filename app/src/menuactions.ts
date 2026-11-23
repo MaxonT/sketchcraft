@@ -76,6 +76,9 @@ export interface MenuCtx {
   nextView: () => void;
   plan: () => void;
   clearSection: () => void;
+  /** the parts are laid out flat to look at (`lay_out_parts`), and the switch */
+  laidOut: boolean;
+  layOutParts: () => void;
   toggleStyle: (key: "shadows" | "xray" | "backEdges" | "edges" | "profiles" | "vertexColors" | "sketchy" | "ao" | "notes" | "help" | "hideRest") => void;
   setStyles: (patch: Partial<Styles>) => void;
   // panels, layout, language
@@ -159,6 +162,8 @@ export function buildMenuActions(c: MenuCtx): Record<string, MenuAction> {
   add("view.notes", () => c.toggleStyle("notes"), model, s.notes !== false);
   add("view.coach", () => c.toggleStyle("help"), model, s.help !== false);
   add("view.hiderest", () => c.toggleStyle("hideRest"), model && c.editing, !!s.hideRest);
+  // the whole model laid out: not while a group or component is open for editing
+  add("view.laidout", c.layOutParts, model && (c.laidOut || !c.editing), c.laidOut);
   add("view.plan", c.plan, model && !c.section);
   add("view.section.clear", c.clearSection, model && c.section);
   add("view.panel.left", () => c.togglePanel("left"), true, c.showLeft);

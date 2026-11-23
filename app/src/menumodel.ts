@@ -133,6 +133,7 @@ export const MENUS: Menu[] = [
       act("view.notes", "menu.notes", "check"),
       act("view.coach", "menu.coach", "check"),
       act("view.hiderest", "menu.hideRest", "check"),
+      act("view.laidout", "menu.layOutParts", "check"),
       SEP,
       act("view.plan", "menu.plan"),
       act("view.section.clear", "menu.clearSection"),

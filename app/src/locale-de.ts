@@ -75,6 +75,7 @@ export default {
   "menu.notes": "Bemaßungen und Beschriftungen",
   "menu.coach": "Werkzeugcoach",
   "menu.hideRest": "Rest des Modells ausblenden",
+  "menu.layOutParts": "Teile auslegen",
   "menu.plan": "Grundrissschnitt",
   "menu.clearSection": "Schnitt entfernen",
   "menu.leftPanel": "Linkes Fenster",
@@ -493,5 +494,8 @@ export default {
   "proj.clear": "Projektion entfernen",
   "proj.clear.tip": "Zur eigenen Platzierung des Bildes auf diesen Flächen zurückkehren",
   "proj.done": "Textur projiziert. Rückgängig macht es ungeschehen.",
-  "proj.cleared": "Projektion entfernt."
+  "proj.cleared": "Projektion entfernt.",
+  "laidOut.bar": "Teile flach ausgelegt: {n}. Änderungen warten, bis du zurück im Modell bist.",
+  "laidOut.loose": "Flächen ohne Gruppe werden nicht gezeigt: {n}.",
+  "laidOut.back": "Zurück zum Modell",
 };
