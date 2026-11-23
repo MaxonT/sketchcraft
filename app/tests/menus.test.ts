@@ -173,6 +173,9 @@ describe("what is available", () => {
     expect(a["view.perspective"].checked).toBe(false);
     expect(a["view.layout.side"].checked).toBe(true);
     expect(a["lang.it"].checked).toBe(true);
+    const zh = buildMenuActions(stub({ language: "zh" }).ctx);
+    expect(zh["lang.zh"].checked).toBe(true);
+    expect(zh["lang.it"].checked).toBe(false);
     expect(a["view.panel.left"].checked).toBe(false);
     expect(a["view.panel.right"].checked).toBe(true);
     expect(a["view.xray"].checked).toBe(true);

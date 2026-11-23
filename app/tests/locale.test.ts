@@ -1,6 +1,7 @@
 import { expect, it } from "vitest";
 import english from "../src/locale-en";
 import italian from "../src/locale-it";
+import chinese from "../src/locale-zh";
 import { resolveLanguage, translate } from "../src/locale";
 import { guide } from "../src/guide";
 import { TOOL_INFO } from "../src/workspace";
@@ -16,12 +17,27 @@ it("covers every English message and built-in tool, with explicit null fallbacks
   expect(translate("it", "toString", "fallback")).toBe("fallback");
 });
 
+it("covers every English message and built-in tool in Simplified Chinese", () => {
+  expect(Object.keys(chinese).sort()).toEqual(Object.keys(english).sort());
+  const entries: Record<string, string | null> = chinese;
+  for (const [id, original] of Object.entries(english)) {
+    expect(entries[id] === null || !!entries[id]?.trim()).toBe(true);
+    expect(translate("zh", id)).toBe(entries[id] ?? original);
+  }
+  expect(translate("zh", "toString", "fallback")).toBe("fallback");
+});
+
 it("starts from the system locale and honors the selected language", () => {
   expect(resolveLanguage("system", "it-IT")).toBe("it");
   expect(resolveLanguage(null, "de-DE")).toBe("en");
   expect(resolveLanguage("en", "it-IT")).toBe("en");
   expect(resolveLanguage("it", "en-GB")).toBe("it");
+  expect(resolveLanguage("system", "zh-CN")).toBe("zh");
+  expect(resolveLanguage("system", "zh-Hans-CN")).toBe("zh");
+  expect(resolveLanguage("system", "zh-TW")).toBe("en");
+  expect(resolveLanguage("zh", "en-GB")).toBe("zh");
   expect(guide("select", { selected: 3, op: null }, "it").step).toContain("3");
+  expect(guide("select", { selected: 3, op: null }, "zh").step).toContain("3");
 });
 
 it("keeps the modifier hints for the Italian paint and eraser tools", () => {
@@ -29,12 +45,18 @@ it("keeps the modifier hints for the Italian paint and eraser tools", () => {
   expect(translate("it", "tool.erase")).toMatch(/Maiusc.*Ctrl.*ammorbidimento/);
 });
 
-it("explains the Paint Bucket modifiers in the step hint, in both languages", () => {
-  for (const lang of ["en", "it"] as const) {
+it("has Simplified Chinese words for the paint and eraser tools", () => {
+  expect(translate("zh", "tool.paint")).toMatch(/油漆桶.*Ctrl.*Option.*Shift/);
+  expect(translate("zh", "tool.erase")).toMatch(/橡皮擦.*Shift.*Ctrl.*软化/);
+});
+
+it("explains the Paint Bucket modifiers in the step hint, in every language", () => {
+  for (const lang of ["en", "it", "zh"] as const) {
     const g = guide("paint", { selected: 0, op: null }, lang);
     expect(g.keys.map((k) => k[0])).toEqual(["⌘ click", "Ctrl / Option click", "⇧ click", "Ctrl ⇧ click"]);
     expect(g.keys.every((k) => k[1].trim().length > 5)).toBe(true);
   }
   expect(guide("paint", { selected: 0, op: null }, "en").keys[1][1]).toMatch(/touching faces.*continuing across edges/);
   expect(guide("paint", { selected: 0, op: null }, "it").keys[1][1]).toMatch(/facce collegate/);
+  expect(guide("paint", { selected: 0, op: null }, "zh").keys[1][1]).toMatch(/相连面/);
 });

@@ -1,15 +1,19 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import english from "./locale-en";
 import italian from "./locale-it";
+import chinese from "./locale-zh";
 
-export type Language = "en" | "it";
+export type Language = "en" | "it" | "zh";
 type Preference = Language | "system";
 const storageKey = "sketchcraft.language";
-const catalogs: Record<Language, Readonly<Record<string, string | null>>> = { en: english, it: italian };
+const catalogs: Record<Language, Readonly<Record<string, string | null>>> = { en: english, it: italian, zh: chinese };
 
 export function resolveLanguage(preference: string | null, system: string): Language {
-  if (preference === "en" || preference === "it") return preference;
-  return /^it(?:-|$)/i.test(system) ? "it" : "en";
+  if (preference === "en" || preference === "it" || preference === "zh") return preference;
+  if (/^it(?:-|$)/i.test(system)) return "it";
+  // Traditional Chinese keeps the English UI until a zh-Hant catalog exists.
+  const simplified = /^zh(?:-Hans)?(?:-|$)/i.test(system) && !/^zh-(?:Hant|TW|HK|MO)(?:-|$)/i.test(system);
+  return simplified ? "zh" : "en";
 }
 
 export function translate(language: Language, id: string, fallback = id): string {
@@ -20,7 +24,7 @@ export function translate(language: Language, id: string, fallback = id): string
 function readPreference(): Preference {
   try {
     const saved = localStorage.getItem(storageKey);
-    if (saved === "en" || saved === "it") return saved;
+    if (saved === "en" || saved === "it" || saved === "zh") return saved;
   } catch {}
   return "system";
 }
@@ -39,9 +43,9 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("languagechange", update);
   }, []);
   const language = resolveLanguage(preference, system);
-  useEffect(() => { document.documentElement.lang = language; }, [language]);
+  useEffect(() => { document.documentElement.lang = language === "zh" ? "zh-Hans" : language; }, [language]);
   const setPreference = (value: string) => {
-    if (value !== "system" && value !== "en" && value !== "it") return;
+    if (value !== "system" && value !== "en" && value !== "it" && value !== "zh") return;
     choose(value);
     try { localStorage.setItem(storageKey, value); } catch {}
   };
