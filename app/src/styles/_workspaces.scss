@@ -277,3 +277,90 @@
     flex: none;
   }
 }
+
+/* ---------- A phone held upright: the 3D view on top, the panels under it ---------- */
+
+/* 248 + 272 px of panels beside the view leave a 412 px-wide phone nothing to draw in, so on a narrow
+   touch screen the view takes the top three fifths and the panels share the rest (side by side, or one
+   across the width). Touch only: a narrow desktop window keeps its columns. */
+@media (max-width: 639px) and (pointer: coarse) {
+  .app,
+  .app.no-left,
+  .app.no-right,
+  .app.panels-right {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: 52px minmax(0, 3fr) minmax(0, 2fr);
+  }
+
+  .app.no-left.no-right,
+  .app.panels-right.no-left.no-right {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 52px minmax(0, 1fr);
+  }
+
+  .app:not(.panels-right),
+  .app.panels-right {
+    .stage {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+
+    .panel.left,
+    .panel.right {
+      grid-row: 3;
+      min-height: 0;
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .panel.left {
+      grid-column: 1;
+      border-right: 1px solid var(--line);
+    }
+
+    .panel.right {
+      grid-column: 2;
+    }
+
+    &.no-left .panel.right,
+    &.no-right .panel.left {
+      grid-column: 1 / -1;
+      grid-row: 3;
+      border-right: 0;
+    }
+  }
+}
+
+/* the Objects / Properties switches at the bottom left of the view (phones held upright only) */
+.panel-toggles {
+  display: none;
+}
+
+@media (max-width: 639px) and (pointer: coarse) {
+  .panel-toggles {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    z-index: 6;
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: calc(var(--radius) + 2px);
+    background: var(--glass);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+
+    button {
+      height: 32px;
+      padding: 0 12px;
+      border-radius: var(--radius);
+      color: var(--muted);
+      font-size: $font-m;
+      font-weight: 560;
+
+      &.on {
+        @include accent-on;
+      }
+    }
+  }
+}
