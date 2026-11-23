@@ -57,6 +57,7 @@ pub mod room;
 pub mod sandbox;
 pub mod safety;
 pub mod scene;
+pub mod parts_layout;
 pub mod plugins;
 pub mod policy;
 pub mod section;

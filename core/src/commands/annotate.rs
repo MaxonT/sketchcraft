@@ -88,6 +88,7 @@ impl Engine {
                 json!({})
             }
             Command::Parts { ids } => json!({"parts": crate::plugins::parts(m, &ids), "units": m.units}),
+            Command::PartsLayout { ids, gap } => crate::parts_layout::reply(m, &ids, gap)?,
             Command::Info => {
                 let b = m.world_bounds().map(|(lo, hi)| json!({"min": lo.to_array(), "max": hi.to_array()}));
                 json!({

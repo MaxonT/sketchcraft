@@ -32,15 +32,15 @@ it("covers every English message in every catalog, with the same placeholders", 
   }
 });
 
-it("translates everything in French, Spanish and Simplified Chinese", () => {
-  for (const lang of ["fr", "es", "zh"] as const) {
+it("translates everything in French, Spanish, German, Portuguese and Simplified Chinese", () => {
+  for (const lang of ["fr", "es", "de", "pt", "zh"] as const) {
     expect(Object.values(LANGUAGE_TABLE[lang].catalog).every((text) => text !== null), lang).toBe(true);
   }
 });
 
 it("starts from the system locale and honors the selected language", () => {
   expect(resolveLanguage("system", "it-IT")).toBe("it");
-  expect(resolveLanguage(null, "de-DE")).toBe("en");
+  expect(resolveLanguage(null, "ko-KR")).toBe("en");
   expect(resolveLanguage("en", "it-IT")).toBe("en");
   expect(resolveLanguage("it", "en-GB")).toBe("it");
   expect(resolveLanguage("system", "zh-CN")).toBe("zh");
@@ -51,9 +51,13 @@ it("starts from the system locale and honors the selected language", () => {
   expect(resolveLanguage("system", "fr-CA")).toBe("fr");
   expect(resolveLanguage("system", "es-ES")).toBe("es");
   expect(resolveLanguage("system", "es-419")).toBe("es");
-  expect(resolveLanguage("system", "pt-BR")).toBe("en");
+  expect(resolveLanguage("system", "pt-BR")).toBe("pt");
+  expect(resolveLanguage("system", "pt-PT")).toBe("pt");
+  expect(resolveLanguage("system", "de-DE")).toBe("de");
+  expect(resolveLanguage("system", "de-AT")).toBe("de");
   expect(resolveLanguage("fr", "es-MX")).toBe("fr");
-  expect(resolveLanguage("de", "es-MX")).toBe("es");
+  expect(resolveLanguage("de", "es-MX")).toBe("de");
+  expect(resolveLanguage("ko", "es-MX")).toBe("es");
   expect(guide("select", { selected: 3, op: null }, "it").step).toContain("3");
   for (const lang of LANGUAGE_IDS) expect(guide("select", { selected: 3, op: null }, lang).step).toContain("3");
 });
@@ -75,6 +79,13 @@ it("keeps the modifier hints for the French and Spanish paint and eraser tools",
   expect(translate("es", "tool.erase")).toMatch(/Mayús.*Ctrl/);
 });
 
+it("keeps the modifier hints for the German and Portuguese paint and eraser tools", () => {
+  expect(translate("de", "tool.paint")).toMatch(/Ctrl.*Option.*Umschalt/);
+  expect(translate("de", "tool.erase")).toMatch(/Umschalt.*Ctrl/);
+  expect(translate("pt", "tool.paint")).toMatch(/Ctrl.*Option.*Shift/);
+  expect(translate("pt", "tool.erase")).toMatch(/Shift.*Ctrl/);
+});
+
 it("explains the Paint Bucket modifiers in the step hint, in every language", () => {
   for (const lang of LANGUAGE_IDS) {
     const g = guide("paint", { selected: 0, op: null }, lang);
@@ -84,7 +95,7 @@ it("explains the Paint Bucket modifiers in the step hint, in every language", ()
   expect(guide("paint", { selected: 0, op: null }, "en").keys[1][1]).toMatch(/touching faces.*continuing across edges/);
   expect(guide("paint", { selected: 0, op: null }, "it").keys[1][1]).toMatch(/facce collegate/);
   expect(guide("paint", { selected: 0, op: null }, "zh").keys[1][1]).toMatch(/相连面/);
-  for (const lang of ["fr", "es"] as const) {
+  for (const lang of ["fr", "es", "de", "pt"] as const) {
     expect(guide("paint", { selected: 0, op: null }, lang).keys[1][1]).not.toBe(guide("paint", { selected: 0, op: null }, "en").keys[1][1]);
   }
 });

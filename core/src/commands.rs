@@ -130,6 +130,7 @@ impl Command {
                 | Command::Section { .. }
                 | Command::Info
                 | Command::Parts { .. }
+                | Command::PartsLayout { .. }
                 | Command::Plugins
                 | Command::PluginEnable { .. }
                 | Command::InstallPlugin { .. }
@@ -1066,7 +1067,7 @@ impl Engine {
             c @ (
                 Command::Guide { .. } | Command::Dimension { .. } | Command::Text { .. } | Command::Units { .. } |
                 Command::ClearGuides { .. } | Command::ShowView { .. } | Command::SaveView { .. } |
-                Command::MatchPhoto { .. } | Command::DeleteView { .. } | Command::Parts { .. } |
+                Command::MatchPhoto { .. } | Command::DeleteView { .. } | Command::Parts { .. } | Command::PartsLayout { .. } |
                 Command::Info { .. } | Command::ProjectPhoto { .. } | Command::PhotoSolve { .. } |
                 Command::Finish { .. } | Command::Options { .. } | Command::Report { .. }
             ) => self.run_annotate(c),

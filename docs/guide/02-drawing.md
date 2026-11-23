@@ -43,8 +43,11 @@ SketchCraft shows what the cursor is locked to, with a colored dot and a label:
 | a red, green or blue line | along an **axis** |
 
 Hover a point, then move away: a dotted line shows when you're lined up with
-it ("From Point"). Press an **arrow key** to lock an axis: → red, ← green,
-↑ blue. **Shift** holds whatever you're locked to.
+it ("From Point"). Hover two points and move to where their lines cross: both
+dotted lines show and the cursor lands on the crossing ("From Points"). That
+finds the middle of a board or a floor: hover the midpoints of two sides that
+meet, then move toward the middle. Press an **arrow key** to lock an axis:
+→ red, ← green, ↑ blue. **Shift** holds whatever you're locked to.
 
 ## Guides and measuring
 
