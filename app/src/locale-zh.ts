@@ -34,6 +34,7 @@ export default {
   "menu.tools": "工具",
   "menu.window": "窗口",
   "menu.help": "帮助",
+  "menu.all": "菜单",
   "menu.render": "渲染…",
   "menu.undo": "撤销",
   "menu.redo": "重做",

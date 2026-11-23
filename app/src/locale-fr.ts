@@ -34,6 +34,7 @@ export default {
   "menu.tools": "Outils",
   "menu.window": "Fenêtre",
   "menu.help": "Aide",
+  "menu.all": "Menu",
   "menu.render": "Rendu…",
   "menu.undo": "Annuler",
   "menu.redo": "Rétablir",

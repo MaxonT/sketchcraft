@@ -957,7 +957,7 @@ function ModelingApp() {
           </button>
           <button className="btn small ghost skin-btn" title="Themes: SketchCraft's colors, layout and icons" onClick={() => setShowSkins(true)}>
             <Icons.theme />
-            Themes
+            <span className="btn-label">Themes</span>
           </button>
           <button className="icon-btn" title={`Undo (⌘Z)${scene?.undo_origin && scene.undo_origin !== "you" ? `: the last step is from ${scene.undo_origin}` : ""}`} onClick={() => run({ cmd: "undo" })}>
             <Icons.undo />
@@ -967,7 +967,7 @@ function ModelingApp() {
           </button>
           <input ref={fileRef} type="file" accept=".obj,.skp,.fbx,.dxf" hidden onChange={(e) => e.target.files?.[0] && importFile(e.target.files[0])} />
           <button className="btn primary" onClick={() => setShowRender(true)} title="A photoreal picture of this view">
-            <Icons.camera /> Render
+            <Icons.camera /> <span className="btn-label">Render</span>
           </button>
         </div>
       </header>
