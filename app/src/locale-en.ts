@@ -33,6 +33,7 @@ export default {
   "menu.tools": "Tools",
   "menu.window": "Window",
   "menu.help": "Help",
+  "menu.all": "Menu",
   "menu.render": "Render…",
   "menu.undo": "Undo",
   "menu.redo": "Redo",

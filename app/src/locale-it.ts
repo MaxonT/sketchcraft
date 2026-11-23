@@ -34,6 +34,7 @@ export default {
   "menu.tools": "Strumenti",
   "menu.window": "Finestra",
   "menu.help": "Aiuto",
+  "menu.all": "Menu",
   "menu.render": "Render…",
   "menu.undo": "Annulla",
   "menu.redo": "Ripeti",

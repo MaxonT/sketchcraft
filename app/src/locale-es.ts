@@ -34,6 +34,7 @@ export default {
   "menu.tools": "Herramientas",
   "menu.window": "Ventana",
   "menu.help": "Ayuda",
+  "menu.all": "Menú",
   "menu.render": "Renderizar…",
   "menu.undo": "Deshacer",
   "menu.redo": "Rehacer",
