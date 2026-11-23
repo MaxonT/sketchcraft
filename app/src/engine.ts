@@ -243,6 +243,8 @@ export interface Reply {
 }
 
 export const inTauri = "__TAURI_INTERNALS__" in window;
+/** the Android (later iOS) app: tablets for now; it doesn't update itself */
+export const onMobileApp = inTauri && /Android|iPhone|iPad/i.test(navigator.userAgent);
 const BRIDGE = `http://127.0.0.1:${import.meta.env.VITE_BRIDGE_PORT ?? 5175}`;
 
 // In a plain browser the bridge needs its per-launch token. The dev server

@@ -7,6 +7,10 @@ What changed in each SketchCraft release, newest first. The format follows
 ## [Unreleased]
 
 ### Added
+- **Android tablets (early).** SketchCraft builds for Android: the same engine and interface as on a computer, made
+  for tablets in either orientation. One finger draws (tap or drag), two fingers orbit, pinch zooms; the model is
+  kept in the app's own folder, and the launcher icon is the beaver. Builds are a debug APK for testing for now;
+  phones will get their own touch-first interface later. Building it: docs/dev/android.md. (#125)
 - **Linux on arm64.** Releases now include ARM builds for Linux (Raspberry Pi 5, Ampere servers, Snapdragon
   laptops): `SketchCraft_…_aarch64.AppImage`, `…_arm64.deb`, `…-1.aarch64.rpm` and `sketchcraft-cli-linux-arm64.zip`,
   built natively on the same Ubuntu as the x64 build, signed for auto-update, and listed in the checksums and build
