@@ -160,7 +160,8 @@ release as `sketchcraft-cli-<platform>.zip`.
 `sketchcraft mcp` gives an agent `sketchcraft_run`, `sketchcraft_render` (it
 gets the picture back, so it can see what it built) and `sketchcraft_info`.
 Pointed at the app's live model, you and the agent build the same thing.
-[docs/dev/mcp.md](docs/dev/mcp.md)
+[docs/dev/mcp.md](docs/dev/mcp.md). Setup and recipes (a railing, stairs, furnishing
+a room, a permit set): [docs/dev/ai-recipes.md](docs/dev/ai-recipes.md)
 
 ## Plugins
 

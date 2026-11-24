@@ -75,4 +75,5 @@ project, add:
 ```
 
 The commands an agent can send are the same as for scripts: see
-[Scripting](scripting.md).
+[Scripting](scripting.md). A step-by-step setup and four things to ask for (a railing,
+stairs, furnishing a room, a permit set): [Bring your own AI](ai-recipes.md).
