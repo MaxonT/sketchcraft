@@ -2,7 +2,7 @@
 
 ## Using SketchCraft
 
-The [guide](guide/README.md), in ten short chapters:
+The [guide](guide/README.md), in eleven short chapters:
 
 1. [Getting started](guide/01-getting-started.md)
 2. [Drawing](guide/02-drawing.md)
@@ -14,6 +14,7 @@ The [guide](guide/README.md), in ten short chapters:
 8. [Plugins](guide/08-plugins.md)
 9. [Keyboard shortcuts](guide/09-shortcuts.md)
 10. [Troubleshooting and questions](guide/10-troubleshooting.md)
+11. [Coming from SketchUp](guide/11-from-sketchup.md)
 
 ## Building on SketchCraft
 
