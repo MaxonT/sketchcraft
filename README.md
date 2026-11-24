@@ -83,6 +83,9 @@ groups and components, tags), the same way of typing sizes as you go (`5,4`,
 `.skp` files open, from SketchUp 6 up to today's, and many of SketchUp's free
 Ruby scripts run too.
 
+A side-by-side of the tools and shortcuts, and what is different, is in
+[Coming from SketchUp](docs/guide/11-from-sketchup.md).
+
 ## Opens your files
 
 | | |
