@@ -31,6 +31,7 @@ macro_rules! active_model {
 }
 
 mod annotate;
+mod woodworker;
 mod build;
 mod command;
 mod draw;
@@ -108,10 +109,15 @@ fn hex_rgb(s: &str) -> Result<[f32; 3]> {
 
 impl Command {
     pub fn mutates(&self) -> bool {
+        if let Command::FixModel { dry_run: true, .. } = self {
+            return false;
+        }
         !matches!(
             self,
             Command::Faces { .. }
                 | Command::Volume { .. }
+                | Command::CheckSolid { .. }
+                | Command::PrintCheck { .. }
                 | Command::Photoreal { .. }
                 | Command::SaveImage { .. }
                 | Command::Sun { .. }
@@ -130,6 +136,13 @@ impl Command {
                 | Command::Section { .. }
                 | Command::Info
                 | Command::Parts { .. }
+                | Command::PartsLayout { .. }
+                | Command::CutPlan { .. }
+                | Command::ExportCutDiagrams { .. }
+                | Command::ExportCutLabels { .. }
+                | Command::ExportCnc { .. }
+                | Command::LayOutParts { .. }
+                | Command::RoomInfo { .. }
                 | Command::Plugins
                 | Command::PluginEnable { .. }
                 | Command::InstallPlugin { .. }
@@ -147,6 +160,7 @@ impl Command {
                 | Command::ExportGlb { .. }
                 | Command::ExportFbx { .. }
                 | Command::ExportStl { .. }
+                | Command::Export3mf { .. }
                 | Command::ExportDae { .. }
                 | Command::ExportIfc { .. }
                 | Command::ExportSheets { .. }
@@ -181,6 +195,16 @@ impl Command {
     }
 }
 
+/// What `lay_out_parts` was asked to show.
+#[derive(Clone, Debug, Default)]
+pub struct LayOutRequest {
+    pub ids: Vec<Id>,
+    pub gap: Option<f64>,
+}
+
+/// Why a change is refused while the parts are laid out.
+pub const LAID_OUT_REFUSAL: &str = "The parts are laid out to look at. Switch back to the model (View > Lay out parts) to change it.";
+
 #[derive(Default)]
 pub struct Engine {
     pub model: Model,
@@ -191,6 +215,11 @@ pub struct Engine {
     pub names: HashMap<String, Id>,
     /// Component definition being edited (`edit`), if any.
     pub ctx: Option<Id>,
+    /// The parts are laid out flat to look at (`lay_out_parts`): which parts and what gap. Only the request is kept;
+    /// the view is worked out from the model each time it is drawn, so it is never out of date. Never saved.
+    pub laid_out: Option<LayOutRequest>,
+    /// the view was switched on by a plugin or an agent: the person's own edit switches it off instead of being refused
+    laid_out_by_other: bool,
     /// bumps on every change to the model (progressive renders start over)
     revision: u64,
     /// a photoreal render in progress
@@ -290,6 +319,20 @@ fn v3(a: [f64; 3]) -> DVec3 {
 impl Engine {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// What pictures of the model show: the laid-out view while the parts are laid out, otherwise the model.
+    pub fn shown_model(&self) -> std::borrow::Cow<'_, Model> {
+        match self.laid_out_view() {
+            Some(v) => std::borrow::Cow::Owned(v.model),
+            None => std::borrow::Cow::Borrowed(&self.model),
+        }
+    }
+
+    /// The laid-out view of the model as it is now, when the parts are laid out (see `lay_out_parts`).
+    pub fn laid_out_view(&self) -> Option<crate::parts_layout::LaidOutView> {
+        let r = self.laid_out.as_ref()?;
+        crate::parts_layout::laid_out_view(&self.model, &r.ids, r.gap).ok()
     }
 
     /// Run one JSON command line as the person using the app (no limits on
@@ -746,6 +789,16 @@ impl Engine {
                 return json!({"ok": false, "error": ro.refusal(), "read_only": true});
             }
         }
+        // laid out, the parts are only looked at: changes wait until the model is back (New and Open end the view)
+        if self.laid_out.is_some() && (cmd.mutates() || is_env || matches!(cmd, Command::Undo | Command::Redo | Command::BeginBatch)) && !matches!(cmd, Command::New { .. } | Command::Open { .. }) {
+            if !self.untrusted && self.laid_out_by_other {
+                // a plugin or an agent switched the view on: the person's own edit ends it rather than being refused
+                self.laid_out = None;
+                self.laid_out_by_other = false;
+            } else {
+                return json!({"ok": false, "error": LAID_OUT_REFUSAL, "laid_out": true});
+            }
+        }
         let was_read_only = self.read_only.clone();
         let is_new = matches!(cmd, Command::New { .. });
         // opening a file replaces the model and the history with it: Undo must never
@@ -788,6 +841,10 @@ impl Engine {
             self.run(cmd).map(|mut v| {
                 if is_new {
                     self.read_only = None;
+                }
+                // a new or opened model ends the laid-out view (a reload by `Live` puts it back)
+                if is_new || is_open {
+                    self.laid_out = None;
                 }
                 // dimensions on sheets follow what the command did, in the same undo step (see `anchors`)
                 if mutates && !is_new && !is_open {
@@ -1011,7 +1068,7 @@ impl Engine {
         match cmd {
             c @ (
                 Command::New { .. } | Command::Rect { .. } | Command::Polygon { .. } | Command::Line { .. } |
-                Command::Circle { .. } | Command::Arc { .. } | Command::Offset { .. } | Command::FollowMe { .. } |
+                Command::Circle { .. } | Command::Arc { .. } | Command::Spline { .. } | Command::Bezier { .. } | Command::MakeFaces { .. } | Command::Flatten { .. } | Command::Offset { .. } | Command::FollowMe { .. } |
                 Command::Pushpull { .. } | Command::Move { .. } | Command::Rotate { .. } | Command::Scale { .. } |
                 Command::Duplicate { .. } | Command::Array { .. } | Command::Delete { .. } | Command::Reverse { .. }
             ) => self.run_draw(c),
@@ -1020,12 +1077,12 @@ impl Engine {
                 Command::Text3d { .. } | Command::Subd { .. } | Command::CageEdit { .. } |
                 Command::Subdivide { .. } | Command::FlipEdge { .. } | Command::Bevel { .. } |
                 Command::Divide { .. } | Command::Slice { .. } | Command::Intersect { .. } | Command::Flip { .. } |
-                Command::Solid { .. } | Command::Volume { .. }
+                Command::Solid { .. } | Command::Volume { .. } | Command::FixModel { .. } | Command::CheckSolid { .. } | Command::PrintCheck { .. }
             ) => self.run_shape(c),
             c @ (
                 Command::RaiseWalls { .. } | Command::DoorSwing { .. } | Command::TerrainFromContours { .. } |
                 Command::TerrainGrid { .. } | Command::Smoove { .. } | Command::Stamp { .. } |
-                Command::Drape { .. } | Command::Wall { .. } | Command::Stairs { .. } | Command::Roof { .. } |
+                Command::Drape { .. } | Command::Wall { .. } | Command::Stairs { .. } | Command::FloorplanBuild { .. } | Command::RoomInfo { .. } | Command::Roof { .. } |
                 Command::Column { .. } | Command::Insert { .. } | Command::Assets { .. } |
                 Command::WallPull { .. } | Command::WallInfo { .. } |
                 Command::RoomRect { .. } | Command::RoomPreview { .. } | Command::Rooms
@@ -1063,15 +1120,16 @@ impl Engine {
                 Command::Section { .. } | Command::SectionPlane { .. } | Command::SectionEdit { .. } |
                 Command::SectionOff { .. }
             ) => self.run_sections(c),
+            c @ (Command::CutStock { .. } | Command::CutPlan { .. } | Command::ExportCutDiagrams { .. } | Command::ExportCutLabels { .. } | Command::ExportCnc { .. } | Command::Dado { .. } | Command::Rabbet { .. } | Command::Tenon { .. }) => self.run_woodworker(c),
             c @ (
                 Command::Guide { .. } | Command::Dimension { .. } | Command::Text { .. } | Command::Units { .. } |
                 Command::ClearGuides { .. } | Command::ShowView { .. } | Command::SaveView { .. } |
-                Command::MatchPhoto { .. } | Command::DeleteView { .. } | Command::Parts { .. } |
+                Command::MatchPhoto { .. } | Command::DeleteView { .. } | Command::Parts { .. } | Command::PartsLayout { .. } | Command::LayOutParts { .. } |
                 Command::Info { .. } | Command::ProjectPhoto { .. } | Command::PhotoSolve { .. } |
                 Command::Finish { .. } | Command::Options { .. } | Command::Report { .. }
             ) => self.run_annotate(c),
             c @ (
-                Command::Save { .. } | Command::Open { .. } | Command::ExportGlb { .. } | Command::ExportFbx { .. } | Command::ExportStl { .. } |
+                Command::Save { .. } | Command::Open { .. } | Command::ExportGlb { .. } | Command::ExportFbx { .. } | Command::ExportStl { .. } | Command::Export3mf { .. } |
                 Command::ImportDxf { .. } | Command::ImportDwg { .. } | Command::ExportDwg { .. } |
                 Command::ExportIfc { .. } | Command::ExportDae { .. } | Command::ExportDxf { .. } |
                 Command::ExportPdf { .. } | Command::ImportObj { .. } | Command::ImportSkp { .. } |

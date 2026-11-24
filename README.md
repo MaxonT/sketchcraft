@@ -19,7 +19,7 @@ It's free and open source, and runs on Mac, Windows and Linux.
 | --- | --- |
 | **Mac** (Apple silicon or Intel) | `SketchCraft_…_universal.dmg`, then drag SketchCraft to Applications |
 | **Windows 10 or 11** | `SketchCraft_…_x64-setup.exe`, or the **portable ZIP** if you'd rather not install |
-| **Linux** | `.AppImage` (any distro), `.deb` or `.rpm` |
+| **Linux** (x64 or arm64) | `.AppImage` (any distro), `.deb` or `.rpm`: `amd64` / `x86_64` for most PCs, `aarch64` / `arm64` for ARM machines like a Raspberry Pi 5 |
 
 The first time you open it, your computer may ask whether you trust it,
 because SketchCraft isn't signed by Apple or Microsoft yet:
@@ -49,7 +49,8 @@ sketchy to blueprint, section cuts and floor plans, drawing sheets at real scale
 ![A Craftsman house modeled in SketchCraft](docs/craftsman_street.png)
 
 **Plan the build.** The **Cut list** plugin lists every board to cut and roughly
-how many sheets and boards to buy.
+how many sheets and boards to buy, and **Tools › Cut plan…** packs them onto real sheets and boards with cutting
+diagrams, prices and printable part labels.
 
 <p align="center"><img src="docs/demos/shelves-cut-list.gif" alt="The Shelves plugin builds a bookcase; Cut list lists its boards and what to buy" width="860"></p>
 
@@ -68,7 +69,7 @@ own themes, docked or floating tool bars, and your own tool icons.
 | **3D models** (`.fbx`, `.obj`) | |
 | **3D scans** (`.ply`, `.las`, `.xyz`, `.pts`) | point clouds you can snap to |
 
-It saves glTF, FBX, OBJ, STL (3D printing), Collada, DXF, DWG, IFC, PDF, PNG and MP4.
+It saves glTF, FBX, OBJ, STL and 3MF (3D printing), Collada, DXF, DWG, IFC, PDF, PNG and MP4.
 
 ## New to SketchCraft?
 
@@ -168,4 +169,4 @@ What changed in each version: [CHANGELOG.md](CHANGELOG.md).
 MIT, see [LICENSE](LICENSE). SketchCraft is an independent, clean-room project.
 It is not affiliated with or endorsed by Trimble or SketchUp, or by ArtCraft.
 
-[![M8ven Score](https://m8ven.ai/badge/mcp/jasonsutter87-sketchcraft-1xpwc9?v=6c67d80421d7a08b4a053ea554cccf6f)](https://m8ven.ai/mcp/jasonsutter87-sketchcraft-1xpwc9?s=readme)
+[![M8ven Score](https://m8ven.ai/badge/mcp/jasonsutter87-sketchcraft-1xpwc9)](https://m8ven.ai/mcp/jasonsutter87-sketchcraft-1xpwc9?s=readme)
