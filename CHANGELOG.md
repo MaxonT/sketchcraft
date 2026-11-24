@@ -77,7 +77,21 @@ What changed in each SketchCraft release, newest first. The format follows
   catalog for them). Chinese contributed by fanhui (#161); the others were asked for in #158, and corrections from
   native speakers are welcome.
 
+### Changed
+- **Print check measures every wall.** Print check used to measure wall thickness at only some places on any model
+  over a few thousand triangles, so it could not say "Ready to print" for them. It now indexes the model and measures
+  every triangle up to 600,000 of them (a 200,000-triangle model takes well under a few seconds); only a model past
+  that is sampled, and says so.
+
 ### Fixed
+- **SketchUp 6 files with guide lines open.** A SketchUp 6 model with a guide line in it (a "Shed" from 2007) failed
+  with "this SketchUp file looks damaged": the reader didn't know guide lines and could not read the model's list past
+  the first one. It now reads them and goes on (guide lines themselves are not brought in), so the model opens with
+  all its parts and dimensions. Thanks to Tim Rowledge for the file. (Refs #200)
+- **SketchUp 8 files open with all their components.** A SketchUp 8 model built from components inside components (a
+  "Rustic Pine Bed") opened with only a couple of them: the reader expected an ID at the end of each placement that only
+  SketchUp 2013 and later write, so it lost every placement after the first in each list. Thanks to Tim Rowledge for
+  the file. (Refs #201)
 - **SketchUp 2017 files with dimensions open.** A SketchUp 2017 model whose own list starts with a dimension failed
   with "this SketchUp file looks damaged": the reader didn't take a list that starts with a dimension or a text for the
   model's, and lost its way inside it. It also now reads what 2017 files add to a dimension (the components between it
@@ -122,6 +136,13 @@ What changed in each SketchCraft release, newest first. The format follows
     refused.
   - 3MF export cleans part names of characters XML can't hold. Print check no longer calls a big model "ready" when it
     could only check its walls at some places, and says so.
+  - Editing a texture in PhotoCraft is safer with project folders from other people: SketchCraft no longer writes through
+    links in the Textures folder, and reads back a limited number of layers. PhotoCraft edits are recognised reliably
+    after updates: layers you made are kept, with no move to a backup on the first run after an update.
+  - The SketchCraft AI box cleans names from the model before the local model reads them, and its debug log has a size
+    limit and keeps only recent days.
+  - The plugin safety check counts a probe as blocked only when the policy blocked it, not for any error.
+  - Android: the app shares less through its file provider.
 
 ## [0.3.9] - 2026-11-20
 
