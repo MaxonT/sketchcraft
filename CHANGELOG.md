@@ -7,6 +7,10 @@ What changed in each SketchCraft release, newest first. The format follows
 ## [Unreleased]
 
 ### Added
+- **An example to open: the Townhouse.** **Library › Examples** has a finished two-storey townhouse with its fixtures,
+  to open, walk through and take apart. It takes the place of the model you have open (after asking; that one is kept
+  in File › Restore from backup…), opens as Untitled, and File › Save As… keeps a copy. `open` takes a model's
+  contents (`data`) as well as a path; it is checked exactly like a file.
 - **Print check and 3MF export.** **Tools › Print check…** tells you if a model is ready for a slicer: is it a closed
   solid, are any walls thinner than your limit, which faces overhang and need supports, how big it is in millimetres
   (with a nudge when it looks like the wrong units), and whether it fits your printer. If it is not solid, **Fix model**

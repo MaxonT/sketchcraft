@@ -13,9 +13,19 @@ impl Engine {
                 crate::safety::write_atomic(&path, crate::format::to_string(&self.model)?.as_bytes())?;
                 json!({"path": path})
             }
-            Command::Open { path } => {
+            Command::Open { path, data } => {
+                // what is opened: a file, or a model's contents handed over (a bundled example), checked the same way
+                let (path, data) = match (path, data) {
+                    (Some(p), None) => (p, None),
+                    (None, Some(d)) => ("the model".to_string(), Some(d)),
+                    _ => bail!("open needs a path or the model's data, not both"),
+                };
+                let from_data = data.is_some();
                 // the whole file is read into memory (a model takes several times its file size once opened): look at the size first
-                let len = std::fs::metadata(&path)?.len();
+                let len = match &data {
+                    Some(d) => d.len() as u64,
+                    None => std::fs::metadata(&path)?.len(),
+                };
                 if len > MAX_OPEN_BYTES {
                     bail!("{path} is {} MB; SketchCraft opens models up to {} MB", len >> 20, MAX_OPEN_BYTES >> 20);
                 }
@@ -23,7 +33,10 @@ impl Engine {
                 if self.untrusted && len > MAX_OPEN_BYTES_UNTRUSTED {
                     bail!("{path} is {} MB; an agent or a plugin can open models up to {} MB (the person can open larger ones)", len >> 20, MAX_OPEN_BYTES_UNTRUSTED >> 20);
                 }
-                let text = std::fs::read_to_string(&path)?;
+                let text = match data {
+                    Some(d) => d,
+                    None => std::fs::read_to_string(&path)?,
+                };
                 // the file's top level is looked at before the model is read: a newer file opens read-only (see `format`)
                 let read_only = crate::format::check(text.as_bytes());
                 let mut opened: Model = serde_json::from_str(&text).map_err(|e| anyhow::anyhow!("{path} isn't a model SketchCraft can read: {e}"))?;
@@ -54,7 +67,7 @@ impl Engine {
                 self.batch = None;
                 self.ctx = None;
                 self.names.clear();
-                let mut v = json!({"path": path, "faces": self.model.faces.len(), "read_only": self.read_only.as_ref().map(|r| r.reasons.clone())});
+                let mut v = json!({"path": if from_data { None } else { Some(&path) }, "faces": self.model.faces.len(), "read_only": self.read_only.as_ref().map(|r| r.reasons.clone())});
                 if !sheets_clamped.is_empty() {
                     v["sheets_clamped"] = json!(sheets_clamped);
                 }

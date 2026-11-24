@@ -347,7 +347,13 @@ pub enum Command {
         opts: RenderOpts,
     },
     Save { path: String },
-    Open { path: String },
+    /// Open a model: from `path`, or from `data`, a model's file contents (the app's bundled examples). Exactly one.
+    Open {
+        #[serde(default)]
+        path: Option<String>,
+        #[serde(default)]
+        data: Option<String>,
+    },
     /// Wavefront OBJ (+ .mtl) for Blender and friends.
     ExportObj { path: String },
     /// Binary glTF (.glb): Blender, three.js, game engines, Quick Look.

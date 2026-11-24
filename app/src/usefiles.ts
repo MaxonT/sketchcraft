@@ -4,6 +4,7 @@ import { stopWatching } from "./photocraft";
 import type { RefObject } from "react";
 import type { Reply, Scene } from "./engine";
 import { exec, onMobileApp } from "./engine";
+import { confirm } from "./ask";
 import { isModelPath, pickOpen, pickSave } from "./files";
 import type { Sel } from "./selection";
 import { EMPTY } from "./selection";
@@ -65,6 +66,19 @@ export function useFileActions({ run, say, refresh, api, scene, figure, currentF
   setCurrentFile: (p: string | null) => void;
   setSel: (s: Sel) => void;
 }) {
+  /** Open a bundled example (templates.ts EXAMPLES) in place of the model; the one open is kept in Backups first. */
+  const openExample = async (name: string, data: string) => {
+    if ((scene?.faces.length ?? 0) > 0 && !(await confirm(`Open the ${name} example?`, "It takes the place of the model you have open. That one is kept: File › Restore from backup… brings it back.", "Open example"))) return;
+    stopWatching();
+    const r = await run({ cmd: "open", data });
+    if (!r.ok) return;
+    setCurrentFile(null);
+    setSel(EMPTY);
+    api.current?.fitSoon();
+    await refresh();
+    say(`Opened the ${name} example. File › Save As… keeps a copy of your own.`);
+  };
+
   const runTemplate = async (lines: string[]) => {
     for (const line of lines) {
       const r = await exec(JSON.parse(line));
@@ -271,5 +285,5 @@ export function useFileActions({ run, say, refresh, api, scene, figure, currentF
       if (r.ok) say(`Rendered ${path.split("/").pop()}`);
     },
   };
-  return { file, importFile, importPath, runTemplate };
+  return { file, importFile, importPath, runTemplate, openExample };
 }
