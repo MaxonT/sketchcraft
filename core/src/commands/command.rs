@@ -286,7 +286,7 @@ pub enum Command {
     Ungroup { id: Id },
     /// Lock or unlock groups (locked: can't be moved, edited or deleted).
     Lock { ids: Vec<Id>, #[serde(default = "yes")] locked: bool },
-    /// Soft edges aren't drawn. `ids` edges or faces; `coplanar:true` softens every flat seam.
+    /// Soft edges aren't drawn. `ids` edges, faces or groups (every face inside); `coplanar:true` softens every flat seam.
     Soften {
         #[serde(default)]
         ids: Vec<Id>,
@@ -362,6 +362,10 @@ pub enum Command {
     ExportFbx { path: String, #[serde(default)] binary: Option<bool> },
     /// Binary STL for 3D printing; `scale` 1000 gives millimeters.
     ExportStl { path: String, #[serde(default = "one")] scale: f64 },
+    /// 3MF (.3mf) for slicers: one object per group and placed component. `units`: millimeter (default), centimeter,
+    /// meter, inch, foot, micron, or "model" for the model's own units.
+    #[serde(rename = "export_3mf")]
+    Export3mf { path: String, #[serde(default)] units: Option<String> },
     /// Animation through saved views (or a turntable): `path` .mp4/.mov
     /// (needs ffmpeg) or a folder for PNG frames. Render options apply.
     Animate {
@@ -1304,6 +1308,34 @@ pub enum Command {
     SaveImage { path: String, data: String },
     /// Volume of a closed group / component (m³), or not a solid.
     Volume { id: Id },
+    /// Repair the geometry in one undo step and list every change: repeated and inside faces, fins on shared edges,
+    /// reversed faces, flat neighbours joined, holes closed, stray lines. `ids`: groups or faces to limit it to
+    /// (none: the whole model); `dry_run`: only report what it would do.
+    FixModel {
+        #[serde(default)]
+        ids: Vec<Id>,
+        #[serde(default)]
+        dry_run: bool,
+        #[serde(default = "yes")]
+        stray_edges: bool,
+    },
+    /// Read-only: is this geometry a solid, and where it isn't (open edges, shared edges, reversed faces, inward shells).
+    CheckSolid {
+        #[serde(default)]
+        ids: Vec<Id>,
+    },
+    /// Read-only 3D printing check: solid, thin walls (`min_wall` mm, default 0.8), overhangs (`overhang_angle` degrees from
+    /// vertical, default 45), size in mm with a wrong-units hint, and whether it fits `build` (mm x y z).
+    PrintCheck {
+        #[serde(default)]
+        ids: Vec<Id>,
+        #[serde(default)]
+        min_wall: Option<f64>,
+        #[serde(default)]
+        overhang_angle: Option<f64>,
+        #[serde(default)]
+        build: Option<[f64; 3]>,
+    },
     /// Import a binary FBX (7.x): `path`, or the file as base64 in `data`.
     /// The file becomes one component; each mesh a group inside it.
     ImportFbx {
@@ -1325,6 +1357,14 @@ pub enum Command {
         height: f64,
         #[serde(default)]
         closed: bool,
+    },
+    /// Read-only: a room by name (loose: "master" finds "Primary Bedroom"): its floor area in m² and ft², perimeter, level.
+    RoomInfo { name: String },
+    /// A whole house from a compact plan: floors of rooms (rect or orthogonal polygon on the wall centerlines)
+    /// and openings between two rooms (or a room and "outside"). See `floorplan.rs`. One undo step.
+    FloorplanBuild {
+        #[serde(flatten)]
+        plan: serde_json::Map<String, Value>,
     },
     /// Pull a whole wall (the one `face` is a side of) `by` metres along that face's outward normal (negative: back
     /// the other way). Both sides move together so it keeps its thickness; its doors and windows ride along; walls

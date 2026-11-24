@@ -108,10 +108,15 @@ fn hex_rgb(s: &str) -> Result<[f32; 3]> {
 
 impl Command {
     pub fn mutates(&self) -> bool {
+        if let Command::FixModel { dry_run: true, .. } = self {
+            return false;
+        }
         !matches!(
             self,
             Command::Faces { .. }
                 | Command::Volume { .. }
+                | Command::CheckSolid { .. }
+                | Command::PrintCheck { .. }
                 | Command::Photoreal { .. }
                 | Command::SaveImage { .. }
                 | Command::Sun { .. }
@@ -132,6 +137,7 @@ impl Command {
                 | Command::Parts { .. }
                 | Command::PartsLayout { .. }
                 | Command::LayOutParts { .. }
+                | Command::RoomInfo { .. }
                 | Command::Plugins
                 | Command::PluginEnable { .. }
                 | Command::InstallPlugin { .. }
@@ -149,6 +155,7 @@ impl Command {
                 | Command::ExportGlb { .. }
                 | Command::ExportFbx { .. }
                 | Command::ExportStl { .. }
+                | Command::Export3mf { .. }
                 | Command::ExportDae { .. }
                 | Command::ExportIfc { .. }
                 | Command::ExportSheets { .. }
@@ -1057,12 +1064,12 @@ impl Engine {
                 Command::Text3d { .. } | Command::Subd { .. } | Command::CageEdit { .. } |
                 Command::Subdivide { .. } | Command::FlipEdge { .. } | Command::Bevel { .. } |
                 Command::Divide { .. } | Command::Slice { .. } | Command::Intersect { .. } | Command::Flip { .. } |
-                Command::Solid { .. } | Command::Volume { .. }
+                Command::Solid { .. } | Command::Volume { .. } | Command::FixModel { .. } | Command::CheckSolid { .. } | Command::PrintCheck { .. }
             ) => self.run_shape(c),
             c @ (
                 Command::RaiseWalls { .. } | Command::DoorSwing { .. } | Command::TerrainFromContours { .. } |
                 Command::TerrainGrid { .. } | Command::Smoove { .. } | Command::Stamp { .. } |
-                Command::Drape { .. } | Command::Wall { .. } | Command::Stairs { .. } | Command::Roof { .. } |
+                Command::Drape { .. } | Command::Wall { .. } | Command::Stairs { .. } | Command::FloorplanBuild { .. } | Command::RoomInfo { .. } | Command::Roof { .. } |
                 Command::Column { .. } | Command::Insert { .. } | Command::Assets { .. } |
                 Command::WallPull { .. } | Command::WallInfo { .. } |
                 Command::RoomRect { .. } | Command::RoomPreview { .. } | Command::Rooms
@@ -1108,7 +1115,7 @@ impl Engine {
                 Command::Finish { .. } | Command::Options { .. } | Command::Report { .. }
             ) => self.run_annotate(c),
             c @ (
-                Command::Save { .. } | Command::Open { .. } | Command::ExportGlb { .. } | Command::ExportFbx { .. } | Command::ExportStl { .. } |
+                Command::Save { .. } | Command::Open { .. } | Command::ExportGlb { .. } | Command::ExportFbx { .. } | Command::ExportStl { .. } | Command::Export3mf { .. } |
                 Command::ImportDxf { .. } | Command::ImportDwg { .. } | Command::ExportDwg { .. } |
                 Command::ExportIfc { .. } | Command::ExportDae { .. } | Command::ExportDxf { .. } |
                 Command::ExportPdf { .. } | Command::ImportObj { .. } | Command::ImportSkp { .. } |

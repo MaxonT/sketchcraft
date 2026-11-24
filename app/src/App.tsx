@@ -26,7 +26,9 @@ import { MatchPhoto, type PhotoMatch } from "./matchphoto";
 import { prepareImage } from "./textures";
 import { savedSettings, store } from "./skins";
 import { STYLE_KEY, STYLE_PRESETS, chosenStyle, readChosenStyle, startingStyles, styleForModel } from "./styledefaults";
+import { AiPanel } from "./aibox";
 import { panelTabs, readSideTab, shownTab, SIDE_TAB_KEY, stepTab, type SideTab } from "./sidetabs";
+import { labsAi } from "./labs";
 import { useLook } from "./uselook";
 import { CommandPalette, type Command } from "./palette";
 import { TOOL_INFO, WORKSPACES } from "./workspace";
@@ -57,6 +59,8 @@ import { DEFAULT_TPAINT, paintMaterialOf, type TPaintSettings } from "./texturep
 import { exportTexture, TexturePaintPanel } from "./texturepaintpanel";
 import { editInPhotoCraft, photocraftHere } from "./photocraft";
 import { targetIds } from "./projection";
+import { fixCommand, fixSummary, type FixReply } from "./fixmodel";
+import { PrintCheckDialog } from "./printcheckdialog";
 import { PositionPanel } from "./positionpanel";
 import { UvPanel } from "./uvpanel";
 import { RestoreDialog } from "./restore";
@@ -204,6 +208,7 @@ function ModelingApp() {
   const [showTimeline, setShowTimeline] = useState(false);
   const [showLearn, setShowLearn] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [showPrintCheck, setShowPrintCheck] = useState(false);
   const { preference, setPreference, t: tr } = useLocale();
   const [lesson, setLesson] = useState<string | null>(null);
   const [showWs, setShowWs] = useState(false);
@@ -334,6 +339,13 @@ function ModelingApp() {
     if (!photocraftHere) return say(tr("pc.desktop"), true);
     if (!scene) return;
     void editInPhotoCraft(scene, targetIds(sel), sel, run, say, tr);
+  };
+  // Fix model / Check model: one engine command (one undo step); the toast says what it did
+  const askFixModel = async (dryRun: boolean) => {
+    const r = await run(fixCommand(sel, dryRun));
+    if (!r.ok) return;
+    const said = fixSummary(r as FixReply, tr);
+    say(said.text, said.bad, !dryRun && ((r.changes as number) ?? 0) > 0);
   };
   const askExportTexture = () => {
     const name = scene ? paintMaterialOf(scene, sel) ?? scene.materials.find((m) => m.texture && m.name.startsWith("Paint "))?.name ?? null : null;
@@ -588,7 +600,7 @@ function ModelingApp() {
       { id: "file.saveas", label: "Save As…", hint: "File", run: () => file.save(true) },
       { label: "Restore from backup…", hint: "File · earlier copies of this model, and work set aside", run: () => setShowRestore(true) },
       { id: "file.import", label: "Import…", hint: "File · SketchUp, DWG/DXF, IFC, FBX, OBJ, point clouds", run: file.import },
-      ...(["glb", "fbx", "obj", "stl", "dae", "dxf", "dwg", "pdf", "ifc"] as const).map((k) => ({ label: `Export ${k.toUpperCase()}…`, hint: "File", run: () => file.export(k) })),
+      ...(["glb", "fbx", "obj", "stl", "3mf", "dae", "dxf", "dwg", "pdf", "ifc"] as const).map((k) => ({ label: `Export ${k.toUpperCase()}…`, hint: "File", run: () => file.export(k) })),
       { id: "file.render", label: "Render…", hint: "Photoreal render", run: () => setShowRender(true) },
       { id: "file.timeline", label: "Timeline (video)…", hint: "Turntables, walkthroughs, sun studies", run: () => setShowTimeline(true) },
       { label: "Drawing sheets (PDF)…", hint: "File", run: () => setShowSheets(true) },
@@ -643,6 +655,9 @@ function ModelingApp() {
       { id: "tools.photocraft", label: "Edit texture in PhotoCraft…", hint: "Tools · open the selection's picture in PhotoCraft with its UV layout as a guide layer; save there and it comes back", run: askPhotoCraft },
       { id: "tools.newpainttexture", label: "New paint texture…", hint: "Tools · make a paint texture for the selected faces (unwraps them if needed), then paint on it with Texture Paint", run: askNewPaintTexture },
       { id: "file.exporttexture", label: "Export texture…", hint: "File · save the selected faces' picture (or the first paint texture) as a PNG", run: askExportTexture },
+      { id: "tools.fixmodel", label: "Fix model", hint: "Tools · repair the selection (or the whole model): close holes, turn reversed faces, join flat neighbours, remove repeated and inside faces and stray lines. One undo step", run: () => void askFixModel(false) },
+      { id: "tools.checkmodel", label: "Check model", hint: "Tools · say what keeps the selection (or the whole model) from being a solid, without changing anything", run: () => void askFixModel(true) },
+      { id: "tools.printcheck", label: "Print check…", hint: "Tools · is it solid, any thin walls or overhangs, the size in mm, then export 3MF or STL for a slicer", run: () => setShowPrintCheck(true) },
       { id: "tools.uveditor", label: "UV editor", hint: "Tools · a 2D view of the selected faces' UVs: mark seams, unwrap, pack, move islands, make the lightmap UVs", run: askUv },
       { id: "tools.projecttexture", label: "Project texture…", hint: "Tools · lay a picture on the selection: planar, box, cylinder or sphere", run: askProjection },
       { label: "Subdivide…", hint: `Tools · smooth the selected group or component into a SubD shape. ${SUBD_HOW}`, run: askSubdivide },
@@ -766,6 +781,9 @@ function ModelingApp() {
       uvEditor: askUv,
       newPaintTexture: askNewPaintTexture,
       photocraft: askPhotoCraft,
+      fixModel: () => void askFixModel(false),
+      checkModel: () => void askFixModel(true),
+      printCheck: () => setShowPrintCheck(true),
       plugins: () => (reloadPlugins(), setShowPlugins(true)),
       themes: () => setShowSkins(true),
       keys: () => setShowKeys(true),
@@ -790,9 +808,16 @@ function ModelingApp() {
 
   // the Vertical layout has one sidebar: the lower-right panel becomes its Properties tab
   const merged = layout === "side";
-  const tabs = panelTabs(wsId, layout);
+  // SketchCraft AI is in labs (labs.ts): hidden unless switched on
+  const aiOn = labsAi();
+  const tabs = panelTabs(wsId, layout, aiOn);
   const curTab = shownTab(tab, tabs);
   const showSide = ws.showLeft || (merged && ws.showRight);
+  // the top-bar SketchCraft AI button: show the side panel on its AI tab
+  const openAi = () => {
+    if (!showSide) editWs(merged ? { showLeft: true, showRight: true } : { showLeft: true });
+    chooseTab("ai");
+  };
   const chooseTab = (t: SideTab) => {
     setTab(t);
     if (merged) store.set(SIDE_TAB_KEY, t);
@@ -992,6 +1017,11 @@ function ModelingApp() {
           <button className="btn small ghost learn-btn" title="Lessons and demos: learn SketchCraft by doing" onClick={() => setShowLearn(true)}>
             Learn{lessonsDone().length === 0 && <i className="learn-dot" aria-label="(new)" />}
           </button>
+          {aiOn && (
+            <button className="btn small ghost ai-btn" data-testid="ai-btn" title="SketchCraft AI: ask for changes in plain words (local test)" onClick={openAi}>
+              SketchCraft AI
+            </button>
+          )}
           <button className="btn small ghost skin-btn" title="Themes: SketchCraft's colors, layout and icons" onClick={() => setShowSkins(true)}>
             <Icons.theme />
             <span className="btn-label">Themes</span>
@@ -1024,13 +1054,14 @@ function ModelingApp() {
         >
           {tabs.map((t) => (
             <button key={t} id={`side-tab-${t}`} role="tab" aria-selected={curTab === t} aria-controls="side-tabpanel" tabIndex={curTab === t ? 0 : -1} className={curTab === t ? "on" : ""} onClick={() => chooseTab(t)}>
-              {t === "outliner" ? "Outliner" : t === "library" ? "Library" : t === "pages" ? "Pages" : t === "properties" ? tr("tab.properties") : "Views"}
+              {t === "outliner" ? "Outliner" : t === "library" ? "Library" : t === "pages" ? "Pages" : t === "properties" ? tr("tab.properties") : t === "ai" ? tr("tab.ai") : "Views"}
               {t === "properties" && selCount > 0 && curTab !== "properties" && <i className="tab-dot" role="img" aria-label={tr("tab.hasSelection")} title={tr("tab.hasSelection")} />}
             </button>
           ))}
         </div>
         <div id="side-tabpanel" role="tabpanel" aria-labelledby={`side-tab-${curTab}`} className={curTab === "properties" ? "inspector-body" : "section grow"}>
           {curTab === "properties" && inspector}
+          {curTab === "ai" && <AiPanel scene={scene} run={run} refresh={refresh} say={say} importFile={importFile} />}
           {curTab === "pages" && <PagesPanel L={L} />}
           {scene && curTab === "outliner" && <Outliner scene={scene} sel={sel} setSel={setSel} run={run} byTag={!!styles.byTag} setByTag={(on) => setStyles((s) => ({ ...s, byTag: on }))} />}
           {scene && curTab === "library" && (
@@ -1324,6 +1355,15 @@ function ModelingApp() {
             component={subdividing.component}
             onGo={doSubdivide}
             onClose={() => setSubdividing(null)}
+          />
+        )}
+        {showPrintCheck && (
+          <PrintCheckDialog
+            sel={sel}
+            run={run}
+            onFix={() => askFixModel(false)}
+            onSelect={(s) => setSel({ ...EMPTY, ...s })}
+            onClose={() => setShowPrintCheck(false)}
           />
         )}
         {showAbout && <AboutDialog onClose={() => setShowAbout(false)} />}
